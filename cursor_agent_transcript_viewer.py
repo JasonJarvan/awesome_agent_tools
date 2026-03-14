@@ -1,0 +1,255 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Cursor Agent 对话记录查看器
+扫描 .cursor/projects 下所有 agent-transcripts，列出并查看 JSONL 对话内容。
+
+用法:
+  python cursor_agent_transcript_viewer.py           # 交互：先列清单，输入序号查看
+  python cursor_agent_transcript_viewer.py list      # 仅列出所有对话（含对话 ID）
+  python cursor_agent_transcript_viewer.py view 3    # 查看第 3 条
+  python cursor_agent_transcript_viewer.py view "C:\\...\\xxx.jsonl"  # 按路径查看
+  python cursor_agent_transcript_viewer.py copy-id 2 # 复制第 2 条的对话 ID 到剪贴板
+
+环境变量 CURSOR_AGENT_TRANSCRIPTS_ROOT 可指定扫描根目录，默认 ~/.cursor/projects
+
+关于「无目录」对话（project 为纯数字如 1773280448224）：
+  这类对话来自「未打开文件夹」的临时窗口。要继续并尽量利用 KV cache，只能在同一
+  窗口内切回该对话；Cursor 目前不支持通过对话 ID 直接打开。若窗口已关：可尝试
+  File → Open Recent 中是否有「无文件夹」项，或完全退出 Cursor 后重启并选择恢复上次会话。
+"""
+
+import json
+import os
+import sys
+from pathlib import Path
+from datetime import datetime
+
+# 默认 Cursor 项目根目录（存放各项目 agent-transcripts 的上级）
+def _default_projects_root():
+    home = Path.home()
+    return home / ".cursor" / "projects"
+
+PROJECTS_ROOT = Path(os.environ.get("CURSOR_AGENT_TRANSCRIPTS_ROOT", str(_default_projects_root())))
+
+
+def _extract_text_from_message(msg):
+    """从 message 中提取可读文本（只取 type=text 的 content）。"""
+    if not msg or "content" not in msg:
+        return ""
+    parts = []
+    for block in msg.get("content") or []:
+        if isinstance(block, dict) and block.get("type") == "text" and "text" in block:
+            parts.append(block["text"])
+    return "\n".join(parts)
+
+
+def _first_user_query_line(text):
+    """从首条用户消息中取一行作为标题，去掉 <user_query> 包装。"""
+    if not text:
+        return "(无标题)"
+    text = text.strip()
+    if text.startswith("<user_query>"):
+        text = text[len("<user_query>"):].strip()
+    first_line = text.split("\n")[0].strip()
+    return (first_line[:60] + "…") if len(first_line) > 60 else first_line
+
+
+def collect_transcripts(root: Path):
+    """收集所有 agent-transcripts 下的 .jsonl 文件。"""
+    root = Path(root)
+    if not root.is_dir():
+        return []
+    out = []
+    for project_dir in root.iterdir():
+        if not project_dir.is_dir():
+            continue
+        at_dir = project_dir / "agent-transcripts"
+        if not at_dir.is_dir():
+            continue
+        for chat_dir in at_dir.iterdir():
+            if not chat_dir.is_dir():
+                continue
+            for f in chat_dir.glob("*.jsonl"):
+                try:
+                    mtime = datetime.fromtimestamp(f.stat().st_mtime)
+                except OSError:
+                    mtime = None
+                out.append({
+                    "path": f,
+                    "project_id": project_dir.name,
+                    "chat_id": chat_dir.name,
+                    "mtime": mtime,
+                })
+    # 按修改时间倒序
+    out.sort(key=lambda x: (x["mtime"] or datetime.min), reverse=True)
+    return out
+
+
+def get_title(entry):
+    """读取首条用户消息作为标题。"""
+    path = entry["path"]
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                    if obj.get("role") == "user" and "message" in obj:
+                        text = _extract_text_from_message(obj["message"])
+                        return _first_user_query_line(text)
+                except json.JSONDecodeError:
+                    continue
+    except OSError:
+        pass
+    return "(无法读取标题)"
+
+
+def _is_no_folder_project(project_id: str) -> bool:
+    """project_id 为纯数字时表示无目录的临时窗口。"""
+    return project_id.isdigit()
+
+
+def list_transcripts(entries, with_title=True, show_conversation_id=True):
+    """打印对话列表。"""
+    has_no_folder = False
+    for i, e in enumerate(entries, 1):
+        title = get_title(e) if with_title else ""
+        mtime_str = e["mtime"].strftime("%Y-%m-%d %H:%M") if e["mtime"] else "?"
+        proj = e["project_id"]
+        if _is_no_folder_project(proj):
+            has_no_folder = True
+        line = f"  {i:3d}  [{mtime_str}]  {proj}"
+        if show_conversation_id:
+            line += f"  |  conversationId: {e['chat_id']}"
+        print(line)
+        if with_title and title:
+            print(f"         {title}")
+    if has_no_folder:
+        print("\n  [说明] 项目名为纯数字（如 1773280448224）的对话来自「未打开文件夹」的临时窗口。"
+              "要继续该对话并利用 KV cache，请在 Cursor 中回到该窗口并在聊天历史里切换；"
+              "若已关闭，可尝试 File → Open Recent 或重启后恢复上次会话。")
+    return len(entries)
+
+
+def view_transcript(path: Path, project_id: str = None):
+    """逐条打印一场对话。"""
+    path = Path(path)
+    if not path.is_file():
+        print(f"文件不存在: {path}", file=sys.stderr)
+        return
+    conversation_id = path.stem  # 文件夹名与 .jsonl 主名相同，即 conversationId
+    print(f"\n========== 对话记录: {path.name} ==========")
+    print(f"  conversationId: {conversation_id}")
+    if project_id and _is_no_folder_project(project_id):
+        print("  [无目录对话] 要继续请在 Cursor 中回到该临时窗口，在聊天历史里切换到此对话。")
+    print()
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                    role = obj.get("role", "?")
+                    text = _extract_text_from_message(obj.get("message") or {})
+                    if not text and role != "user":
+                        continue
+                    if role == "user":
+                        if text.startswith("<user_query>"):
+                            text = text[len("<user_query>"):].strip()
+                        if text.endswith("</user_query>"):
+                            text = text[:-len("</user_query>")].strip()
+                        print("【用户】")
+                        print(text)
+                    else:
+                        print("【助手】")
+                        print(text)
+                    print()
+                except json.JSONDecodeError:
+                    continue
+    except OSError as err:
+        print(f"读取失败: {err}", file=sys.stderr)
+
+
+def main():
+    root = PROJECTS_ROOT
+    args = sys.argv[1:]
+
+    if args and args[0] == "list":
+        entries = collect_transcripts(root)
+        print(f"共找到 {len(entries)} 条 Agent 对话（根目录: {root}）\n")
+        list_transcripts(entries)
+        return
+
+    if args and args[0] == "view" and len(args) >= 2:
+        target = args[1]
+        if target.isdigit():
+            entries = collect_transcripts(root)
+            idx = int(target)
+            if 1 <= idx <= len(entries):
+                e = entries[idx - 1]
+                view_transcript(e["path"], project_id=e["project_id"])
+            else:
+                print(f"无效序号，请用 1 到 {len(entries)} 之间的数字。", file=sys.stderr)
+        else:
+            view_transcript(Path(target))
+        return
+
+    if args and args[0] == "copy-id" and len(args) >= 2:
+        entries = collect_transcripts(root)
+        try:
+            idx = int(args[1])
+            if 1 <= idx <= len(entries):
+                cid = entries[idx - 1]["chat_id"]
+                print(cid)
+                # 尝试写入剪贴板（Windows PowerShell）
+                try:
+                    import subprocess
+                    subprocess.run(
+                        ["powershell", "-NoProfile", "-Command", f"Set-Clipboard -Value {repr(cid)}"],
+                        check=True, capture_output=True, timeout=5
+                    )
+                    print("(已复制到剪贴板)", file=sys.stderr)
+                except Exception:
+                    pass
+            else:
+                print(f"无效序号，请用 1 到 {len(entries)} 之间的数字。", file=sys.stderr)
+        except ValueError:
+            print("用法: copy-id <序号>", file=sys.stderr)
+        return
+
+    # 交互模式
+    entries = collect_transcripts(root)
+    if not entries:
+        print(f"未找到任何 Agent 对话记录。\n根目录: {root}")
+        print("请确认 Cursor 的 agent-transcripts 位于上述目录下。")
+        return
+
+    print(f"共找到 {len(entries)} 条 Agent 对话（根目录: {root}）\n")
+    list_transcripts(entries)
+    print("\n输入序号查看该对话，直接回车退出: ", end="")
+    try:
+        line = input().strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return
+    if not line:
+        return
+    if line.isdigit():
+        idx = int(line)
+        if 1 <= idx <= len(entries):
+            e = entries[idx - 1]
+            view_transcript(e["path"], project_id=e["project_id"])
+        else:
+            print(f"无效序号: {idx}")
+    else:
+        # 当作路径尝试打开
+        view_transcript(Path(line))
+
+
+if __name__ == "__main__":
+    main()
