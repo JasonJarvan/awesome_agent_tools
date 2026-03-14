@@ -5,11 +5,12 @@ Cursor Agent 对话记录查看器
 扫描 .cursor/projects 下所有 agent-transcripts，列出并查看 JSONL 对话内容。
 
 用法:
-  python cursor_agent_transcript_viewer.py           # 交互：先列清单，输入序号查看
+  python cursor_agent_transcript_viewer.py           # 交互：列清单→选序号查看→可输入目录导出或回车退出
   python cursor_agent_transcript_viewer.py list      # 仅列出所有对话（含对话 ID）
   python cursor_agent_transcript_viewer.py view 3    # 查看第 3 条
   python cursor_agent_transcript_viewer.py view "C:\\...\\xxx.jsonl"  # 按路径查看
   python cursor_agent_transcript_viewer.py copy-id 2 # 复制第 2 条的对话 ID 到剪贴板
+  # 交互模式下展示会话后：直接回车退出；输入目录则导出。若目录不存在则提示「按回车创建并导出，按 ESC 退出」
 
 环境变量 CURSOR_AGENT_TRANSCRIPTS_ROOT 可指定扫描根目录，默认 ~/.cursor/projects
 
@@ -24,6 +25,44 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
+
+
+def _read_enter_or_esc():
+    """等待用户按回车或 ESC，返回 'enter' 或 'esc'。"""
+    if sys.platform == "win32":
+        try:
+            import msvcrt
+            while True:
+                ch = msvcrt.getwch()
+                if ch in ("\r", "\n"):
+                    return "enter"
+                if ch == "\x1b":
+                    return "esc"
+        except Exception:
+            pass
+    else:
+        try:
+            import tty
+            import termios
+            fd = sys.stdin.fileno()
+            old = termios.tcgetattr(fd)
+            try:
+                tty.setraw(fd)
+                ch = sys.stdin.read(1)
+                if ch in ("\r", "\n"):
+                    return "enter"
+                if ch == "\x1b":
+                    return "esc"
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        except Exception:
+            pass
+    # 降级：用 input，回车=创建，输入 n=退出
+    try:
+        line = input().strip().lower()
+        return "esc" if line == "n" else "enter"
+    except (EOFError, KeyboardInterrupt):
+        return "esc"
 
 # 默认 Cursor 项目根目录（存放各项目 agent-transcripts 的上级）
 def _default_projects_root():
@@ -146,6 +185,21 @@ def view_transcript(path: Path, project_id: str = None):
     if project_id and _is_no_folder_project(project_id):
         print("  [无目录对话] 要继续请在 Cursor 中回到该临时窗口，在聊天历史里切换到此对话。")
     print()
+    lines = _format_transcript_lines(path)
+    if not lines:
+        print("(无内容或读取失败)", file=sys.stderr)
+        return
+    for role, text in lines:
+        label = "【用户】" if role == "user" else "【助手】"
+        print(label)
+        print(text)
+        print()
+
+
+def _format_transcript_lines(path: Path):
+    """从 JSONL 生成可读的对话行（用于打印或导出）。"""
+    path = Path(path)
+    lines = []
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
@@ -163,16 +217,36 @@ def view_transcript(path: Path, project_id: str = None):
                             text = text[len("<user_query>"):].strip()
                         if text.endswith("</user_query>"):
                             text = text[:-len("</user_query>")].strip()
-                        print("【用户】")
-                        print(text)
+                        lines.append(("user", text))
                     else:
-                        print("【助手】")
-                        print(text)
-                    print()
+                        lines.append(("assistant", text))
                 except json.JSONDecodeError:
                     continue
-    except OSError as err:
-        print(f"读取失败: {err}", file=sys.stderr)
+    except OSError:
+        pass
+    return lines
+
+
+def export_transcript_to_dir(transcript_path: Path, output_dir: Path) -> bool:
+    """将对话导出到指定目录，文件名为 {conversationId}.md。返回是否成功。"""
+    transcript_path = Path(transcript_path)
+    output_dir = Path(output_dir)
+    if not transcript_path.is_file():
+        return False
+    if not output_dir.is_dir():
+        return False
+    conversation_id = transcript_path.stem
+    out_file = output_dir / f"{conversation_id}.md"
+    lines = _format_transcript_lines(transcript_path)
+    try:
+        with open(out_file, "w", encoding="utf-8") as f:
+            f.write(f"# 对话记录: {conversation_id}\n\n")
+            for role, text in lines:
+                label = "【用户】" if role == "user" else "【助手】"
+                f.write(f"## {label}\n\n{text}\n\n")
+        return True
+    except OSError:
+        return False
 
 
 def main():
@@ -239,16 +313,57 @@ def main():
         return
     if not line:
         return
+    viewed_path = None
     if line.isdigit():
         idx = int(line)
         if 1 <= idx <= len(entries):
             e = entries[idx - 1]
-            view_transcript(e["path"], project_id=e["project_id"])
+            viewed_path = e["path"]
+            view_transcript(viewed_path, project_id=e["project_id"])
         else:
             print(f"无效序号: {idx}")
+            return
     else:
-        # 当作路径尝试打开
-        view_transcript(Path(line))
+        candidate = Path(line)
+        if candidate.is_file():
+            viewed_path = candidate
+            view_transcript(viewed_path)
+        else:
+            print(f"文件不存在: {candidate}", file=sys.stderr)
+            return
+
+    # 展示后：输入目录则导出，直接回车退出
+    if viewed_path is None:
+        return
+    print("输入目录路径导出对话，直接回车退出: ", end="")
+    try:
+        export_dir_input = input().strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return
+    if not export_dir_input:
+        return
+    export_dir = Path(export_dir_input)
+    if not export_dir.is_dir():
+        if export_dir.exists():
+            print(f"错误：路径已存在但不是目录: {export_dir}", file=sys.stderr)
+            return
+        print(f"目录不存在: {export_dir}")
+        print("按回车创建该目录并导出，按 ESC 退出: ", end="", flush=True)
+        key = _read_enter_or_esc()
+        print()
+        if key == "esc":
+            return
+        try:
+            export_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            print(f"创建目录失败: {e}", file=sys.stderr)
+            return
+    if export_transcript_to_dir(viewed_path, export_dir):
+        out_name = viewed_path.stem + ".md"
+        print(f"已导出到: {export_dir / out_name}")
+    else:
+        print("导出失败。", file=sys.stderr)
 
 
 if __name__ == "__main__":
