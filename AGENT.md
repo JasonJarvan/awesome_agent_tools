@@ -5,12 +5,12 @@
 
 ## 顶层结构
 
-- `cursor_history_viewer.py`
-  - Cursor Agent 对话记录查看器的实现文件。
-  - 读取本机 `~/.cursor/projects`（或 `CURSOR_AGENT_TRANSCRIPTS_ROOT` 环境变量指定的目录）下的 `agent-transcripts` JSONL 文件，支持列出、查看、导出对话。
+- `chat_browser/cursor_chat_browser/scripts/cursor_chat_browser.py`
+  - Cursor **AI Chat（SQLite）**与 **Agent（JSONL）** 的统一终端入口。
+  - 扫描 `workspaceStorage` / `state.vscdb` 与 `~/.cursor/projects/.../agent-transcripts`，支持双源选择与 `agent list|view|copy-id` 子命令。
 
 - `README.md`
-  - 面向人类用户的项目说明，介绍整体定位（AI 工具聚合）、目录结构以及如何使用 `cursor_history_viewer.py`。
+  - 面向人类用户的项目说明，介绍整体定位（AI 工具聚合）、目录结构以及如何使用 `cursor_chat_browser.py`。
 
 - `AGENT.md`（当前文件）
   - 面向代码助手 / Agent 的“开发约定与架构说明”。
@@ -42,14 +42,12 @@
 
 ## 关于对话历史的位置（Agent 使用须知）
 
-当用户在 **本机（例如 Windows 11）运行 Cursor**，并通过 Cursor 远程连接到另一台 **Linux 服务器** 时：
+当用户通过 **Cursor Remote（如 Windows 客户端 + Linux SSH 远端）** 工作时：
 
-- Cursor Agent / Composer 的对话历史（`agent-transcripts`）是保存在**运行 Cursor 的那台机器本地**：
-  - 例如：`%USERPROFILE%\.cursor\projects\...` 或 `~/.cursor/projects/...`
-  - 远程 Linux 服务器上默认不会出现这些 JSONL 历史文件。
+- **Agent JSONL** 常出现在**打开工程所在侧**的用户目录（例如远端 Linux 的 `~/.cursor/projects`）；在**客户端本机**也可能有一份，取决于 Cursor 版本与场景。
+- **AI Chat 的 SQLite 状态**更常在**运行 Cursor UI 的客户端**的 `workspaceStorage`。
 
 因此：
 
-- 当你（Agent）在本项目中使用 `cursor_history_viewer.py`，应默认认为它读取的是**本机 Cursor 数据目录**，而非远程服务器上的路径。
-- 如需适配特殊目录，应通过环境变量 `CURSOR_AGENT_TRANSCRIPTS_ROOT` 进行配置，而不是在代码中写死其他路径。
-
+- 使用 `cursor_chat_browser.py` 时，应明确**当前进程所在机器**是否包含目标数据；需要时用 `CURSOR_WORKSPACE_STORAGE`、`CURSOR_AGENT_TRANSCRIPTS_ROOT` 指向正确根目录，而不是在代码中写死路径。
+- 脚本通过**实际扫描是否命中数据**区分数据源，而非依赖操作系统类型。
