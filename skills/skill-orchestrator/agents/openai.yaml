@@ -1,0 +1,3 @@
+display_name: Skill Orchestrator
+short_description: Find, compare, adapt, and only then create reusable skills across agent ecosystems.
+default_prompt: Help me find an existing skill before creating a new one.

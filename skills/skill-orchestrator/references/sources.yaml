@@ -1,0 +1,79 @@
+version: 1
+updated_at: 2026-03-26
+
+source_types:
+  - id: skill_market
+    description: Agent-specific skill marketplaces, registries, or curated skill collections.
+  - id: github
+    description: GitHub repositories and code search used to find skills, templates, and reusable workflow packages.
+  - id: other_market
+    description: Other ecosystem-specific directories, community hubs, blogs, or curated collections worth checking after primary sources.
+
+agents:
+  codex:
+    description: OpenAI Codex and related Codex app skill ecosystem.
+    markets:
+      tier_1:
+        - name: codex-official-docs
+          url: https://openai.com/index/introducing-the-codex-app/
+          description: Official Codex product page and launch material. Good for baseline capability and packaging guidance, not a broad community marketplace.
+        - name: codex-local-skill-conventions
+          url: file://local/codex-skill-creator
+          description: Local Codex skill-creator conventions available in the runtime. Useful when shaping or adapting a Codex-native skill.
+      tier_2:
+        - name: codex-community-github-search
+          url: https://github.com/search?q=codex+skill
+          description: Broad community discovery on GitHub when no curated marketplace is available.
+
+  claude_code:
+    description: Claude Code and Anthropic-compatible skill ecosystem.
+    markets:
+      tier_1:
+        - name: anthropics-skills
+          url: https://github.com/anthropics/skills
+          description: Anthropic-maintained public skills repository and the strongest first-pass source for community-recognized Claude-compatible skills.
+        - name: claude-code-docs
+          url: https://docs.claude.com/en/docs/claude-code/skills
+          description: Official Claude Code skill documentation. Useful for compatibility checks and packaging expectations.
+      tier_2:
+        - name: claude-community-github-search
+          url: https://github.com/search?q=%22Claude+Code%22+skill
+          description: Broader community repository discovery for Claude Code-related skills.
+
+  openclaw:
+    description: OpenClaw and AgentSkills-compatible ecosystem.
+    markets:
+      tier_1:
+        - name: openclaw-skills-docs
+          url: https://docs.openclaw.ai/tools/skills
+          description: Official OpenClaw skills documentation and compatibility guidance.
+      tier_2:
+        - name: tencent-skill-hub
+          url: https://skillhub.tencent.com/
+          description: Tencent Skill Hub, a broader community-facing skill directory worth checking after official OpenClaw-oriented sources.
+        - name: openclaw-community-github-search
+          url: https://github.com/search?q=openclaw+skill
+          description: Community repository discovery for OpenClaw-oriented skills.
+
+global_sources:
+  github:
+    - name: github-general-search
+      url: https://github.com/search?q=SKILL.md
+      description: Broad GitHub search for repositories containing skill entry points and reusable skill packages.
+    - name: github-topic-agent-skills
+      url: https://github.com/topics/agent
+      description: Topic-level browsing for adjacent repositories when direct skill searches are sparse.
+
+  other_market:
+    - name: agent-skills-overview
+      url: https://docs.claude.com/en/docs/agents-and-tools/agent-skills
+      description: Anthropic documentation covering agent skill concepts and best practices, useful when comparing packaging models.
+    - name: community-blogs-and-forums
+      url: https://www.google.com/search?q=agent+skill+marketplace
+      description: Broad fallback discovery for community roundups, blog posts, and forum discussions when curated sources are insufficient.
+
+notes:
+  - Keep this file easy to edit. Add or reorder sources as ecosystems evolve.
+  - Treat `tier_1` as the first-pass trust boundary.
+  - Only use `tier_2` after `tier_1` fails to produce a strong enough candidate.
+  - Keep MCP registries out of this file until the dedicated MCP orchestrator is introduced.

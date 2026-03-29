@@ -1,89 +1,245 @@
-## 项目简介
+# Awesome Agent Tools
 
-这是一个**本地 AI 工具聚合仓库**，用于集中维护与 Cursor / LLM 协作相关的小工具和技能（skills）。  
-当前已包含：
+An open repository of reusable agent tooling, with a strong focus on portable skills, practical workflows, and clear design.
 
-- **`chat_browser/cursor_chat_browser/`**：终端内浏览 Cursor **AI Chat 面板（SQLite）**与 **Agent 转录（JSONL）** 的脚本与 Cursor 插件，详见 [chat_browser/cursor_chat_browser/README.md](chat_browser/cursor_chat_browser/README.md)
-- **`skills/`（约定）**：存放零散的 AI 技能脚本，每个技能一个子文件夹，并配套自己的 `README.md`
-  - **`skills/barksy_pipeline/`**：将 Codex 会话历史从 `~/.codex/sessions` 导出为 Markdown，详见 [skills/barksy_pipeline/README.md](skills/barksy_pipeline/README.md)
+This repository is built around a simple idea:
 
-## 仓库结构约定
+> Do not create a new skill too early.
+> First search for an existing, trusted solution.
+> Only after a workflow succeeds in real use should it be packaged into a reusable skill.
 
-- **根目录**
-  - `README.md`：当前文件，介绍整个工具聚合仓库
-  - `AGENT.md`：给 Cursor / 代码助手看的“项目说明书”，约定目录结构与使用方式
-  - `skills/`：用于存放各类独立的 AI 技能（可选，目前可以为空）
+The current flagship artifact is a cross-platform `skill-orchestrator` skill. It helps an agent decide where to search for an existing skill, how to present candidates to the user, and when to stop searching and create a new skill instead.
 
-- **`chat_browser/cursor_chat_browser/`**
-  - 入口脚本：`scripts/cursor_chat_browser.py`（合并了原「仅 Agent JSONL」查看器的全部能力）
+## What This Repository Contains
 
-- **`skills/` 目录约定**
-  - 每个技能使用一个子文件夹，例如：
-    - `skills/web-search/`
-    - `skills/sql-helper/`
-    - `skills/refactor-patterns/`
-  - **每个子文件夹必须包含一个 `README.md`**，至少说明：
-    - 这个 skill 的用途（做什么）
-    - 适用场景 / 输入输出
-    - 是否依赖外部服务或环境变量
+- `skills/skill-orchestrator/`
+  A portable orchestration skill for discovering, evaluating, adapting, and eventually creating skills across agent ecosystems such as Codex, Claude Code, and OpenClaw.
 
-> 提示：当前仓库内暂未强制创建这些子文件夹，你可以按需要逐步补充。只要遵守“每个 skill 子目录都带有 README”的约定即可。
+- `skills/barksy_pipeline/`
+  A utility-oriented skill for exporting Codex session history to Markdown.
 
-## 工具：Cursor 聊天与 Agent 历史（cursor_chat_browser）
+- `skills/web-search.md`
+  A lightweight skill note related to web search behavior.
 
-脚本路径：`chat_browser/cursor_chat_browser/scripts/cursor_chat_browser.py`
+- `cursor_history_viewer/`
+  Existing project material related to browsing and exporting agent or editor history.
 
-功能概要：
+## Why This Project Exists
 
-- **数据源一**：各系统下的 `workspaceStorage` → `state.vscdb` 中 AI Chat 面板的 Tab（键 `aichat.chatdata`）
-- **数据源二**：`~/.cursor/projects/.../agent-transcripts/*.jsonl`（Agent 对话）
-- 若两种数据在同一台机器上都存在，启动时会先选择数据源；仅存在一种则直接进入对应流程
-- Agent 侧支持：交互浏览、`agent list` / `agent view` / `agent copy-id`（Windows 下 `copy-id` 可写剪贴板）、导出 Markdown
-- 列表中将 Cursor 项目目录 slug（原用 `-` 编码的路径）显示为带 `/` 的路径样式（启发式）
+Teams using AI coding agents quickly run into the same problem:
 
-### 安装与使用
+- Sometimes the right answer is a `skill`
+- Sometimes it is an `MCP server`
+- Sometimes it is just a `CLI tool`
+- Sometimes the best move is to build nothing and reuse what already works
 
-在插件目录下（见子 README）安装依赖后：
+Most projects jump straight into creation. This repository takes the opposite approach. It treats creation as the last step, not the first.
 
-```bash
-cd chat_browser/cursor_chat_browser
-python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r scripts/requirements.txt
+That leads to three design principles:
 
-# 统一入口（自动识别 SQLite / JSONL / 双源）
-python scripts/cursor_chat_browser.py
+1. Search before build.
+2. Ask for confirmation before adapting or generating new tooling.
+3. Keep the reusable logic platform-neutral, and isolate platform-specific behavior in thin adapters.
 
-# 仅 Agent：交互
-python scripts/cursor_chat_browser.py agent
+## The `skill-orchestrator`
 
-# 仅 Agent：命令行
-python scripts/cursor_chat_browser.py agent list
-python scripts/cursor_chat_browser.py agent view 3
-python scripts/cursor_chat_browser.py agent view "/path/to/xxx.jsonl"
-python scripts/cursor_chat_browser.py agent copy-id 2
+The `skill-orchestrator` is intentionally scoped to skills first. It does not yet absorb MCP orchestration. That is a deliberate design choice.
+
+The planned layering is:
+
+1. `skill-orchestrator`
+2. `mcp-orchestrator`
+3. A higher-level capability orchestrator that can route between skills, MCP, and possibly CLI tools
+
+This keeps the first version focused and makes evaluation simpler.
+
+### What The Skill Does
+
+Given a user request, the skill should:
+
+1. Analyze the request and decide which source type is most appropriate for skill discovery.
+2. Search the highest-priority registered markets first.
+3. Search those markets in parallel when the runtime supports parallel or delegated work.
+4. Return a small number of high-signal candidates rather than a long dump of links.
+5. Ask the user whether to adopt one of the discovered options, continue searching, or create a new skill.
+6. If a discovered skill targets another ecosystem, ask whether adaptation should happen before use.
+
+### Why The Skill Is Cross-Platform
+
+The skill is designed around a portable core:
+
+- search policy
+- source registry
+- scoring rules
+- candidate presentation format
+- adaptation rules
+
+Platform-specific behavior is intentionally separated:
+
+- Codex-specific metadata
+- Claude Code-specific frontmatter or tool constraints
+- OpenClaw-specific runtime fields
+- differences in sub-agent spawning, parallel search, and user confirmation flows
+
+This means the content is reusable even when the packaging is not identical.
+
+## Repository Layout
+
+```text
+awesome_agent_tools/
+├── README.md
+├── AGENT.md
+├── skills/
+│   ├── barksy_pipeline/
+│   ├── skill-orchestrator/
+│   │   ├── SKILL.md
+│   │   ├── agents/
+│   │   │   └── openai.yaml
+│   │   ├── references/
+│   │   │   ├── adaptation-matrix.md
+│   │   │   ├── decision-rules.md
+│   │   │   ├── result-schema.md
+│   │   │   ├── search-playbook.md
+│   │   │   └── sources.yaml
+│   │   └── assets/
+│   │       └── templates/
+│   │           ├── candidate-summary.md
+│   │           └── creation-brief.md
+│   └── web-search.md
+└── cursor_history_viewer/
 ```
 
-### 环境变量
+## How To Use The Skill
 
-| 变量 | 说明 |
-|------|------|
-| `CURSOR_WORKSPACE_STORAGE` | 手动指定 `workspaceStorage` 根目录，多个路径用英文分号 `;` 分隔 |
-| `CURSOR_AGENT_TRANSCRIPTS_ROOT` | 指定扫描 `agent-transcripts` 的父目录（默认 `~/.cursor/projects`） |
+The skill is intended for agent runtimes that support skill folders with a `SKILL.md` entry point.
 
-### 数据路径（各平台）
+Typical usage pattern:
 
-- **Agent JSONL**
-  - Windows：`%USERPROFILE%\.cursor\projects\<项目 slug>\agent-transcripts\<对话ID>\<对话ID>.jsonl`
-  - macOS / Linux：`~/.cursor/projects/<项目 slug>/agent-transcripts/<对话ID>/<对话ID>.jsonl`
-- **AI Chat SQLite**：见子目录 README 与 `skills/cursor-chat-browser/reference.md`
+1. Put the skill folder where your agent runtime can discover it.
+2. Ask for a tool or reusable workflow.
+3. Let the skill choose the best source type to search first.
+4. Review the candidate summary.
+5. Confirm whether to adopt, adapt, continue searching, or create a new skill.
 
-当项目 slug 对应「无文件夹」临时窗口时，Cursor 可能使用**纯数字**目录名；脚本会提示在 Cursor 内回到对应窗口继续会话。
+If you want a repeatable, half-automated search outside the agent runtime, use the included script:
 
-## 关于对话历史存储位置（本机 vs 远程）
+```bash
+cd skills/skill-orchestrator/scripts
+python -m pip install -r requirements.txt
+python search_skills.py "documentation co-authoring skill for Claude Code" --ecosystem claude_code
+```
 
-使用 **Cursor Remote（如从 Windows 连 Linux SSH）** 时：
+The script writes both Markdown and JSON outputs into `skills/skill-orchestrator/output/`.
+When no strong candidate exists, or when you may still prefer a custom solution, the output also includes a structured creation brief that can seed a new skill.
+For web-based source lookups, the script uses retries and fallback providers so occasional search-engine failures degrade gracefully into source notes instead of breaking the whole run.
 
-- **Agent 转录（JSONL）** 常写在**你当前打开工程所在环境**的用户目录下，例如远程 Linux 上的 `~/.cursor/projects`（在远端终端跑脚本即可扫到）。
-- **经典 AI Chat 面板状态（SQLite）** 往往在**运行 Cursor 窗口的客户端**（如 Windows 的 `%APPDATA%\Cursor\...`）；在纯远程 Linux 上可能只有空壳 `workspaceStorage` 或没有 `chatdata`。
+Example requests:
 
-因此应**在需要读的那一侧**运行脚本，或通过上述环境变量指向客户端上的 `workspaceStorage`（例如在 WSL 里挂载 Windows 路径）。
+- "Find a community skill for structured code review in Claude Code."
+- "Search for a Codex-compatible skill for repository archaeology."
+- "I need a cross-platform skill for issue triage. Reuse something existing if possible."
+- "Search skill markets first, then GitHub, then help me create one if nothing is strong enough."
+
+## How Discovery Works
+
+The core search strategy is intentionally conservative.
+
+### Source Types
+
+The first version focuses on skill discovery, not MCP orchestration. The main source types are:
+
+- agent-specific skill markets
+- GitHub
+- other skill directories or ecosystem-specific registries
+
+All registered sources live in [`skills/skill-orchestrator/references/sources.yaml`](skills/skill-orchestrator/references/sources.yaml), which is designed to be easy to edit as the ecosystem changes.
+
+### Priority Model
+
+For agent-specific markets, sources are grouped into two tiers:
+
+- `tier_1`: preferred and trusted first-pass sources
+- `tier_2`: broader or more experimental fallback sources
+
+The orchestrator searches all `tier_1` sources in parallel where possible. Only if no sufficiently strong result is found does it move to `tier_2`.
+
+### Candidate Count
+
+The orchestrator does not dump every hit.
+
+Its default presentation rule is:
+
+- return `Top 3` by default
+- never return more than `5`
+- do not pad with weak candidates just to hit a number
+- if one result is clearly best, return it with a backup option
+
+This keeps decision-making fast and humane.
+
+## Design Files
+
+The skill is documented as a small system rather than a single prompt file.
+
+- [`SKILL.md`](skills/skill-orchestrator/SKILL.md)
+  The portable operating manual for the orchestrator.
+
+- [`sources.yaml`](skills/skill-orchestrator/references/sources.yaml)
+  Editable registry of search sources, grouped by source type, agent ecosystem, and priority tier.
+
+- [`decision-rules.md`](skills/skill-orchestrator/references/decision-rules.md)
+  Routing, scoring, stopping rules, and candidate-count logic.
+
+- [`result-schema.md`](skills/skill-orchestrator/references/result-schema.md)
+  Defines exactly what information should be returned to help a user choose.
+
+- [`adaptation-matrix.md`](skills/skill-orchestrator/references/adaptation-matrix.md)
+  Describes how skills can be adapted between Codex, Claude Code, and OpenClaw.
+
+- [`search-playbook.md`](skills/skill-orchestrator/references/search-playbook.md)
+  Concrete execution guidance for searching well and escalating carefully.
+
+## Why The README Is Detailed
+
+This project is intended to be useful both to humans and to agents.
+
+That creates a tension:
+
+- humans need clear architecture and rationale
+- agents need compact, structured operating instructions
+
+The solution here is to separate concerns:
+
+- the root `README.md` explains the system to humans
+- the skill folder contains the compact operational material for agent runtimes
+
+## Current Scope And Future Work
+
+Current scope:
+
+- skill discovery
+- candidate evaluation
+- user confirmation
+- cross-platform adaptation planning
+- creation fallback after search exhaustion
+
+Planned future work:
+
+- a dedicated `mcp-orchestrator`
+- a unified top-level capability orchestrator
+- richer search scripts for repeatable marketplace queries
+- automated source freshness checks
+
+## Contributing
+
+Contributions are most helpful when they improve one of these areas:
+
+- better registered sources in `sources.yaml`
+- clearer decision rules
+- stronger cross-platform adaptation guidance
+- real-world examples of successful skill reuse
+
+When proposing changes, prefer improvements that make the orchestrator more legible and more trustworthy, not just more complex.
+
+## Philosophy In One Sentence
+
+The best skill is often the one you do not have to create, and the best custom skill is one distilled from a workflow that has already proven itself in practice.
