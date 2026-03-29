@@ -18,6 +18,9 @@ The current flagship artifact is a cross-platform `skill-orchestrator` skill. It
 - `skills/barksy_pipeline/`
   A utility-oriented skill for exporting Codex session history to Markdown.
 
+- `skills/ops-doc-maintainer/`
+  A portable ops documentation skill for Linux hosts. It maintains low-noise shared docs for network hotspots, listening ports, Docker, Nginx, SSH, PostgreSQL connection guidance, and manually installed global CLI tools. It is designed to be written once and then installed into Codex, Claude Code, and OpenClaw while sharing one docs directory.
+
 - `skills/web-search.md`
   A lightweight skill note related to web search behavior.
 
@@ -91,6 +94,35 @@ awesome_agent_tools/
 ├── AGENT.md
 ├── skills/
 │   ├── barksy_pipeline/
+│   ├── ops-doc-maintainer/
+│   │   ├── SKILL.md
+│   │   ├── agents/
+│   │   │   └── openai.yaml
+│   │   ├── adapters/
+│   │   │   ├── claude-code.md
+│   │   │   └── openclaw.md
+│   │   ├── references/
+│   │   │   ├── collection-rules.md
+│   │   │   ├── doc-layout.md
+│   │   │   ├── safety-and-boundaries.md
+│   │   │   └── software-detection-rules.md
+│   │   ├── scripts/
+│   │   │   ├── collect_network_hotspots.sh
+│   │   │   ├── collect_postgres_hotspots.sh
+│   │   │   ├── collect_service_hotspots.sh
+│   │   │   ├── collect_software_tools.sh
+│   │   │   ├── ops_doc_lib.py
+│   │   │   └── update_ops_docs.py
+│   │   └── assets/
+│   │       └── templates/
+│   │           ├── changes.md
+│   │           ├── host-index.md
+│   │           ├── ignorelist.txt
+│   │           ├── manual-software.txt
+│   │           ├── network.md
+│   │           ├── services.md
+│   │           ├── software.md
+│   │           └── watchlist.txt
 │   ├── skill-orchestrator/
 │   │   ├── SKILL.md
 │   │   ├── agents/
@@ -139,6 +171,31 @@ Example requests:
 - "Search for a Codex-compatible skill for repository archaeology."
 - "I need a cross-platform skill for issue triage. Reuse something existing if possible."
 - "Search skill markets first, then GitHub, then help me create one if nothing is strong enough."
+
+## The `ops-doc-maintainer`
+
+The `ops-doc-maintainer` skill focuses on hotspot-only host documentation rather than full machine inventory. Its default shared docs home is `~/.ops-doc-maintainer-docs/`, with `OPS_DOCS_HOME` available as an override.
+
+### What The Skill Does
+
+Given a Linux host, the skill should:
+
+1. Track only high-signal network and port information.
+2. Summarize Docker, Nginx, and SSH state without dumping raw configs.
+3. Record PostgreSQL connection guidance and config path references rather than database internals.
+4. Record manually installed global executable tools from `apt`, `snap`, `npm`, `pip`, `uv`, `conda`, and a manual-binary list.
+5. Update current-state docs and append only meaningful changes to history.
+
+### Why The Skill Is Cross-Platform
+
+Like `skill-orchestrator`, `ops-doc-maintainer` keeps its core portable:
+
+- runtime-neutral `SKILL.md`
+- reusable scripts
+- references and templates
+- thin adapter notes for Claude Code and OpenClaw
+
+That makes it practical to validate in this repository first and then copy into each assistant's local skill directory without changing the shared docs model.
 
 ## How Discovery Works
 
