@@ -1,5 +1,7 @@
 # Awesome Agent Tools
 
+English | [中文](README.zh-CN.md)
+
 An open repository of reusable agent tooling, with a strong focus on portable skills, practical workflows, and clear design.
 
 This repository is built around a simple idea:
@@ -95,6 +97,9 @@ awesome_agent_tools/
 │   │   ├── SKILL.md
 │   │   ├── agents/
 │   │   │   └── openai.yaml
+│   │   ├── scripts/
+│   │   │   ├── requirements.txt
+│   │   │   └── search_skills.py
 │   │   ├── references/
 │   │   │   ├── adaptation-matrix.md
 │   │   │   ├── decision-rules.md
@@ -105,6 +110,7 @@ awesome_agent_tools/
 │   │       └── templates/
 │   │           ├── candidate-summary.md
 │   │           └── creation-brief.md
+│   │   └── output/ (generated, gitignored)
 │   └── web-search.md
 └── cursor_history_viewer/
 ```
