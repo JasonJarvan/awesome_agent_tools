@@ -12,6 +12,24 @@
 
 当前仓库中的核心产物，是一个跨平台的 `skill-orchestrator`。它帮助智能体先搜索、再比较、再适配，最后才决定是否创建新的 skill。
 
+## Clone 注意事项
+
+`Skills/ops-doc-maintainer/` 是一个 git submodule，指向独立仓库
+[JasonJarvan/ops-doc-maintainer](https://github.com/JasonJarvan/ops-doc-maintainer)。
+普通 `git clone` 完之后，那个目录是空的，需要一并初始化 submodule：
+
+```bash
+git clone --recurse-submodules https://github.com/JasonJarvan/awesome_agent_tools.git
+# 或者已经 clone 完了：
+git submodule update --init --recursive
+```
+
+之后想顺带把 submodule 的上游更新一起拉下来：
+
+```bash
+git pull --recurse-submodules
+```
+
 ## 仓库里有什么
 
 - `Skills/skill-orchestrator/`
@@ -20,7 +38,7 @@
 - `Skills/barksy_pipeline/`
   一个偏工具型的 skill，用于将 Codex 会话历史导出为 Markdown。
 
-- `Skills/ops-doc-maintainer/`
+- `Skills/ops-doc-maintainer/` *（git submodule → [JasonJarvan/ops-doc-maintainer](https://github.com/JasonJarvan/ops-doc-maintainer)）*
   一个跨平台（Linux + Windows）的运维文档维护 skill。每次调用时自动判断平台，分别走 `scripts/linux/` 或 `scripts/windows/` 的实现，共享同一份 docs 目录。
 
 - `Skills/web-search.md`

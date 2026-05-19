@@ -12,6 +12,25 @@ This repository is built around a simple idea:
 
 The current flagship artifact is a cross-platform `skill-orchestrator` skill. It helps an agent decide where to search for an existing skill, how to present candidates to the user, and when to stop searching and create a new skill instead.
 
+## Cloning This Repository
+
+`Skills/ops-doc-maintainer/` is a git submodule pointing to its own
+[standalone repo](https://github.com/JasonJarvan/ops-doc-maintainer).
+A plain `git clone` leaves that directory empty — initialise submodules
+in the same step:
+
+```bash
+git clone --recurse-submodules https://github.com/JasonJarvan/awesome_agent_tools.git
+# or, after a plain clone:
+git submodule update --init --recursive
+```
+
+To pull later upstream changes for the submodule as well:
+
+```bash
+git pull --recurse-submodules
+```
+
 ## What This Repository Contains
 
 - `Skills/skill-orchestrator/`
@@ -20,7 +39,7 @@ The current flagship artifact is a cross-platform `skill-orchestrator` skill. It
 - `Skills/barksy_pipeline/`
   A utility-oriented skill for exporting Codex session history to Markdown.
 
-- `Skills/ops-doc-maintainer/`
+- `Skills/ops-doc-maintainer/` *(git submodule → [JasonJarvan/ops-doc-maintainer](https://github.com/JasonJarvan/ops-doc-maintainer))*
   A cross-platform ops documentation skill (Linux and Windows). Auto-detects the host on every invocation and maintains low-noise shared docs for network hotspots, listening ports, Docker, Nginx/IIS, SSH/WinRM, VPN/proxy state, PostgreSQL connection guidance (Linux only), and manually installed global CLI tools. Designed to be written once and installed into Codex, Claude Code, and OpenClaw while sharing one docs directory.
 
 - `Skills/web-search.md`
