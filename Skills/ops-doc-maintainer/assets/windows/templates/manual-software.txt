@@ -1,5 +1,0 @@
-# Hand-installed tools not tracked by any package manager.
-# One entry per line. Format: name [version] [# notes]
-# Examples:
-# my-cli-tool 1.2.3
-# internal-deploy-helper # from internal repo

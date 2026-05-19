@@ -1,0 +1,3 @@
+[submodule "Skills/ops-doc-maintainer"]
+	path = Skills/ops-doc-maintainer
+	url = https://github.com/JasonJarvan/ops-doc-maintainer.git
