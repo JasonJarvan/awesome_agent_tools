@@ -50,8 +50,8 @@ git pull --recurse-submodules
   - `Skills/Coding/RepoMem/` *(git submodule → [JasonJarvan/RepoMem](https://github.com/JasonJarvan/RepoMem))*
     A persistent memory layer for code repositories and coding agents.
 
-  - `Skills/Coding/HarnessStack/` *(git submodule → [JasonJarvan/HarnessStack](https://github.com/JasonJarvan/HarnessStack))*
-    A harness system for coding agents — long-term and temporary contractor templates plus skill packaging, designed to be embedded into target development repos.
+  - `Skills/Coding/HarnessFactory/` *(git submodule → [JasonJarvan/HarnessFactory](https://github.com/JasonJarvan/HarnessFactory))*
+    A harness system for coding agents — long-term and temporary contractor templates plus skill packaging, designed to be embedded into target development repos. *(formerly `HarnessStack`)*
 
   - `Skills/Coding/cc-sendbox/` *(git submodule → [JasonJarvan/cc-sendbox](https://github.com/JasonJarvan/cc-sendbox))*
     Multi-agent coordination via versioned letters — packaged as a Claude Code skill.
@@ -127,7 +127,7 @@ awesome_agent_tools/
 ├── Skills/
 │   ├── Coding/                               # curated skills for coding agents (all submodules)
 │   │   ├── RepoMem/                          # submodule → JasonJarvan/RepoMem
-│   │   ├── HarnessStack/                     # submodule → JasonJarvan/HarnessStack
+│   │   ├── HarnessFactory/                   # submodule → JasonJarvan/HarnessFactory
 │   │   └── cc-sendbox/                       # submodule → JasonJarvan/cc-sendbox
 │   ├── barksy_pipeline/
 │   ├── ops-doc-maintainer/                   # submodule → JasonJarvan/ops-doc-maintainer (cross-platform)

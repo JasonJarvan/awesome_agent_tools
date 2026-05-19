@@ -49,8 +49,8 @@ git pull --recurse-submodules
   - `Skills/Coding/RepoMem/` *（git submodule → [JasonJarvan/RepoMem](https://github.com/JasonJarvan/RepoMem)）*
     给代码仓库和 coding agent 用的持久化记忆层。
 
-  - `Skills/Coding/HarnessStack/` *（git submodule → [JasonJarvan/HarnessStack](https://github.com/JasonJarvan/HarnessStack)）*
-    coding agent 的 harness 体系：长期 + 临时 contractor 模板与 skill 打包，用于嵌入目标开发仓库。
+  - `Skills/Coding/HarnessFactory/` *（git submodule → [JasonJarvan/HarnessFactory](https://github.com/JasonJarvan/HarnessFactory)）*
+    coding agent 的 harness 体系：长期 + 临时 contractor 模板与 skill 打包，用于嵌入目标开发仓库。*（前身为 `HarnessStack`）*
 
   - `Skills/Coding/cc-sendbox/` *（git submodule → [JasonJarvan/cc-sendbox](https://github.com/JasonJarvan/cc-sendbox)）*
     用带版本号的"信件"做多 agent 协作，打包成 Claude Code skill。
@@ -129,7 +129,7 @@ awesome_agent_tools/
 ├── Skills/
 │   ├── Coding/                               # 面向 coding agent 的 skill（全是 submodule）
 │   │   ├── RepoMem/                          # submodule → JasonJarvan/RepoMem
-│   │   ├── HarnessStack/                     # submodule → JasonJarvan/HarnessStack
+│   │   ├── HarnessFactory/                   # submodule → JasonJarvan/HarnessFactory
 │   │   └── cc-sendbox/                       # submodule → JasonJarvan/cc-sendbox
 │   ├── barksy_pipeline/
 │   ├── ops-doc-maintainer/                   # submodule → JasonJarvan/ops-doc-maintainer（跨平台）
