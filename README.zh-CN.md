@@ -14,9 +14,9 @@
 
 ## Clone 注意事项
 
-`Skills/ops-doc-maintainer/` 是一个 git submodule，指向独立仓库
-[JasonJarvan/ops-doc-maintainer](https://github.com/JasonJarvan/ops-doc-maintainer)。
-普通 `git clone` 完之后，那个目录是空的，需要一并初始化 submodule：
+仓库里有多处 git submodule，指向各自的独立仓库
+（`Skills/ops-doc-maintainer/` 和 `Skills/Coding/` 下的所有条目）。
+普通 `git clone` 完之后，那些目录是空的，需要一并初始化 submodule：
 
 ```bash
 git clone --recurse-submodules https://github.com/JasonJarvan/awesome_agent_tools.git
@@ -43,6 +43,17 @@ git pull --recurse-submodules
 
 - `Skills/web-search.md`
   一个轻量的搜索相关 skill 说明文件。
+
+- `Skills/Coding/` —— 面向 coding agent 的精选 skill，每个都是 git submodule：
+
+  - `Skills/Coding/RepoMem/` *（git submodule → [JasonJarvan/RepoMem](https://github.com/JasonJarvan/RepoMem)）*
+    给代码仓库和 coding agent 用的持久化记忆层。
+
+  - `Skills/Coding/HarnessStack/` *（git submodule → [JasonJarvan/HarnessStack](https://github.com/JasonJarvan/HarnessStack)）*
+    coding agent 的 harness 体系：长期 + 临时 contractor 模板与 skill 打包，用于嵌入目标开发仓库。
+
+  - `Skills/Coding/cc-sendbox/` *（git submodule → [JasonJarvan/cc-sendbox](https://github.com/JasonJarvan/cc-sendbox)）*
+    用带版本号的"信件"做多 agent 协作，打包成 Claude Code skill。
 
 - `Tools/cursor_history_viewer/`
   仓库中已有的智能体或编辑器历史浏览相关项目材料。
@@ -116,8 +127,12 @@ awesome_agent_tools/
 ├── README.zh-CN.md
 ├── AGENT.md
 ├── Skills/
+│   ├── Coding/                               # 面向 coding agent 的 skill（全是 submodule）
+│   │   ├── RepoMem/                          # submodule → JasonJarvan/RepoMem
+│   │   ├── HarnessStack/                     # submodule → JasonJarvan/HarnessStack
+│   │   └── cc-sendbox/                       # submodule → JasonJarvan/cc-sendbox
 │   ├── barksy_pipeline/
-│   ├── ops-doc-maintainer/                   # 跨平台 (Linux + Windows)
+│   ├── ops-doc-maintainer/                   # submodule → JasonJarvan/ops-doc-maintainer（跨平台）
 │   ├── skill-orchestrator/
 │   │   ├── SKILL.md
 │   │   ├── agents/

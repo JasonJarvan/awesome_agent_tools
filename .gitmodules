@@ -1,3 +1,12 @@
 [submodule "Skills/ops-doc-maintainer"]
 	path = Skills/ops-doc-maintainer
 	url = https://github.com/JasonJarvan/ops-doc-maintainer.git
+[submodule "Skills/Coding/RepoMem"]
+	path = Skills/Coding/RepoMem
+	url = https://github.com/JasonJarvan/RepoMem.git
+[submodule "Skills/Coding/HarnessStack"]
+	path = Skills/Coding/HarnessStack
+	url = https://github.com/JasonJarvan/HarnessStack.git
+[submodule "Skills/Coding/cc-sendbox"]
+	path = Skills/Coding/cc-sendbox
+	url = https://github.com/JasonJarvan/cc-sendbox.git

@@ -14,9 +14,9 @@ The current flagship artifact is a cross-platform `skill-orchestrator` skill. It
 
 ## Cloning This Repository
 
-`Skills/ops-doc-maintainer/` is a git submodule pointing to its own
-[standalone repo](https://github.com/JasonJarvan/ops-doc-maintainer).
-A plain `git clone` leaves that directory empty — initialise submodules
+Several entries below are git submodules pointing to their own standalone
+repos (`Skills/ops-doc-maintainer/` and everything under `Skills/Coding/`).
+A plain `git clone` leaves those directories empty — initialise submodules
 in the same step:
 
 ```bash
@@ -44,6 +44,17 @@ git pull --recurse-submodules
 
 - `Skills/web-search.md`
   A lightweight skill note related to web search behavior.
+
+- `Skills/Coding/` — curated skills for coding agents, each a git submodule:
+
+  - `Skills/Coding/RepoMem/` *(git submodule → [JasonJarvan/RepoMem](https://github.com/JasonJarvan/RepoMem))*
+    A persistent memory layer for code repositories and coding agents.
+
+  - `Skills/Coding/HarnessStack/` *(git submodule → [JasonJarvan/HarnessStack](https://github.com/JasonJarvan/HarnessStack))*
+    A harness system for coding agents — long-term and temporary contractor templates plus skill packaging, designed to be embedded into target development repos.
+
+  - `Skills/Coding/cc-sendbox/` *(git submodule → [JasonJarvan/cc-sendbox](https://github.com/JasonJarvan/cc-sendbox))*
+    Multi-agent coordination via versioned letters — packaged as a Claude Code skill.
 
 - `Tools/cursor_history_viewer/`
   Existing project material related to browsing and exporting agent or editor history.
@@ -114,8 +125,12 @@ awesome_agent_tools/
 ├── README.md
 ├── AGENT.md
 ├── Skills/
+│   ├── Coding/                               # curated skills for coding agents (all submodules)
+│   │   ├── RepoMem/                          # submodule → JasonJarvan/RepoMem
+│   │   ├── HarnessStack/                     # submodule → JasonJarvan/HarnessStack
+│   │   └── cc-sendbox/                       # submodule → JasonJarvan/cc-sendbox
 │   ├── barksy_pipeline/
-│   ├── ops-doc-maintainer/                   # cross-platform (Linux + Windows)
+│   ├── ops-doc-maintainer/                   # submodule → JasonJarvan/ops-doc-maintainer (cross-platform)
 │   │   ├── SKILL.md
 │   │   ├── README.md
 │   │   ├── adapters/
