@@ -2,3 +2,4 @@ Skills/skill-orchestrator/output/
 __pycache__/
 *.pyc
 .vscode/
+.claude/
