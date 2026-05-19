@@ -10,3 +10,6 @@
 [submodule "Skills/Coding/HarnessFactory"]
 	path = Skills/Coding/HarnessFactory
 	url = https://github.com/JasonJarvan/HarnessFactory.git
+[submodule "Skills/cc-relocate-project"]
+	path = Skills/cc-relocate-project
+	url = https://github.com/JasonJarvan/cc-relocate-project.git
