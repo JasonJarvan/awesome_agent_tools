@@ -14,19 +14,19 @@ The current flagship artifact is a cross-platform `skill-orchestrator` skill. It
 
 ## What This Repository Contains
 
-- `skills/skill-orchestrator/`
+- `Skills/skill-orchestrator/`
   A portable orchestration skill for discovering, evaluating, adapting, and eventually creating skills across agent ecosystems such as Codex, Claude Code, and OpenClaw.
 
-- `skills/barksy_pipeline/`
+- `Skills/barksy_pipeline/`
   A utility-oriented skill for exporting Codex session history to Markdown.
 
-- `skills/ops-doc-maintainer/`
-  A portable ops documentation skill for Linux hosts. It maintains low-noise shared docs for network hotspots, listening ports, Docker, Nginx, SSH, PostgreSQL connection guidance, and manually installed global CLI tools. It is designed to be written once and then installed into Codex, Claude Code, and OpenClaw while sharing one docs directory.
+- `Skills/ops-doc-maintainer/`
+  A cross-platform ops documentation skill (Linux and Windows). Auto-detects the host on every invocation and maintains low-noise shared docs for network hotspots, listening ports, Docker, Nginx/IIS, SSH/WinRM, VPN/proxy state, PostgreSQL connection guidance (Linux only), and manually installed global CLI tools. Designed to be written once and installed into Codex, Claude Code, and OpenClaw while sharing one docs directory.
 
-- `skills/web-search.md`
+- `Skills/web-search.md`
   A lightweight skill note related to web search behavior.
 
-- `cursor_history_viewer/`
+- `Tools/cursor_history_viewer/`
   Existing project material related to browsing and exporting agent or editor history.
 
 ## Why This Project Exists
@@ -94,37 +94,27 @@ This means the content is reusable even when the packaging is not identical.
 awesome_agent_tools/
 ├── README.md
 ├── AGENT.md
-├── skills/
+├── Skills/
 │   ├── barksy_pipeline/
-│   ├── ops-doc-maintainer/
+│   ├── ops-doc-maintainer/                   # cross-platform (Linux + Windows)
 │   │   ├── SKILL.md
-│   │   ├── agents/
-│   │   │   └── openai.yaml
+│   │   ├── README.md
 │   │   ├── adapters/
-│   │   │   ├── claude-code.md
-│   │   │   └── openclaw.md
+│   │   │   ├── linux/{claude-code.md, openclaw.md}
+│   │   │   └── windows/claude-code.md
+│   │   ├── agents/
+│   │   │   ├── linux/openai.yaml
+│   │   │   └── windows/openai.yaml
+│   │   ├── assets/
+│   │   │   ├── linux/templates/
+│   │   │   └── windows/templates/
 │   │   ├── references/
-│   │   │   ├── collection-rules.md
-│   │   │   ├── doc-layout.md
-│   │   │   ├── safety-and-boundaries.md
-│   │   │   └── software-detection-rules.md
-│   │   ├── scripts/
-│   │   │   ├── collect_network_hotspots.sh
-│   │   │   ├── collect_postgres_hotspots.sh
-│   │   │   ├── collect_service_hotspots.sh
-│   │   │   ├── collect_software_tools.sh
-│   │   │   ├── ops_doc_lib.py
-│   │   │   └── update_ops_docs.py
-│   │   └── assets/
-│   │       └── templates/
-│   │           ├── changes.md
-│   │           ├── host-index.md
-│   │           ├── ignorelist.txt
-│   │           ├── manual-software.txt
-│   │           ├── network.md
-│   │           ├── services.md
-│   │           ├── software.md
-│   │           └── watchlist.txt
+│   │   │   ├── linux/{collection-rules.md, doc-layout.md, safety-and-boundaries.md, software-detection-rules.md}
+│   │   │   └── windows/{collection-rules.md, doc-layout.md, safety-and-boundaries.md, software-detection-rules.md}
+│   │   └── scripts/
+│   │       ├── update_ops_docs.py            # dispatcher: detects OS, delegates
+│   │       ├── linux/{collect_*.sh, ops_doc_lib.py, update_ops_docs.py}
+│   │       └── windows/{win_ops_doc_lib.py, update_ops_docs.py}
 │   ├── skill-orchestrator/
 │   │   ├── SKILL.md
 │   │   ├── agents/
@@ -144,7 +134,8 @@ awesome_agent_tools/
 │   │           └── creation-brief.md
 │   │   └── output/ (generated, gitignored)
 │   └── web-search.md
-└── cursor_history_viewer/
+└── Tools/
+    └── cursor_history_viewer/
 ```
 
 ## How To Use The Skill
@@ -162,12 +153,12 @@ Typical usage pattern:
 If you want a repeatable, half-automated search outside the agent runtime, use the included script:
 
 ```bash
-cd skills/skill-orchestrator/scripts
+cd Skills/skill-orchestrator/scripts
 python -m pip install -r requirements.txt
 python search_skills.py "documentation co-authoring skill for Claude Code" --ecosystem claude_code
 ```
 
-The script writes both Markdown and JSON outputs into `skills/skill-orchestrator/output/`.
+The script writes both Markdown and JSON outputs into `Skills/skill-orchestrator/output/`.
 When no strong candidate exists, or when you may still prefer a custom solution, the output also includes a structured creation brief that can seed a new skill.
 For web-based source lookups, the script uses retries and fallback providers so occasional search-engine failures degrade gracefully into source notes instead of breaking the whole run.
 
@@ -215,7 +206,7 @@ The first version focuses on skill discovery, not MCP orchestration. The main so
 - GitHub
 - other skill directories or ecosystem-specific registries
 
-All registered sources live in [`skills/skill-orchestrator/references/sources.yaml`](skills/skill-orchestrator/references/sources.yaml), which is designed to be easy to edit as the ecosystem changes.
+All registered sources live in [`Skills/skill-orchestrator/references/sources.yaml`](Skills/skill-orchestrator/references/sources.yaml), which is designed to be easy to edit as the ecosystem changes.
 
 ### Priority Model
 
@@ -243,22 +234,22 @@ This keeps decision-making fast and humane.
 
 The skill is documented as a small system rather than a single prompt file.
 
-- [`SKILL.md`](skills/skill-orchestrator/SKILL.md)
+- [`SKILL.md`](Skills/skill-orchestrator/SKILL.md)
   The portable operating manual for the orchestrator.
 
-- [`sources.yaml`](skills/skill-orchestrator/references/sources.yaml)
+- [`sources.yaml`](Skills/skill-orchestrator/references/sources.yaml)
   Editable registry of search sources, grouped by source type, agent ecosystem, and priority tier.
 
-- [`decision-rules.md`](skills/skill-orchestrator/references/decision-rules.md)
+- [`decision-rules.md`](Skills/skill-orchestrator/references/decision-rules.md)
   Routing, scoring, stopping rules, and candidate-count logic.
 
-- [`result-schema.md`](skills/skill-orchestrator/references/result-schema.md)
+- [`result-schema.md`](Skills/skill-orchestrator/references/result-schema.md)
   Defines exactly what information should be returned to help a user choose.
 
-- [`adaptation-matrix.md`](skills/skill-orchestrator/references/adaptation-matrix.md)
+- [`adaptation-matrix.md`](Skills/skill-orchestrator/references/adaptation-matrix.md)
   Describes how skills can be adapted between Codex, Claude Code, and OpenClaw.
 
-- [`search-playbook.md`](skills/skill-orchestrator/references/search-playbook.md)
+- [`search-playbook.md`](Skills/skill-orchestrator/references/search-playbook.md)
   Concrete execution guidance for searching well and escalating carefully.
 
 ## Why The README Is Detailed

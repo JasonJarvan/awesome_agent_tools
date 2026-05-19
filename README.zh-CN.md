@@ -14,16 +14,19 @@
 
 ## 仓库里有什么
 
-- `skills/skill-orchestrator/`
+- `Skills/skill-orchestrator/`
   一个可跨平台复用的编排型 skill，用来在 Codex、Claude Code、OpenClaw 等生态里发现、评估、适配和创建 skill。
 
-- `skills/barksy_pipeline/`
+- `Skills/barksy_pipeline/`
   一个偏工具型的 skill，用于将 Codex 会话历史导出为 Markdown。
 
-- `skills/web-search.md`
+- `Skills/ops-doc-maintainer/`
+  一个跨平台（Linux + Windows）的运维文档维护 skill。每次调用时自动判断平台，分别走 `scripts/linux/` 或 `scripts/windows/` 的实现，共享同一份 docs 目录。
+
+- `Skills/web-search.md`
   一个轻量的搜索相关 skill 说明文件。
 
-- `cursor_history_viewer/`
+- `Tools/cursor_history_viewer/`
   仓库中已有的智能体或编辑器历史浏览相关项目材料。
 
 ## 为什么要做这个项目
@@ -94,8 +97,9 @@ awesome_agent_tools/
 ├── README.md
 ├── README.zh-CN.md
 ├── AGENT.md
-├── skills/
+├── Skills/
 │   ├── barksy_pipeline/
+│   ├── ops-doc-maintainer/                   # 跨平台 (Linux + Windows)
 │   ├── skill-orchestrator/
 │   │   ├── SKILL.md
 │   │   ├── agents/
@@ -115,7 +119,8 @@ awesome_agent_tools/
 │   │   │       └── creation-brief.md
 │   │   └── output/ (运行生成，已加入 gitignore)
 │   └── web-search.md
-└── cursor_history_viewer/
+└── Tools/
+    └── cursor_history_viewer/
 ```
 
 ## 如何使用这个 skill
@@ -133,12 +138,12 @@ awesome_agent_tools/
 如果你想在智能体运行时之外做一轮可重复的“半自动搜索”，可以直接运行附带脚本：
 
 ```bash
-cd skills/skill-orchestrator/scripts
+cd Skills/skill-orchestrator/scripts
 python -m pip install -r requirements.txt
 python search_skills.py "documentation co-authoring skill for Claude Code" --ecosystem claude_code
 ```
 
-脚本会把 Markdown 和 JSON 输出写入 `skills/skill-orchestrator/output/`。
+脚本会把 Markdown 和 JSON 输出写入 `Skills/skill-orchestrator/output/`。
 
 当没有找到足够强的候选，或者你虽然找到了候选但仍然更倾向于自建时，输出里还会包含一个结构化的 `creation brief`，可以直接作为创建新 skill 的起点。
 
@@ -163,7 +168,7 @@ python search_skills.py "documentation co-authoring skill for Claude Code" --eco
 - GitHub
 - 其他 skill 目录、社区聚合页或生态注册源
 
-所有已注册源都放在 [`skills/skill-orchestrator/references/sources.yaml`](skills/skill-orchestrator/references/sources.yaml) 里，方便随着生态变化手工维护。
+所有已注册源都放在 [`Skills/skill-orchestrator/references/sources.yaml`](Skills/skill-orchestrator/references/sources.yaml) 里，方便随着生态变化手工维护。
 
 ### 优先级模型
 
@@ -191,22 +196,22 @@ python search_skills.py "documentation co-authoring skill for Claude Code" --eco
 
 这个 skill 不是一个单纯的 prompt 文件，而是一组小而清晰的系统化文档：
 
-- [`SKILL.md`](skills/skill-orchestrator/SKILL.md)
+- [`SKILL.md`](Skills/skill-orchestrator/SKILL.md)
   编排器本身的操作说明。
 
-- [`sources.yaml`](skills/skill-orchestrator/references/sources.yaml)
+- [`sources.yaml`](Skills/skill-orchestrator/references/sources.yaml)
   可编辑的 source registry，按 source type、agent 生态和优先级组织。
 
-- [`decision-rules.md`](skills/skill-orchestrator/references/decision-rules.md)
+- [`decision-rules.md`](Skills/skill-orchestrator/references/decision-rules.md)
   负责路由、评分、停止条件和候选数量规则。
 
-- [`result-schema.md`](skills/skill-orchestrator/references/result-schema.md)
+- [`result-schema.md`](Skills/skill-orchestrator/references/result-schema.md)
   规定返回给用户的候选信息应包含哪些关键字段。
 
-- [`adaptation-matrix.md`](skills/skill-orchestrator/references/adaptation-matrix.md)
+- [`adaptation-matrix.md`](Skills/skill-orchestrator/references/adaptation-matrix.md)
   说明 Codex、Claude Code、OpenClaw 之间如何做适配转换。
 
-- [`search-playbook.md`](skills/skill-orchestrator/references/search-playbook.md)
+- [`search-playbook.md`](Skills/skill-orchestrator/references/search-playbook.md)
   规定搜索时该如何扩展、何时升级搜索范围、如何和用户同步决策边界。
 
 ## 为什么 README 写得这么详细

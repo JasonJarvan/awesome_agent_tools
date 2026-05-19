@@ -1,3 +1,4 @@
-skills/skill-orchestrator/output/
+Skills/skill-orchestrator/output/
 __pycache__/
 *.pyc
+.vscode/

@@ -24,17 +24,17 @@
 
 ```bash
 # 从本仓库根目录运行（输出到当前目录下的 codexhistory/）
-python skills/barksy_pipeline/codexhistory_export.py
+python Skills/barksy_pipeline/codexhistory_export.py
 
 # 或进入 skill 目录后运行（输出到执行时的当前目录下的 codexhistory/）
-cd skills/barksy_pipeline
+cd Skills/barksy_pipeline
 python codexhistory_export.py
 ```
 
 ### 可选参数
 
 ```bash
-python skills/barksy_pipeline/codexhistory_export.py \
+python Skills/barksy_pipeline/codexhistory_export.py \
   --cwd /path/to/project \
   --sessions-dir /path/to/.codex/sessions \
   --output-dir /path/to/project/codexhistory

@@ -15,16 +15,16 @@
 - `AGENT.md`（当前文件）
   - 面向代码助手 / Agent 的“开发约定与架构说明”。
 
-- `skills/`（约定目录，可以后续逐步补充）
+- `Skills/`（约定目录，可以后续逐步补充）
   - 用于存放零散的 AI skills，每个 skill 使用一个**独立子文件夹**。
 
-## `skills/` 目录约定
+## `Skills/` 目录约定
 
 - 目录结构示例：
 
-  - `skills/web-search/`
-  - `skills/sql-helper/`
-  - `skills/refactor-patterns/`
+  - `Skills/web-search/`
+  - `Skills/sql-helper/`
+  - `Skills/refactor-patterns/`
 
 - 约定：
   - **每个 skill 子目录必须包含一个 `README.md`**
@@ -35,7 +35,7 @@
 
 - 对 Agent 的操作建议：
   - 若需要新增一个 skill，请：
-    1. 在 `skills/` 下创建新的子目录（例如 `skills/my-new-skill/`）。
+    1. 在 `Skills/` 下创建新的子目录（例如 `Skills/my-new-skill/`）。
     2. 在该目录内创建详尽的 `README.md`，按照上述约定说明该 skill。
     3. 再根据需要添加代码文件 / 配置文件。
   - 在未得到用户明确授权前，不要擅自修改其他 skill 子目录中的实现逻辑，可在 README 中追加说明或提出改进建议。
