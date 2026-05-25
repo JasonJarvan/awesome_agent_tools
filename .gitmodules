@@ -13,3 +13,6 @@
 [submodule "Skills/cc-relocate-project"]
 	path = Skills/cc-relocate-project
 	url = https://github.com/JasonJarvan/cc-relocate-project.git
+[submodule "Tools/gstack"]
+	path = Tools/gstack
+	url = https://github.com/garrytan/gstack

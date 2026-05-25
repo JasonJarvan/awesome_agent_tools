@@ -1,0 +1,17 @@
+{
+  "name": "cursor-chat-browser",
+  "version": "1.0.0",
+  "description": "Browse local Cursor AI chat storage from the terminal: pick a workspace folder, then list chat tabs and previews from workspaceStorage SQLite.",
+  "author": {
+    "name": "awesome_agent_tools"
+  },
+  "keywords": [
+    "cursor",
+    "chat",
+    "workspace-storage",
+    "sqlite",
+    "terminal",
+    "history",
+    "export"
+  ]
+}
