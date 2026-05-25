@@ -16,3 +16,6 @@
 [submodule "Tools/gstack"]
 	path = Tools/gstack
 	url = https://github.com/garrytan/gstack
+[submodule "Tools/claude-hud"]
+	path = Tools/claude-hud
+	url = https://github.com/JasonJarvan/claude-hud
