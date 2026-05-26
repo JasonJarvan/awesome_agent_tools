@@ -1,15 +1,6 @@
 [submodule "Skills/ops-doc-maintainer"]
 	path = Skills/ops-doc-maintainer
 	url = https://github.com/JasonJarvan/ops-doc-maintainer.git
-[submodule "Skills/Coding/RepoMem"]
-	path = Skills/Coding/RepoMem
-	url = https://github.com/JasonJarvan/RepoMem.git
-[submodule "Skills/Coding/cc-sendbox"]
-	path = Skills/Coding/cc-sendbox
-	url = https://github.com/JasonJarvan/cc-sendbox.git
-[submodule "Skills/Coding/HarnessFactory"]
-	path = Skills/Coding/HarnessFactory
-	url = https://github.com/JasonJarvan/HarnessFactory.git
 [submodule "Skills/cc-relocate-project"]
 	path = Skills/cc-relocate-project
 	url = https://github.com/JasonJarvan/cc-relocate-project.git
@@ -19,6 +10,6 @@
 [submodule "Tools/claude-hud"]
 	path = Tools/claude-hud
 	url = https://github.com/JasonJarvan/claude-hud
-[submodule "Skills/Coding/cc-dashboard"]
-	path = Skills/Coding/cc-dashboard
-	url = https://github.com/JasonJarvan/cc-dashboard.git
+[submodule "OpenTeam"]
+	path = OpenTeam
+	url = https://github.com/JasonJarvan/OpenTeam.git
