@@ -10,6 +10,6 @@
 [submodule "Tools/claude-hud"]
 	path = Tools/claude-hud
 	url = https://github.com/JasonJarvan/claude-hud
-[submodule "OpenTeam"]
-	path = OpenTeam
-	url = https://github.com/JasonJarvan/OpenTeam.git
+[submodule "CodeTeam"]
+	path = CodeTeam
+	url = https://github.com/JasonJarvan/CodeTeam.git
