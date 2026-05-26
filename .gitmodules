@@ -19,3 +19,6 @@
 [submodule "Tools/claude-hud"]
 	path = Tools/claude-hud
 	url = https://github.com/JasonJarvan/claude-hud
+[submodule "Skills/Coding/cc-dashboard"]
+	path = Skills/Coding/cc-dashboard
+	url = https://github.com/JasonJarvan/cc-dashboard.git
