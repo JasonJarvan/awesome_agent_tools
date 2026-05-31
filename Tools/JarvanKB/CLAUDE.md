@@ -30,7 +30,7 @@
 5. `using-git-worktrees` + `executing-plans` + **TDD** + `RepoMem.capture` (continuous)
 6. `Superpowers.verification-before-completion` — single gate; tests + evidence required before claiming done
 7. `Superpowers.requesting-code-review` + `finishing-a-development-branch` — both **ask-first**
-8. `RepoMem.merge` (HITL) — promote per-module decisions to global persist when warranted; then `prune` / `split`
+8. `RepoMem.merge` (HITL, **impler owns closure**) — the implementer drives merge to completion within its own task lifecycle (may delegate *execution* to orche, but tracks it to done before reporting); promote per-module decisions to global persist when warranted; then `prune` / `split`
 
 Sendbox letters & dashboard rows are **side-effects** of the steps above, not standalone steps.
 
@@ -39,7 +39,7 @@ Sendbox letters & dashboard rows are **side-effects** of the steps above, not st
 - **Single task identifier.** `<task> = <slug>` — one string across HarnessStack and RepoMem docs.
 - **Add-only.** An active method never deactivates by stealth. Recipe upgrades (e.g. v1→v2 removal of OpenSpec) require a **Full Rewrite** entry in longterm.md.
 - **Single verification gate.** `Superpowers.verification-before-completion` is the only mandatory pre-commit check. RepoMem, sendbox, cc-dashboard have no verification role.
-- **Merge ordering.** `RepoMem.merge` runs strictly AFTER `finishing-a-development-branch`, never before, always HITL.
+- **Merge ordering & ownership.** `RepoMem.merge` runs strictly AFTER `finishing-a-development-branch`, never before, always HITL. **The implementer owns merge closure** — it runs the merge within its own task lifecycle, or delegates *execution* to orche but tracks it to completion before reporting done. Never fire-and-forget to orche.
 - **No content duplication** across per-task document sets (RepoMem temp / HarnessStack `temporary-<task>.md`). HITL reviewer rejects duplicated content.
 - **Sendbox is canonical.** The main agent's `<root>/docs/sendbox/` is the only sendbox. Side cwds write to it by path — never fan out.
 - **Per-task mailbox.** Every parallel non-root session (sub-orche, impler, reviewer, ...) reads/writes to its own task-scoped mailbox `to{Prefix}{Role}/`. A single shared `toImpler/` or `toOrche/` is **forbidden** when ≥2 sessions of that role can run concurrently. Hierarchies supported: Orche → Impler, Orche → SubOrche → Impler.

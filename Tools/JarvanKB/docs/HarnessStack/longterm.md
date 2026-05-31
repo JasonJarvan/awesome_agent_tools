@@ -54,7 +54,7 @@ The 8-step per-task pipeline (compressed view also in `CLAUDE.md` §3):
 
 7. **`Superpowers.requesting-code-review` + `finishing-a-development-branch`** — Both **ask-first**. Reviewer (subagent or user) validates against spec + plan. Finishing produces merge / PR / cleanup decision.
 
-8. **`RepoMem.merge` (HITL)** — Promote `temp/<slug>/` lessons to durable layer. Module-scope decisions stay in `<module>/docs/RepoMem/decisions.md`. Global-scope decisions get promoted to `<root>/docs/RepoMem/persist/memory/` with `[Promoted to global ↗]` marker in module decisions. Any `from-<x>-promote-to-durable.md` letter lands here. Then `prune/split` per RepoMem hygiene.
+8. **`RepoMem.merge` (HITL — implementer owns closure)** — **The implementer closes merge within its OWN task lifecycle**: runs it HITL after `finishing-a-development-branch`, or delegates *execution* to orche but tracks it to completion before reporting done — never fire-and-forget. Impler-handoff briefs MUST state this ownership (never frame Step 8 as "NOT YOUR JOB"); they may name orche as delegated executor, but the impler remains the closer. Promote `temp/<slug>/` lessons to durable layer. Module-scope decisions stay in `<module>/docs/RepoMem/decisions.md`. Global-scope decisions get promoted to `<root>/docs/RepoMem/persist/memory/` with `[Promoted to global ↗]` marker in module decisions. Any `from-<x>-promote-to-durable.md` letter lands here. Then `prune/split` per RepoMem hygiene.
 
 Sendbox letters & dashboard rows are **side-effects** of the steps above, not standalone steps.
 
@@ -101,7 +101,7 @@ This is rare; prefer task-decomposition (different prefixes) over peer multiplic
 - **Single task identifier.** `<task> = <slug>`.
 - **Add-only on methods, with Full Rewrite escape valve.** Methods do not silently deactivate. Recipe migrations require a Full Rewrite entry in this file (as the v1→v2 entry above demonstrates).
 - **Single verification gate.** `Superpowers.verification-before-completion`. No replacements.
-- **Merge ordering.** `RepoMem.merge` AFTER `finishing-a-development-branch`, HITL, never before.
+- **Merge ordering & ownership.** `RepoMem.merge` AFTER `finishing-a-development-branch`, HITL, never before. **The implementer owns merge closure** (runs it within its own lifecycle, or delegates *execution* to orche but tracks to done — never fire-and-forget). Impler-handoff §3.F wording must reflect this.
 - **No content duplication** across per-task doc sets.
 - **One sendbox per project.** `<root>/docs/sendbox/` only. Side cwds write by path.
 - **Per-task mailbox.** Every parallel non-root session reads/writes its own `to{Prefix}{Role}/` mailbox; shared role-only mailboxes forbidden for concurrent roles. See §Local sendbox conventions.
