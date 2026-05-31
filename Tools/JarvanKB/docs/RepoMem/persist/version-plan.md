@@ -25,7 +25,7 @@ Distinct from recipe version: same recipe can span multiple orchestrator session
 |---|---|---|---|
 | g1 | bootstrap-orchestrator | 2026-05-26 → 2026-05-30 | Wrote inheritance `handoff.md` post-Phase-1 doc skeleton; burned in SP-0 closure commit (5c28447) |
 | g2 | Claude Opus 4.7 (this session) | 2026-05-30 → 2026-05-31 | Wrote `g3-handoff.md` post-SP-0 done + SP-1 launched; context heavy with R1–R9 调研 + 7 governance patches, prune-via-inheritance preferred over `/compact` |
-| g3 | TBD by user spawn (see Dashboard UN-011) | 2026-05-31 → | — |
+| g3 | Claude Opus 4.8 (1M context) | 2026-05-31 → | — (active) |
 
 Naming convention: `g{N}-handoff.md` placed in `docs/sendbox/toOrchestrator/` (same box as inbound letters; new orche replaces predecessor, no parallel box). Letter lifecycle: `burn` after inheritor logs first orche-attributable commit (decision letter / Dashboard archive / new SP brainstorming kickoff).
 

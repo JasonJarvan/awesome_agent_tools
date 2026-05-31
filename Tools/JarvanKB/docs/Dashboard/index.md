@@ -51,8 +51,6 @@
 |---|---|---|---|---|---|---|
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
-| UN-011 | B | 当 g2 orche 上下文吃紧或你想换新 session 时，起一个新 Claude Code session（cwd = `Tools/JarvanKB/`，与 SP1Impler 并行），第一句告诉它：`read docs/sendbox/toOrchestrator/g3-handoff.md and inherit JarvanKB orchestration`。g2 session 由你关闭（or 留作 lookup 只读）。非紧急 — 仅在你判断 g2 上下文需要 prune 时触发 | `docs/sendbox/toOrchestrator/g3-handoff.md` | g2 退场 + g3 接管 SP1Impler 反馈链路 | 2026-05-31 | open |
-| UN-012 | D | 给 SP-1 Stage 3 execution 的 greenlight。Stage 1+2 完成（design+plan 已落盘自审），SP-0 done ✅、模块目录已存在。直接在 SP1Impler chat 说"开跑"即给绿灯（等价 orche `from-orche-sp1-greenlight.md`）。给灯后还需选执行模式：subagent-driven（推荐）vs inline | `docs/sendbox/toOrchestrator/from-sp1impler-plan-ready.md` | SP-1 Stage 3 落地（v1 第一个功能子项目） | 2026-05-31 | resolved（greenlit 2026-05-31，subagent-driven 执行中）|
 
 ## Archive
 
@@ -66,3 +64,5 @@
 | UN-009 | 起 SP-1 impler — **done**：SP1Impler 已在跑（Stage 1 wip）；进度跟踪走 `§SP Status Board` SP-1 行，无 user 动作待办 | 2026-05-31 | user + sp1impler |
 | UN-010 | 决定 SP-0 final-sweep residue 处理范围 — **resolved**：orche decisions letter ack D1=A（4 文件改 v2）+ D2=A（AgentCrawl 串延到 UN-005）；sp0impler 已执行（commit `de4af04`） | 2026-05-31 | sp0impler + orche |
 | UN-005 | 物理改名 `Tools/AgentCrawl/` → `Tools/JarvanKB/` — **done**（user 独立 session 执行；D2 deferred AgentCrawl 串改名 orche 跟进于本 commit，仅历史 narrative 文件保留旧名） | 2026-05-31 | user + orche |
+| UN-011 | 起 g3 orche session 继承编排 — **done**：g3（Claude Opus 4.8 1M）已读 g3-handoff、跑完引导检查、接管 SP1Impler 反馈链路；g2 退场；inheritance handoff 已 burn | 2026-05-31 | user + orche g3 |
+| UN-012 | 给 SP-1 Stage 3 greenlight + 选执行模式 — **resolved**：user 在 SP1Impler chat 直接给绿灯 + 选 subagent-driven；orche g3 plan 审阅通过（fork→自写偏离由 CookieCloud GPLv3 发现正当化，保 MIT 干净）。SP1Impler 已进入 Stage 3 | 2026-05-31 | user + orche g3 |
