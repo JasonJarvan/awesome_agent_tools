@@ -585,7 +585,7 @@ cat > CLAUDE.md <<'EOF'
 |---|---|---|---|
 | Execution Discipline | `Superpowers` | **active** | brainstorming, writing-plans, using-git-worktrees, executing-plans, TDD, verification-before-completion, requesting-code-review, finishing-a-development-branch |
 | Repository Memory | `RepoMem` | **active** | persist + temp split; HITL merge runs **after** `finishing-a-development-branch`; **layered** (global `<root>/docs/RepoMem/persist/` + per-module `<module>/docs/RepoMem/`) |
-| Harness Enhancement | `sendbox-protocol` | **active** | `<root>/docs/sendbox/` is single source of truth; subagents in side cwds write to it by path |
+| Harness Enhancement | `sendbox-protocol` | **active** | `<root>/docs/sendbox/` is single source of truth; subagents in side cwds write to it by path. **Per-task mailbox naming**: `to{Prefix}{Role}/` (id-first, role-second; e.g. `toSP0Impler/`, `toZhihuCrawlOrche/`). Root orchestrator special-case: `toOrchestrator/` (no prefix). See `longterm.md §Local sendbox conventions` for the full pattern + CodeTeam#1 |
 | Harness Enhancement | `cc-dashboard` | **active** | `<root>/docs/Dashboard/index.md` projects pending user actions; one letter → N rows; hook config `docs/HarnessStack/hooks/cc-dashboard.md` |
 | Spec | `OpenSpec` | **removed in v2** | See longterm.md §Recipe v1→v2 Migration; if future Skill needs SDK-grade contract versioning, re-introduce per that module only |
 
@@ -610,6 +610,7 @@ Sendbox letters & dashboard rows are **side-effects** of the steps above, not st
 - **Merge ordering.** `RepoMem.merge` runs strictly AFTER `finishing-a-development-branch`, never before, always HITL.
 - **No content duplication** across per-task document sets (RepoMem temp / HarnessStack `temporary-<task>.md`). HITL reviewer rejects duplicated content.
 - **Sendbox is canonical.** The main agent's `<root>/docs/sendbox/` is the only sendbox. Side cwds write to it by path — never fan out.
+- **Per-task mailbox.** Every parallel non-root session (sub-orche, impler, reviewer, ...) reads/writes to its own task-scoped mailbox `to{Prefix}{Role}/`. A single shared `toImpler/` or `toOrche/` is **forbidden** when ≥2 sessions of that role can run concurrently. Hierarchies supported: Orche → Impler, Orche → SubOrche → Impler.
 - **Layered RepoMem.** Subagent in `<module>/` cwd reads two layers (global persist + module memory) on `RepoMem.read`. Writes go to module unless the decision is global-scope, in which case HITL merge promotes it.
 - **One letter → N dashboard rows.** Each atomic user action emits its own row.
 - **Sendbox & dashboard lifecycles independent.** Burning a letter does NOT cascade-delete rows; marking a row done does NOT trigger letter cleanup.
@@ -632,7 +633,8 @@ Sendbox letters & dashboard rows are **side-effects** of the steps above, not st
 | Per-module brainstorming design | `<module>/docs/superpowers/specs/` |
 | Cross-module implementation plan | `docs/superpowers/plans/` |
 | Per-module implementation plan | `<module>/docs/superpowers/plans/` |
-| Sendbox letters | `docs/sendbox/to<Role>/` |
+| Sendbox letters (root orche inbox) | `docs/sendbox/toOrchestrator/` |
+| Sendbox letters (per-task mailbox pattern) | `docs/sendbox/to{Prefix}{Role}/` — e.g. `toSP0Impler/`, `toZhihuCrawlOrche/`, `toZhihuCrawlImpler/` |
 | Caller-agent contract for using JarvanKB tools | `docs/sendbox/toAgent/handoff.md` (persist-lifecycle) |
 | Project README (human-facing) | `README.md` |
 | Top-level layout reference | `docs/superpowers/specs/2026-05-31-SP-0-jarvankb-skeleton-design.md` |
@@ -756,6 +758,40 @@ Sendbox letters & dashboard rows are **side-effects** of the steps above, not st
 
 ---
 
+## Local sendbox conventions (JarvanKB)
+
+In addition to the upstream cc-sendbox protocol (`~/.claude/skills/sendbox-protocol/SKILL.md`), JarvanKB enforces the following project-local conventions. These augment the upstream "roles over sessions" principle and are tracked upstream in CodeTeam#1.
+
+### Mailbox naming pattern
+
+**`docs/sendbox/to{Prefix}{Role}/`**
+
+- **`{Prefix}`** = a stable task-scope id, capitalized PascalCase. Examples: `SP0`, `SP1`, `ZhihuCrawl`, `BilibiliWatcher`, `CookieManager`. The prefix is omitted **only** for the singleton root orchestrator role (`toOrchestrator/`), preserving the cc-sendbox v0.2.1 legacy.
+- **`{Role}`** = the function of the session that reads this box. Canonical roles: `Orche`, `SubOrche`, `Impler`, `Reviewer`, `Author`. New roles MAY be coined per project need; document them where they first appear.
+
+### Supported hierarchies
+
+```
+Root Orche ──(handoff)──> Impler                     # e.g. toOrchestrator → toSP0Impler
+Root Orche ──(handoff)──> SubOrche ──> Impler        # e.g. toOrchestrator → toZhihuCrawlOrche → toZhihuCrawlImpler
+Root Orche ──(handoff)──> SubOrche ──> SubOrche → …  # deeper nesting allowed; same naming pattern
+```
+
+The convergence letter from a child session always lands in the **parent's** mailbox, named `from-<child-id-lower>-<topic>.md` (e.g. `from-sp0impler-sp0-done.md`).
+
+### Multiple peers of the same role
+
+If two implers report to the same orchestrator on the same task, append a numeric discriminator:
+- `toSP0Impler1/`, `toSP0Impler2/`
+
+This is rare; prefer task-decomposition (different prefixes) over peer multiplication.
+
+### Hard invariant
+
+**A single shared `toImpler/` or `toOrche/` (no prefix on a non-root role) is forbidden** whenever ≥2 sessions of that role can run concurrently. This was the failure mode that motivated the convention (see CodeTeam#1).
+
+---
+
 ## Hard Invariants (v2)
 
 (See `CLAUDE.md` §4 for the compressed version. Both must stay in sync.)
@@ -766,6 +802,7 @@ Sendbox letters & dashboard rows are **side-effects** of the steps above, not st
 - **Merge ordering.** `RepoMem.merge` AFTER `finishing-a-development-branch`, HITL, never before.
 - **No content duplication** across per-task doc sets.
 - **One sendbox per project.** `<root>/docs/sendbox/` only. Side cwds write by path.
+- **Per-task mailbox.** Every parallel non-root session reads/writes its own `to{Prefix}{Role}/` mailbox; shared role-only mailboxes forbidden for concurrent roles. See §Local sendbox conventions.
 - **Layered RepoMem.** Module reads two layers, writes one; HITL promotes module → global.
 - **One letter → N dashboard rows.** Independent lifecycles.
 - **No silent invariant skips.** Pipeline ordering, merge gates, verification topology are recipe invariants. Exceptions require a declared `Recipe Invariant Exception` in the relevant `temporary-<slug>.md` with reason + compensating action.
