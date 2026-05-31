@@ -51,9 +51,9 @@
 |---|---|---|---|---|---|---|
 | UN-005 | B | 在独立 session 中执行物理改名：`mv Tools/AgentCrawl Tools/JarvanKB`，确认 git mv 路径无丢失，commit | `docs/superpowers/specs/2026-05-31-SP-0-jarvankb-skeleton-design.md` §2 | SP-1 brainstorming 启动（路径稳定后） | 2026-05-31 | open |
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
-| UN-007 | B | 起一个独立 Claude Code session（cwd = `Tools/AgentCrawl/`），第一句话告诉它：`read docs/sendbox/toSP0Impler/handoff.md and execute the plan it references`。等它在 `docs/sendbox/toOrchestrator/` 写出 `from-sp0impler-sp0-done.md` 或 blocker letter 后告知 orche | `docs/sendbox/toSP0Impler/handoff.md` | SP-1 brainstorming 启动 | 2026-05-31 | open（impler 完成 SP-0 即可归档）|
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
 | UN-009 | B | 起一个独立 Claude Code session（cwd = `Tools/AgentCrawl/`，与 SP-0 impler 并行），第一句话告诉它：`read docs/sendbox/toSP1Impler/handoff.md and execute the pipeline it references`。它会做 brainstorming + design + writing-plans 三 stage（与 SP-0 并行），Stage 3 执行会自动等 SP-0 完成 | `docs/sendbox/toSP1Impler/handoff.md` | SP-1 落地（v1 第一个功能子项目） | 2026-05-31 | open |
+
 ## Archive
 
 | ID | Action | Done | By |
@@ -62,4 +62,5 @@
 | UN-002 | 把 handoff 带到 `~/Codes/AgentCrawlers/` 起 ruflo 会话 — **obsoleted**：2026-05-30 决定继续在当前 repo 开发，迁移取消 | 2026-05-30 | bootstrap session |
 | UN-003 | 起新 orchestrator 会话，按 handoff §7 执行 — **completed**：scope 扩展到 10 子项目，SP-0 design + plan 已落盘 | 2026-05-31 | orche session 2 |
 | UN-004 | 确认已开通阿里云 AK/SK + Tingwu + OSS bucket — **obsoleted**：R5 (2026-05-31) 决定切换 BN+bcut，v1 不再依赖 Aliyun 凭据 | 2026-05-31 | orche session 2 |
+| UN-007 | 起 SP-0 impler — **done**：SP-0 完整落地（tag `sp0-complete` at `5c28447`）；handoff chain 已 burn | 2026-05-31 | sp0impler |
 | UN-010 | 决定 SP-0 final-sweep residue 处理范围 — **resolved**：orche decisions letter ack D1=A（4 文件改 v2）+ D2=A（AgentCrawl 串延到 UN-005）；sp0impler 已执行（commit `de4af04`） | 2026-05-31 | sp0impler + orche |
