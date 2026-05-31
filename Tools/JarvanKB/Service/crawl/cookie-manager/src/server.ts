@@ -15,7 +15,11 @@ export function createServer(store: Store, bus: EventEmitter, opts: ServerOption
 
   app.post('/update', (req, res) => {
     const { uuid, encrypted } = req.body ?? {};
-    const crypto_type: CryptoType = (req.body?.crypto_type as CryptoType) ?? 'legacy';
+    const rawCryptoType = req.body?.crypto_type;
+    if (rawCryptoType != null && rawCryptoType !== 'legacy' && rawCryptoType !== 'aes-128-cbc-fixed') {
+      res.status(400).send('Bad Request'); return;
+    }
+    const crypto_type: CryptoType = (rawCryptoType as CryptoType) ?? 'legacy';
     if (!uuid || !encrypted) { res.status(400).send('Bad Request'); return; }
     try {
       store.save(uuid, { encrypted, crypto_type });

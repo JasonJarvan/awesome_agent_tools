@@ -24,4 +24,5 @@ reverse proxy; do not expose the port to the public internet.**
 ## Hooks
 Triggers: `cookie-update` (T1), `cron` (T2). Actions: `exec` (A1), `write_file` (A3).
 Template vars: `{{uuid}} {{domain}} {{cookie_json}} {{encrypted}} {{crypto_type}} {{update_time}} {{ts}}`.
+`{{cookie_json}}` is the matched domain's cookie array when `match.domain` is set; otherwise the full `cookie_data` map (domain → cookies).
 See `config/cookie-manager.example.yaml`.

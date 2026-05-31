@@ -61,6 +61,20 @@ describe('INDEPENDENT oracle: crypto-js legacy output decodes under node:crypto 
   });
 });
 
+describe('INDEPENDENT oracle: node:crypto aes-128-cbc-fixed', () => {
+  function nodeDecryptFixed(theKey: string, b64: string): string {
+    const key = Buffer.from(theKey, 'utf8');            // 16 ASCII bytes of the hex key
+    const iv = Buffer.alloc(16, 0);                     // 16 zero bytes
+    const d = crypto.createDecipheriv('aes-128-cbc', key, iv);
+    return Buffer.concat([d.update(Buffer.from(b64, 'base64')), d.final()]).toString('utf8');
+  }
+
+  it('a crypto-js aes-128-cbc-fixed blob decrypts via node:crypto aes-128-cbc with zero IV', () => {
+    const enc = cookieEncrypt('u', sample, 'pw', 'aes-128-cbc-fixed');
+    expect(JSON.parse(nodeDecryptFixed(deriveKey('u', 'pw'), enc))).toEqual(sample);
+  });
+});
+
 describe('decrypt failure', () => {
   it('throws on wrong password', () => {
     const enc = cookieEncrypt('u', sample, 'pw', 'legacy');
