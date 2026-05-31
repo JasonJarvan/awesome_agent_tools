@@ -45,7 +45,17 @@ A1 exec + A3 write_file), CLI (list/show/dump), Docker compose, MIT.
   (handoff §1 assumed MIT). Fork would impose copyleft; self-write keeps MIT + full control.
 - D2 dual crypto mode; D3 flat YAML hooks; D4 TypeScript; D5/D6 accounts=passphrase-only, single-box (schema supports N).
 
-## For your Step 8 (RepoMem.merge, HITL)
+## Step 8 (RepoMem.merge) — UPDATE: EXECUTED by sp1impler (2026-05-31, HITL-approved by user)
+
+Per the user's explicit instruction, the impler drove RepoMem.merge to completion within its own
+lifecycle (rather than leaving it as an orche TODO). Done: **activated the reserved `credentials` domain**
+(`docs/RepoMem/persist/architecture/credentials.md` + domain map flipped to 活跃); promoted the GPLv3/path-B
+decision + the "reimplement-protocol-over-fork" pattern + the downstream protocol-contract pointer. Module
+implementation details (crypto modes, YAML hooks, TS, accounts) were NOT promoted (stay module-local).
+`temp/sp1-cookie-manager/research.md` retained (not pruned). **Orche: no need to redo; prune/split at
+your discretion.** Original promotion candidates (now done) below for reference.
+
+## For your Step 8 (RepoMem.merge, HITL) — original candidates (now executed above)
 
 - **Candidate for global promotion:** the GPLv3 finding + the "reimplement-the-protocol over fork" pattern,
   since SP-2/SP-3/SP-4b/SP-5a/SP-5b all reference SP-1's protocol contract. Module decisions.md flags it.

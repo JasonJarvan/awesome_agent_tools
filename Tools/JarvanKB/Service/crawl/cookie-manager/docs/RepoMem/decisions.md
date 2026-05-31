@@ -42,9 +42,9 @@ compatibility is guaranteed by reusing the same `crypto-js` package the official
 **Revisit when:** upstream relicenses to a permissive license AND ships an extensible hook/WebUI
 surface — then re-evaluate fork vs maintain.
 
-**Candidate for global promotion:** the GPLv3 finding + "reimplement-the-protocol over fork" pattern
-may be worth promoting to global persist (HITL merge decides), since other cookie-dependent modules
-reference SP-1's protocol contract.
+**[Promoted to global ↗]** the GPLv3 finding + the "reimplement-the-protocol over fork" pattern + the
+downstream protocol-contract pointer were promoted to `<root>/docs/RepoMem/persist/architecture/credentials.md`
+(RepoMem.merge, 2026-05-31, HITL-approved by user; the reserved `credentials` domain was activated).
 
 ## 2026-05-31 — sp1-cookie-manager — dual crypto mode (legacy + aes-128-cbc-fixed)
 
