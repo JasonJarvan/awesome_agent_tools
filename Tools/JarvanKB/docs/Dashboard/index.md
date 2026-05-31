@@ -51,6 +51,7 @@
 |---|---|---|---|---|---|---|
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
+| UN-013 | B | cookie-manager 公网暴露：①把 `docs/sendbox/toFRPS/handoff.md` 交给 frps(101.35.46.114) 上的 AI 改 allowPorts 放行 48088/48xxx；②本机起服务(48088) + `sudo systemctl restart frpc`；③`journalctl -u frpc` 验证（"port not allowed" 则按 frps AI 回复换 remotePort）；④把回复转回本 session | `docs/sendbox/toFRPS/handoff.md` | cookie-manager 公网可达（蜂窝网下扩展 push） | 2026-05-31 | open |
 
 ## Archive
 
