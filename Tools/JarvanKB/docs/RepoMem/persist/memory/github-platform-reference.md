@@ -1,12 +1,17 @@
 ---
 language: zh
 audience: H2A
+lifecycle: ephemeral-persist
+burn_when: UN-006 resolved AND v1.0 OSS release executed (whichever later)
 ---
 
 # GitHub 平台概念参考 — v1.0 OSS 释出决策用
 
 > **用途**：当 JarvanKB v1.0 OSS release 临近时（Dashboard UN-006 触发），决定"代码托管在哪个 namespace + 是否要 Organization + 付费层级"用的参考。
 > **场景**：user 偶读；orche/agent 一般不需要这层平台知识。
+>
+> **Lifecycle**：`ephemeral-persist` —— 一次性参考文档，与常规 persist memory 不同。**Burn 条件**：UN-006 已 archive **且** v1.0 OSS release 已实际执行（Org 已建好、子 repo 已 push 到位）。两条件全满足后此文件失去价值，由当时的 orche `git rm` 并在 commit message 标注 "burn per file's lifecycle clause"。
+> **Why not persist forever**：GitHub 平台政策（免费层限额、Org 创建流程、API quotas）变化快；保留过期信息会误导未来读者。一次性消费完即 burn 比让它"陈旧 persist"更安全。
 
 ## 三层概念（GitHub 平台）
 
