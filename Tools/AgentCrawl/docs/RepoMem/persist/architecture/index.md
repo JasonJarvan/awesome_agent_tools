@@ -5,7 +5,7 @@
 | Domain | 状态 | 文件 | 覆盖范围 |
 |---|---|---|---|
 | `crawl-pipeline` | **活跃** | `crawl-pipeline.md` | 知乎/B站抓取、字幕优先、yt-dlp 抽音、OSS、听悟链路、模块边界 |
-| `harness` | 预留 | — | HarnessStack / RepoMem / OpenSpec 自身演进的架构记忆 |
+| `harness` | 预留 | — | HarnessStack / RepoMem 自身演进的架构记忆 |
 | `credentials` | 预留 | — | cookie / SESSDATA / 阿里云 AK / OSS 凭据生命周期与刷新逻辑 |
 | `asr-summary` | 预留 | — | 听悟 / Paraformer / 本地 SenseVoice 切换策略，与 `crawl-pipeline` 解耦 |
 

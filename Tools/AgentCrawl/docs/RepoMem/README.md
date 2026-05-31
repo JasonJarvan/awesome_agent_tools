@@ -1,7 +1,7 @@
 # RepoMem — AgentCrawl
 
 Repository memory under the `RepoMem` layer of HarnessStack recipe
-`openspec-superpowers-repomem-sendbox-dashboard`.
+`superpowers-repomem-sendbox-dashboard` (v2).
 
 For authoritative layout and rules, read `~/.claude/skills/repo-mem/references/`.
 
@@ -16,23 +16,24 @@ docs/RepoMem/
 │   │   ├── index.md            # domain map
 │   │   └── crawl-pipeline.md   # current single active domain
 │   └── memory/
-│       ├── index.md            # memory map; boundary vs OpenSpec
+│       ├── index.md            # memory map; boundary vs superpowers writing-plans
 │       ├── runbook.md          # ops / credentials / cost reference
 │       └── pre-openspec-decisions.md   # FROZEN legacy (D1–D7)
 └── temp/<slug>/                # task-scoped, RepoMem.capture / merge
 ```
 
-## Boundary vs OpenSpec
+Layered v2: per-module memory also lives under `<module>/docs/RepoMem/{architecture,decisions}.md` + `temp/<slug>/`.
 
-- **OpenSpec change docs** (`docs/openspec/changes/<change-id>/`) own per-change contracts going forward
-- `memory/` only accepts: operational knowledge (runbook), pre-OpenSpec legacy, or distilled-lessons promoted at `RepoMem.merge` time
-- `RepoMem.merge` rejects content that duplicates an archived OpenSpec change
+## Boundary vs Superpowers writing-plans
 
-## Pipeline touch points
+- **Superpowers writing-plans** outputs (`docs/superpowers/plans/`) own the per-task implementation contract; **RepoMem `temp/<slug>/`** holds task-scoped requirements / architecture / decisions docs
+- `memory/` only accepts: operational knowledge (runbook), the frozen `pre-openspec-decisions.md` legacy, or distilled-lessons promoted at `RepoMem.merge` time
+- `RepoMem.merge` rejects content that duplicates a per-task plan/spec record
+
+## Pipeline touch points (v2)
 
 | Step | Action |
 |---|---|
-| 1 | `RepoMem.read` loads `persist/` |
-| 4 / 7 | `RepoMem.capture` writes `temp/<slug>/{requirements,architecture,memory}.md` |
-| 12 | `RepoMem.merge` (HITL) promotes from `temp/<slug>/` to `persist/` — after `OpenSpec.archive` |
-| 13 | `RepoMem.prune / split` periodic hygiene |
+| 1 | `RepoMem.read` loads `persist/` + per-module `<module>/docs/RepoMem/` (two layers) |
+| 3 / 5 | `RepoMem.capture` writes `temp/<slug>/{requirements,architecture,decisions}.md` (continuous) |
+| 8 | `RepoMem.merge` (HITL) promotes from `temp/<slug>/` to `persist/` — after `finishing-a-development-branch`; then `prune / split` |

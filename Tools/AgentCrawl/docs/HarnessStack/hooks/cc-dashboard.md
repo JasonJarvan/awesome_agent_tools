@@ -12,7 +12,6 @@ authority: HarnessStack longterm.md §Hooks; cc-dashboard skill SKILL.md
 Maintain `docs/Dashboard/index.md` as **single source of truth for pending user actions** in this repo, projected out of:
 
 - sendbox letters under `docs/sendbox/`
-- OpenSpec proposal / archive HITL acks (once `docs/openspec/` exists)
 - any session identifying a user-blocking action with no sendbox doc
 
 The hook codifies repo-specific choices for this repo only. The portable protocol contract lives in `~/.claude/skills/cc-dashboard/SKILL.md`.
@@ -53,12 +52,12 @@ The hook codifies repo-specific choices for this repo only. The portable protoco
 
 | Code | Type | AgentCrawl 场景举例 |
 |---|---|---|
-| **A** | Decision / Approve | 批准 OpenSpec proposal；选凭据策略；决定要不要装 OpenSpec CLI |
+| **A** | Decision / Approve | 批准 design / plan；选凭据策略；review HITL ack |
 | **B** | Start session | 启 Phase 2 implementer session 写 `bilibili_audio.py` |
 | **C** | Review / Merge | review PR；走 verify；合并 branch |
 | **D** | Read + Triage | 读调研报告决定下一步范围 |
 | **E** | Destructive ops | 用户手动做 `git push --force` / `rm -rf .worktrees/<task>` |
-| **F** | Ops / Admin | `npm install -g @fission-ai/openspec`；阿里云 OSS 桶创建；token 轮换 |
+| **F** | Ops / Admin | 阿里云 OSS 桶创建；依赖安装（pip/npm）；token 轮换 |
 
 如果一个待办不属于 A–F 任何一项，**先质疑是否真的 user-blocking**。
 
@@ -68,8 +67,6 @@ The hook codifies repo-specific choices for this repo only. The portable protoco
 |---|---|---|
 | 写 `docs/sendbox/toUser/*.md` | 1..N（每个 atomic ask 一行） | A / C / D |
 | 写 `docs/sendbox/to<Implementer>/handoff.md` | ≥1（至少 "Start <Implementer> session"） | B |
-| OpenSpec proposal 待 user review | 1 | A |
-| OpenSpec change 待 archive 的 HITL ack | 1 | C |
 | 发现 user-blocking 动作但没有 sendbox 信件（如外部 MR 待合并、凭据过期） | 1 | C / D / F |
 
 **铁律**：1 letter → N rows，绝不 collapse 成 1 letter → 1 row。
@@ -120,7 +117,7 @@ cc-dashboard 与 sendbox-protocol **lifecycle 独立**：
 本 hook **不得**：
 
 - 改任何 pipeline 步骤顺序 / merge gates / verification topology
-- 成为 L2 work unit / OpenSpec change record / RepoMem persist content 的真相源
+- 成为 L2 work unit / RepoMem persist content 的真相源
 - 级联删除 / 修改 upstream sendbox 信件
 - 替代 tracker 工具（Linear / Multica）
 
@@ -130,6 +127,4 @@ cc-dashboard 与 sendbox-protocol **lifecycle 独立**：
 
 Day-One Init §5–6 要求：seed 完 `docs/Dashboard/index.md` 后扫已存在的 sendbox 信件 / handoff / 外部 tracker，把**已完成**动作直接放 `Archive`（不要塞 `Active`）。
 
-当前 AgentCrawl 仓库**没有任何历史已完成动作**（Phase 1 刚收尾，sendbox 只一个 placeholder `handoff.md`）→ 初始 dashboard 两表都是空的。
-
-正在等待的当前唯一 user-blocking 项是 `npm install -g @fission-ai/openspec`（type F），会作为 UN-001 落地。
+JarvanKB v2 状态下，初始 dashboard 由 SP-0 落地，Seed Backfill 已发生（UN-001..004 in Archive，UN-005+ in Active）。新 hook 部署到其他 repo 时按 cc-dashboard SKILL.md §Day-One Init 执行 seed。
