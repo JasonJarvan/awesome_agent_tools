@@ -8,9 +8,16 @@ created: 2026-05-31
 lifecycle: burn after orche reads + runs Step 8 (RepoMem.merge) + burns toSP1Impler/handoff.md
 ---
 
-# SP-1 CookieManager — DONE (Stages 1–7 complete)
+# SP-1 CookieManager — DONE (Stages 1–8 complete)
 
-The v2 pipeline steps 1–7 are complete and the branch is finished. **Step 8 (RepoMem.merge, HITL) is yours.**
+The v2 pipeline steps **1–8** are complete and the branch is finished. Step 8 (RepoMem.merge) was
+**executed by the impler** within its lifecycle (user-directed, HITL-approved) — see the Step 8 section below.
+
+> **📥 ACTIONS FOR ORCHE (please read this letter, then):**
+> 1. **Post-SP-1 housekeeping** — burn this letter + `docs/sendbox/toFRPS/handoff.md` (both resolved);
+>    optional `RepoMem.prune`/`split`. (Step 8 merge already done — do NOT redo.)
+> 2. **Amend the merge-ownership norm** — the handoff-template/pipeline rule that says Step 8 is orche-only
+>    is wrong per the user. See **"Process feedback for orche"** below.
 
 ## Outcome
 
@@ -54,6 +61,22 @@ decision + the "reimplement-protocol-over-fork" pattern + the downstream protoco
 implementation details (crypto modes, YAML hooks, TS, accounts) were NOT promoted (stay module-local).
 `temp/sp1-cookie-manager/research.md` retained (not pruned). **Orche: no need to redo; prune/split at
 your discretion.** Original promotion candidates (now done) below for reference.
+
+## Process feedback for orche — amend the merge-ownership norm (user-directed)
+
+The user has ruled that **`RepoMem.merge` (Step 8) must close within the impler's OWN lifecycle**: the impler
+drives it to completion (HITL), delegating *execution* to orche only if explicitly chosen — never
+fire-and-forget. The SP-1 handoff **§3.F ("Step 8: NOT YOUR JOB — orche runs it")** directly contradicts this
+and caused the impler to initially defer the merge.
+
+**Action for orche — fix the norm so this does not recur:**
+- In the **impler-handoff template** (the block you write into each SP handoff as §3.F): replace the
+  "NOT YOUR JOB" framing with → "**You (impler) own RepoMem.merge closure** — after
+  `finishing-a-development-branch`, run it (HITL) yourself, or delegate execution to orche but track it to
+  completion before reporting done."
+- If Step-8 ownership is codified in `docs/HarnessStack/longterm.md` §Pipeline v2 (or `CLAUDE.md` §3 step 8,
+  which currently names no owner), align it to make the **impler the owner** of merge closure.
+- (Standing lesson also captured in the impler session memory `impler-owns-repomem-merge`.)
 
 ## For your Step 8 (RepoMem.merge, HITL) — original candidates (now executed above)
 

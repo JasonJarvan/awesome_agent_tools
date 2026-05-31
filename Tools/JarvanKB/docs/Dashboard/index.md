@@ -52,6 +52,8 @@
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
 | UN-013 | B | cookie-manager 公网暴露 — **已端到端验证通**（公网 HTTPS push→hook 全链路）。入口：HTTPS `https://www.zhaoricheng.fun:48098`（推荐，Nginx TLS）/ 直连 `http://101.35.46.114:48088`。frps 端无需 allowPorts 改动（默认放行）；frps AI 顺带配了 Nginx SSL 48098→48088。**剩余（例行）**：起正式服务（真实 uuid/password + `docker compose up -d`）+ 扩展服务器地址填 HTTPS 入口 | `docs/sendbox/toFRPS/handoff.md` | — | 2026-05-31 | resolved（隧道已验证；待起正式服务）|
+| UN-014 | B | **orche 读 `from-sp1impler-sp1-done.md`** 并做 SP-1 后处理：burn 该信 + `toFRPS/handoff.md`（均已 resolved）；可选 `RepoMem.prune`/`split`。注意 **Step 8 merge 已由 impler 执行完，勿重做** | `docs/sendbox/toOrchestrator/from-sp1impler-sp1-done.md` | SP-1 sendbox 收尾 | 2026-06-01 | open |
+| UN-015 | D | **orche 修订 merge 归属规范**（见 sp1-done letter §Process feedback）：impler-handoff 模板 §3.F 的 "Step 8 NOT YOUR JOB" 改为"impler 拥有 RepoMem.merge 闭环"；如 longterm.md §Pipeline v2 / CLAUDE.md §3 step 8 有 owner 缺失则补齐。符合用户期望，避免再次混淆 | `docs/sendbox/toOrchestrator/from-sp1impler-sp1-done.md` §Process feedback | 未来 SP impler 一致 owns merge | 2026-06-01 | open |
 
 ## Archive
 
