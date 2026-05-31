@@ -59,6 +59,13 @@
 1. **被动**：配一条 `cookie-update` + `match.domain=<目标站>` 的 hook，触发时 `exec` 调你的刷新脚本 / `write_file` 落地 cookie，供爬虫读取。
 2. **主动**：调 `cookie-manager show domain=<目标站>` 或读 `GET /get/:uuid` 自行解密，按需取 cookie。
 
-## 8. 部署与安全
+## 8. 部署与访问
 
-Docker compose（见根 `README.md`）。协议仅靠 uuid+password 模糊保护——**务必跑在局域网/VPN/反向代理后，勿暴露公网**。
+Docker compose（见根 `README.md`）。本地监听 `127.0.0.1:48088`（JarvanKB 48xxx 端口段）。
+
+**访问入口**（公网经 frp 暴露，已端到端验证通）：
+- 局域网：`http://192.168.31.251:48088`
+- 公网 HTTPS（推荐）：`https://www.zhaoricheng.fun:48098`（Nginx TLS/Let's Encrypt → frps `101.35.46.114` → frpc 代理 `jarvankb-cookie-manager` remotePort 48088 → 本服务）
+- 公网直连 HTTP：`http://101.35.46.114:48088`（无传输层 TLS，优先用 HTTPS）
+
+**安全**：协议仅靠 uuid+password 模糊保护 → 用长随机 uuid + 强密码。cookie 端到端 AES 加密、`/update` 不传密码，payload 即使明文 HTTP 也安全；公网访问**优先 HTTPS 入口**（尤其任何带 password 的 `/get`，否则密码会明文过网）。解密查看（`show`/`dump`）走本机 CLI，勿经公网。
