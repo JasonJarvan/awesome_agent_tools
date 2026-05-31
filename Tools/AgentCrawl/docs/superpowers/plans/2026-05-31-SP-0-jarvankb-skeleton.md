@@ -1116,6 +1116,7 @@ cat > docs/Dashboard/index.md <<'EOF'
 |---|---|---|---|---|---|---|
 | UN-005 | B | 在独立 session 中执行物理改名：`mv Tools/AgentCrawl Tools/JarvanKB`，确认 git mv 路径无丢失，commit | `docs/superpowers/specs/2026-05-31-SP-0-jarvankb-skeleton-design.md` §2 | SP-1 brainstorming 启动（路径稳定后） | 2026-05-31 | open |
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
+| UN-007 | B | 起一个独立 Claude Code session（cwd = `Tools/AgentCrawl/`），第一句话告诉它：`read docs/sendbox/toSP0Impler/handoff.md and execute the plan it references`。等它在 `docs/sendbox/toOrchestrator/` 写出 `from-sp0impler-sp0-done.md` 或 blocker letter 后告知 orche | `docs/sendbox/toSP0Impler/handoff.md` | SP-1 brainstorming 启动 | 2026-05-31 | open（impler 完成 SP-0 即可归档）|
 
 ## Archive
 
