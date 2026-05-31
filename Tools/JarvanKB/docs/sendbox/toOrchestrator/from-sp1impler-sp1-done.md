@@ -65,3 +65,13 @@ A1 exec + A3 write_file), CLI (list/show/dump), Docker compose, MIT.
 
 SP-2 (Zhihu Engine — needs SP-0 done ✓ + SP-1 协议敲定 ✓), and the cookie-consuming SP-3/4b/5a/5b once their
 own engine prerequisites land.
+
+## Addendum — post-merge follow-ups (2026-05-31, on user request; all on feat/agentcrawl-bootstrap, 45 tests green)
+
+- **Port 8088 → 48088** (JarvanKB **48xxx** port convention; recorded in host ops `rules.md`; commit `a382452`).
+- **Public frp exposure — verified end-to-end** (public HTTPS push → store → hook): `https://www.zhaoricheng.fun:48098`
+  (Nginx TLS) + direct `http://101.35.46.114:48088`. frps needed no allowPorts change. `docs/sendbox/toFRPS/handoff.md`
+  resolved (frps-side AI added the Nginx 48098→48088 SSL proxy). frpc recorded in ops `manual-software.txt`.
+- **Optional shared-secret header auth** (`server.auth_token` → `X-CookieCloud-Token`, 401 except `/health`; commit `2f39367`).
+- **`config/cookie-manager.yaml` gitignored** (secrets); a placeholder-only copy was briefly committed then untracked (`debf429`, no real secret leaked).
+- Full module decision log (incl. these): `Service/crawl/cookie-manager/docs/RepoMem/decisions.md` (top entry) — fold into Step 8 RepoMem.merge.

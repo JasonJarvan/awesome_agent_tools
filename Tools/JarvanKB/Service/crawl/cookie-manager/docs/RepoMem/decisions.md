@@ -4,6 +4,29 @@
 > Each entry: date, slug, decision, rationale, what-changes-when-this-is-revisited.
 > When a decision is promoted to global, leave a `[Promoted to global ↗]` marker pointing to `<root>/docs/RepoMem/persist/memory/`.
 
+## 2026-05-31 (post-merge follow-ups) — sp1-cookie-manager — port 48xxx, frp public exposure, header auth
+
+Made after SP-1 was merged, on user request. Verified end-to-end (public HTTPS push → store → hook).
+
+- **Port 8088 → 48088.** JarvanKB services use the **48xxx** range (host port convention recorded in
+  `~/.ops-doc-maintainer-docs/.../rules.md`; 40xxx had a UDP occupant). 8088 was only CookieCloud's upstream
+  default, NOT a protocol constraint — the extension points at a configurable URL, so the extension's server
+  address simply uses the new port.
+- **Public exposure via frp.** frpc proxy `jarvankb-cookie-manager` (local 48088 → remote 48088) through frps
+  `101.35.46.114`; the frps host's Nginx terminates TLS → public **`https://www.zhaoricheng.fun:48098`**
+  (Let's Encrypt) and a direct plain endpoint `http://101.35.46.114:48088`. frps needed no `allowPorts` change
+  (default allow). Coordinated via `docs/sendbox/toFRPS/handoff.md` (resolved). frpc recorded in ops
+  `manual-software.txt`.
+- **Optional shared-secret header auth.** `server.auth_token` (+ `server.auth_header`, default
+  `X-CookieCloud-Token`): when set, every request except `/health` must carry the header (401, checked before
+  body parsing). Disabled when empty (LAN-only / back-compat). Defense-in-depth over uuid+password obscurity;
+  recommended whenever publicly exposed. The extension carries it via its "request header" field.
+- **`config/cookie-manager.yaml` is gitignored** (real config = secrets: uuid/password/auth_token); only
+  `*.example.yaml` / `*.smoke.yaml` templates are tracked.
+
+**Revisit when:** moving hosts (re-pick a 48xxx port + redo the frps proxy); exposing more JarvanKB services
+(allocate the next 48xxx port + ops registry entry).
+
 ## 2026-05-31 — sp1-cookie-manager — Path B: self-write, NOT fork CookieCloud
 
 **Decision:** Implement a self-written Node.js/TypeScript Express service that speaks the
