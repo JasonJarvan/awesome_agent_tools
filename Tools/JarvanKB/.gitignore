@@ -1,0 +1,4 @@
+# 含明文 API key 的本地 MCP 配置 —— 不入库
+.mcp.json
+# 个人本地覆盖（含 disabledMcpjsonServers 等）—— 不入库
+.claude/settings.local.json

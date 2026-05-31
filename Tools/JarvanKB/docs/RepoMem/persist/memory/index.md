@@ -6,7 +6,7 @@
 
 | 文件 | 性质 | 何时读 |
 |---|---|---|
-| `runbook.md` | 操作手册：凭据配置、OSS 桶策略、故障表、成本估算 | 配环境 / 排查故障 / 估算运行成本 |
+| `runbook.md` | 操作手册：凭据配置、OSS 桶策略、故障表、成本估算、**§6 Tavily MCP 作用域/启用** | 配环境 / 排查故障 / 估算运行成本 / SP-8 web-search 接手 |
 | `pre-openspec-decisions.md` | **冻结的遗存**：D1–D7 调研结论（bootstrap 期产生） | 阅读历史背景；**新决策不写这里**，走 `<module>/docs/RepoMem/temp/<slug>/decisions.md` |
 
 ## 与 superpowers writing-plans / RepoMem temp 的边界

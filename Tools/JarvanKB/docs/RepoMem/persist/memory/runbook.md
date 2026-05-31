@@ -79,3 +79,16 @@ google-chrome --remote-debugging-port=9222 --user-data-dir=$HOME/.config/google-
 - 中间音轨：`/tmp/agentcrawl/audio/{bvid}.m4a`（任务结束删除）
 - 日志：`logs/agentcrawl-{YYYYMMDD}.log`（按天滚动）
 - OSS 临时对象：`agent-crawl/{bvid}-{ts}.m4a`（24h 生命周期）
+
+## 6. Tavily MCP（web-search 开发环境，2026-05-31）
+
+> 关联未来模块：`Skill/router/web-search/`（**SP-8**，聚合知乎官方 Skill + Tavily + Exa；当前未动工）。
+
+- **作用域变更**：Tavily MCP 原为 Claude Code **user-scope**（`~/.claude.json`，全局），现已 `claude mcp remove tavily -s user` 移除，改为 **JarvanKB project-scope**。
+- **决策动机**：user-scope 常驻会把 ~1.4k tokens 的工具 schema 注册进每个会话上下文；当前 SP-0/SP-1 用不上，故降级并默认禁用以省 token。Tavily 自身 schema 偏重（`search`/`crawl` 各十余参数）。
+- **配置位置**：
+  - `<root>/.mcp.json` — tavily server 定义 + **明文 `TAVILY_API_KEY`** + proxy（`127.0.0.1:7890`）。**已 gitignore，不入库**。
+  - `<root>/.claude/settings.local.json` — `disabledMcpjsonServers: ["tavily"]`，**默认禁用**（不连接 → 不注册 schema → 省 token）。**已 gitignore**。
+- **如何启用**（SP-8 接手时）：把 `settings.local.json` 改为 `enabledMcpjsonServers: ["tavily"]`（或删除 `disabledMcpjsonServers` 行后在 `/mcp` 批准）。**无需重输 key**，key 已在 `.mcp.json`。
+- **替代方案**（禁用期间 agent 搜索）：内置 `WebSearch` / `WebFetch` + `deep-research` skill；搜索维度够用，**整站爬取/映射维度** Tavily 才有优势。
+- **注意**：Claude Code 无 user-scope server 的官方 disable 开关（`disabledMcpjsonServers` 仅对 `.mcp.json` 生效），这也是降级到 project-scope 的原因。`officialMarketplaceAutoInstalled` 理论上可能重装 user-scope tavily，若发生再 `remove` 一次。
