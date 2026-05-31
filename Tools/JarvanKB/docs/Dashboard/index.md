@@ -32,7 +32,7 @@
 | ID | 名称 | 状态 | Owner Agent | 进入条件 |
 |---|---|---|---|---|
 | SP-0 | 骨架 + recipe v2 迁移 | ⚫ done | sp0impler | （无）|
-| SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | 🔴 blocked (Stage 2 done) | sp1impler | Stage 1+2 完成；Stage 3 gate：SP-0 done ✅ + 待 greenlight（见 UN-012） |
+| SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | 🟡 wip (Stage 3) | sp1impler | Stage 3 执行中（greenlit 2026-05-31，subagent-driven，worktree TDD）|
 | SP-2 | 知乎引擎 | ⚪ queued | (无) | SP-0 完成 + SP-1 协议敲定 |
 | SP-3 | 知乎 Skill | ⚪ queued | (无) | SP-2 实现完成 |
 | SP-4a | B 站引擎 | ⚪ queued | (无) | SP-0 完成；BN docker 可达 |
@@ -52,7 +52,7 @@
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
 | UN-011 | B | 当 g2 orche 上下文吃紧或你想换新 session 时，起一个新 Claude Code session（cwd = `Tools/JarvanKB/`，与 SP1Impler 并行），第一句告诉它：`read docs/sendbox/toOrchestrator/g3-handoff.md and inherit JarvanKB orchestration`。g2 session 由你关闭（or 留作 lookup 只读）。非紧急 — 仅在你判断 g2 上下文需要 prune 时触发 | `docs/sendbox/toOrchestrator/g3-handoff.md` | g2 退场 + g3 接管 SP1Impler 反馈链路 | 2026-05-31 | open |
-| UN-012 | D | 给 SP-1 Stage 3 execution 的 greenlight。Stage 1+2 完成（design+plan 已落盘自审），SP-0 done ✅、模块目录已存在。直接在 SP1Impler chat 说"开跑"即给绿灯（等价 orche `from-orche-sp1-greenlight.md`）。给灯后还需选执行模式：subagent-driven（推荐）vs inline | `docs/sendbox/toOrchestrator/from-sp1impler-plan-ready.md` | SP-1 Stage 3 落地（v1 第一个功能子项目） | 2026-05-31 | open |
+| UN-012 | D | 给 SP-1 Stage 3 execution 的 greenlight。Stage 1+2 完成（design+plan 已落盘自审），SP-0 done ✅、模块目录已存在。直接在 SP1Impler chat 说"开跑"即给绿灯（等价 orche `from-orche-sp1-greenlight.md`）。给灯后还需选执行模式：subagent-driven（推荐）vs inline | `docs/sendbox/toOrchestrator/from-sp1impler-plan-ready.md` | SP-1 Stage 3 落地（v1 第一个功能子项目） | 2026-05-31 | resolved（greenlit 2026-05-31，subagent-driven 执行中）|
 
 ## Archive
 
