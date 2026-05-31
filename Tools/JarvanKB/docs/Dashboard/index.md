@@ -32,8 +32,8 @@
 | ID | 名称 | 状态 | Owner Agent | 进入条件 |
 |---|---|---|---|---|
 | SP-0 | 骨架 + recipe v2 迁移 | ⚫ done | sp0impler | （无）|
-| SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约见 module `docs/interface.md`）；待 orche Step 8 RepoMem.merge |
-| SP-2 | 知乎引擎 | ⚪ queued | (无) | SP-0 完成 + SP-1 协议敲定 |
+| SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约 `Service/crawl/cookie-manager/docs/interface.md`）；Step 8 RepoMem.merge 已完成（impler-driven HITL，激活 credentials 域） |
+| SP-2 | 知乎引擎 | 🟢 ready | (无) | 进入条件已满足（SP-0 done ✓ + SP-1 协议敲定 ✓，契约 `Service/crawl/cookie-manager/docs/interface.md`）；待起 impler |
 | SP-3 | 知乎 Skill | ⚪ queued | (无) | SP-2 实现完成 |
 | SP-4a | B 站引擎 | ⚪ queued | (无) | SP-0 完成；BN docker 可达 |
 | SP-4b | B 站 Skill | ⚪ queued | (无) | SP-4a 实现完成 |
@@ -51,9 +51,6 @@
 |---|---|---|---|---|---|---|
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
-| UN-013 | B | cookie-manager 公网暴露 — **已端到端验证通**（公网 HTTPS push→hook 全链路）。入口：HTTPS `https://www.zhaoricheng.fun:48098`（推荐，Nginx TLS）/ 直连 `http://101.35.46.114:48088`。frps 端无需 allowPorts 改动（默认放行）；frps AI 顺带配了 Nginx SSL 48098→48088。**剩余（例行）**：起正式服务（真实 uuid/password + `docker compose up -d`）+ 扩展服务器地址填 HTTPS 入口 | `docs/sendbox/toFRPS/handoff.md` | — | 2026-05-31 | resolved（隧道已验证；待起正式服务）|
-| UN-014 | B | **orche 读 `from-sp1impler-sp1-done.md`** 并做 SP-1 后处理：burn 该信 + `toFRPS/handoff.md`（均已 resolved）；可选 `RepoMem.prune`/`split`。注意 **Step 8 merge 已由 impler 执行完，勿重做** | `docs/sendbox/toOrchestrator/from-sp1impler-sp1-done.md` | SP-1 sendbox 收尾 | 2026-06-01 | open |
-| UN-015 | D | **orche 修订 merge 归属规范**（见 sp1-done letter §Process feedback）：impler-handoff 模板 §3.F 的 "Step 8 NOT YOUR JOB" 改为"impler 拥有 RepoMem.merge 闭环"；如 longterm.md §Pipeline v2 / CLAUDE.md §3 step 8 有 owner 缺失则补齐。符合用户期望，避免再次混淆 | `docs/sendbox/toOrchestrator/from-sp1impler-sp1-done.md` §Process feedback | 未来 SP impler 一致 owns merge | 2026-06-01 | open |
 
 ## Archive
 
@@ -69,3 +66,6 @@
 | UN-005 | 物理改名 `Tools/AgentCrawl/` → `Tools/JarvanKB/` — **done**（user 独立 session 执行；D2 deferred AgentCrawl 串改名 orche 跟进于本 commit，仅历史 narrative 文件保留旧名） | 2026-05-31 | user + orche |
 | UN-011 | 起 g3 orche session 继承编排 — **done**：g3（Claude Opus 4.8 1M）已读 g3-handoff、跑完引导检查、接管 SP1Impler 反馈链路；g2 退场；inheritance handoff 已 burn | 2026-05-31 | user + orche g3 |
 | UN-012 | 给 SP-1 Stage 3 greenlight + 选执行模式 — **resolved**：user 在 SP1Impler chat 直接给绿灯 + 选 subagent-driven；orche g3 plan 审阅通过（fork→自写偏离由 CookieCloud GPLv3 发现正当化，保 MIT 干净）。SP1Impler 已进入 Stage 3 | 2026-05-31 | user + orche g3 |
+| UN-013 | cookie-manager 公网暴露 — **done**：公网 HTTPS 全链路验证通（`https://www.zhaoricheng.fun:48098` / 直连 `:48088`）；frps AI 配了 Nginx SSL 代理。剩余"起正式服务 + 扩展填 HTTPS 地址"是用户例行操作，非 orche 待办 | 2026-05-31 | sp1impler + frps AI + user |
+| UN-014 | SP-1 sendbox 后处理 — **done**：archive sp0-done、burn sp1-done + toSP1Impler/handoff + toFRPS/handoff；Step 8 merge 由 impler 完成（未重做）；`temp/sp1-cookie-manager/research.md` 保留（impler 刻意保留 + 下游 SP-2/3 参考） | 2026-06-01 | orche g3 |
+| UN-015 | 修订 merge 归属规范 — **done**：CLAUDE.md §3 step8 + §4、longterm §Pipeline v2 + §Hard Invariants 均加"impler owns merge closure"，并固化 handoff §3.F 措辞（commit `16da3b6`） | 2026-06-01 | orche g3 |
