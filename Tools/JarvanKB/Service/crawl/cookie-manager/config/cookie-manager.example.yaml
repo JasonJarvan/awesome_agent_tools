@@ -1,0 +1,24 @@
+server:
+  host: 0.0.0.0          # 0.0.0.0 for LAN/Android push; 127.0.0.1 if same host only
+  port: 8088
+  data_dir: ./data
+  body_limit: 50mb       # raise above default 100kb; cookie dumps are large
+accounts:
+  - uuid: "REPLACE-with-the-uuid-you-set-in-the-extension"
+    password: "REPLACE-with-the-encryption-password-you-set-in-the-extension"
+hooks:
+  - id: refresh-zhihu
+    on: cookie-update
+    match: { uuid: "*", domain: ".zhihu.com" }
+    action: exec
+    command: "/opt/crawl/refresh.sh"
+    args: ["--uuid", "{{uuid}}", "--domain", "{{domain}}"]
+    env: { COOKIE_JSON: "{{cookie_json}}" }
+    timeout_ms: 30000
+  - id: snapshot-all
+    on: cron
+    schedule: "*/15 * * * *"
+    match: { uuid: "*" }
+    action: write_file
+    path: "./snapshots/{{uuid}}-{{ts}}.json"
+    template: '{"uuid":"{{uuid}}","cookies":{{cookie_json}},"at":"{{ts}}"}'
