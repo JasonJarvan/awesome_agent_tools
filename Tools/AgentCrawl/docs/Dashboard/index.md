@@ -32,7 +32,7 @@
 | ID | 名称 | 状态 | Owner Agent | 进入条件 |
 |---|---|---|---|---|
 | SP-0 | 骨架 + recipe v2 迁移 | ⚫ done | sp0impler | （无） |
-| SP-1 | CookieManager（fork CookieCloud + hook） | ⚪ queued | (无) | SP-0 完成 |
+| SP-1 | CookieManager（fork CookieCloud + hook） | 🟡 wip (Stage 1) | sp1impler | Stage 1+2 与 SP-0 并行；Stage 3 等 SP-0 done |
 | SP-2 | 知乎引擎 | ⚪ queued | (无) | SP-0 完成 + SP-1 协议敲定 |
 | SP-3 | 知乎 Skill | ⚪ queued | (无) | SP-2 实现完成 |
 | SP-4a | B 站引擎 | ⚪ queued | (无) | SP-0 完成；BN docker 可达 |
@@ -53,6 +53,7 @@
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-007 | B | 起一个独立 Claude Code session（cwd = `Tools/AgentCrawl/`），第一句话告诉它：`read docs/sendbox/toSP0Impler/handoff.md and execute the plan it references`。等它在 `docs/sendbox/toOrchestrator/` 写出 `from-sp0impler-sp0-done.md` 或 blocker letter 后告知 orche | `docs/sendbox/toSP0Impler/handoff.md` | SP-1 brainstorming 启动 | 2026-05-31 | open（impler 完成 SP-0 即可归档）|
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
+| UN-009 | B | 起一个独立 Claude Code session（cwd = `Tools/AgentCrawl/`，与 SP-0 impler 并行），第一句话告诉它：`read docs/sendbox/toSP1Impler/handoff.md and execute the pipeline it references`。它会做 brainstorming + design + writing-plans 三 stage（与 SP-0 并行），Stage 3 执行会自动等 SP-0 完成 | `docs/sendbox/toSP1Impler/handoff.md` | SP-1 落地（v1 第一个功能子项目） | 2026-05-31 | open |
 
 ## Archive
 
