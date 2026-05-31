@@ -6,6 +6,6 @@ COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build
 RUN npm prune --omit=dev
-EXPOSE 8088
+EXPOSE 48088
 ENV COOKIE_MANAGER_CONFIG=/app/config/cookie-manager.yaml
 CMD ["node", "dist/index.js"]

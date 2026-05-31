@@ -117,7 +117,7 @@ Dockerfile  docker-compose.yml  package.json  tsconfig.json  vitest.config.ts  L
 ```yaml
 server:
   host: 0.0.0.0          # 局域网/Android 推送用 0.0.0.0；仅同机用 127.0.0.1
-  port: 8088             # CookieCloud 习惯端口
+  port: 48088             # CookieCloud 习惯端口
   data_dir: ./data
   body_limit: 50mb       # 默认 100kb 会静默截断真实 cookie dump
 accounts:                # 箱子 -> 解密口令；cookie 不在这里（经 /update 到达）

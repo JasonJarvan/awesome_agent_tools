@@ -121,7 +121,7 @@ report sync failure). Hook outcomes go to the log.
 ```yaml
 server:
   host: 0.0.0.0          # 0.0.0.0 for LAN/Android push; 127.0.0.1 if same host only
-  port: 8088             # CookieCloud convention
+  port: 48088             # CookieCloud convention
   data_dir: ./data
   body_limit: 50mb       # default 100kb silently truncates real cookie dumps
 accounts:                # box -> decryption passphrase; cookies are NOT here (they arrive via /update)

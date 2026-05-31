@@ -36,7 +36,7 @@ const HookSchema = z.intersection(
 export const ConfigSchema = z.object({
   server: z.object({
     host: z.string().default('0.0.0.0'),
-    port: z.number().int().default(8088),
+    port: z.number().int().default(48088),
     data_dir: z.string().default('./data'),
     body_limit: z.string().default('50mb'),
   }).default({}),

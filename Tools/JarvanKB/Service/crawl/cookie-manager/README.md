@@ -6,7 +6,7 @@ server address at this service.
 
 ## Setup
 1. Install the official CookieCloud extension (PC Chrome / Android Kiwi or Yandex).
-2. In the extension: set **server address** to `http://<this-host>:8088`, pick a
+2. In the extension: set **server address** to `http://<this-host>:48088`, pick a
    **UUID** and **password** (the password is an encryption passphrase, not a login).
 3. Copy `config/cookie-manager.example.yaml` to `config/cookie-manager.yaml`; fill
    `accounts` with the same uuid + password, and configure `hooks`.

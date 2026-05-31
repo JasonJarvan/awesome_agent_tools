@@ -1,4 +1,4 @@
-server: { host: 127.0.0.1, port: 8088, data_dir: ./data-smoke, body_limit: 50mb }
+server: { host: 127.0.0.1, port: 48088, data_dir: ./data-smoke, body_limit: 50mb }
 accounts: [{ uuid: "smoke-uuid", password: "smoke-pass" }]
 hooks:
   - id: smoke-write

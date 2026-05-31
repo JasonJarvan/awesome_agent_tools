@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-const endpoint = process.env.ENDPOINT ?? 'http://127.0.0.1:8088';
+const endpoint = process.env.ENDPOINT ?? 'http://127.0.0.1:48088';
 const uuid = process.argv[2], password = process.argv[3];
 const theKey = CryptoJS.MD5(uuid + '-' + password).toString().substring(0, 16);
 const payload = { cookie_data: { '.zhihu.com': [{ name: 'z_c0', value: 'SMOKE', domain: '.zhihu.com' }] }, local_storage_data: {}, update_time: new Date().toISOString() };

@@ -38,7 +38,7 @@
 ## 5. 配置（flat per-hook YAML）
 
 见 `config/cookie-manager.example.yaml`。要点：
-- `server`: `host`/`port`(默认 8088)/`data_dir`/`body_limit`(默认 50mb)。
+- `server`: `host`/`port`(默认 48088)/`data_dir`/`body_limit`(默认 50mb)。
 - `accounts: [{uuid, password}]`: 箱子 → 解密口令（**cookie 不写这里**）。
 - `hooks[]`: 每条含 `id`、`on`(`cookie-update`\|`cron`，cron 需 `schedule`)、`match`(`uuid` glob `*`/精确 + 可选 `domain`)、`action`(`exec`\|`write_file`)。
   - `exec`: `command` + `args[]` + `env{}` + `timeout_ms`。

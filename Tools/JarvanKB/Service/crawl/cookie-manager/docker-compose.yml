@@ -2,7 +2,7 @@ services:
   cookie-manager:
     build: .
     ports:
-      - "8088:8088"
+      - "48088:48088"
     volumes:
       - ./config/cookie-manager.yaml:/app/config/cookie-manager.yaml:ro
       - ./data:/app/data

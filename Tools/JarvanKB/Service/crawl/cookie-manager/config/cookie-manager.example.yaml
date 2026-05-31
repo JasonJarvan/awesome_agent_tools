@@ -1,6 +1,6 @@
 server:
   host: 0.0.0.0          # 0.0.0.0 for LAN/Android push; 127.0.0.1 if same host only
-  port: 8088
+  port: 48088
   data_dir: ./data
   body_limit: 50mb       # raise above default 100kb; cookie dumps are large
 accounts:

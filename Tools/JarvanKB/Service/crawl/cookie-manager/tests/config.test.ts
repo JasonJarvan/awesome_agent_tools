@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { ConfigSchema, parseConfig } from '../src/config.js';
 
 const valid = {
-  server: { host: '0.0.0.0', port: 8088, data_dir: './data', body_limit: '50mb' },
+  server: { host: '0.0.0.0', port: 48088, data_dir: './data', body_limit: '50mb' },
   accounts: [{ uuid: 'u1', password: 'p1' }],
   hooks: [
     { id: 'h1', on: 'cookie-update', match: { uuid: '*', domain: '.zhihu.com' },
@@ -15,7 +15,7 @@ const valid = {
 describe('config', () => {
   it('parses a valid config and applies defaults', () => {
     const cfg = parseConfig(valid);
-    expect(cfg.server.port).toBe(8088);
+    expect(cfg.server.port).toBe(48088);
     expect(cfg.hooks).toHaveLength(2);
   });
 
