@@ -1,3 +1,149 @@
+# HarnessStack longterm — JarvanKB
+
+> Authoritative full contract. Loaded on recipe upgrade, not every session.
+> Session-level always-loaded contract = `CLAUDE.md` (distilled).
+
+## Recipe v1 → v2 Migration (2026-05-31, Full Rewrite)
+
+**Trigger**: scope expansion of `AgentCrawl` → `JarvanKB` 10-sub-project family; OpenSpec value assessment (subagent R8) recommended removal for thin-layer formation.
+
+**Decision**: drop OpenSpec from the recipe. Compress pipeline 13 → 8 steps.
+
+**Compliance path**: Full Rewrite under §Full Rewrite Conditions (this section). NOT a stealth downgrade — `add-only` invariant honored via versioned recipe migration.
+
+**Net changes**:
+| Aspect | v1 | v2 |
+|---|---|---|
+| Recipe ID | `openspec-superpowers-repomem-sendbox-dashboard` | `superpowers-repomem-sendbox-dashboard` |
+| Active methods | 5 (incl. OpenSpec) | 4 |
+| Pipeline length | 13 steps | 8 steps |
+| Verification gate | dual (OpenSpec verify + Superpowers verification-before-completion) | single (Superpowers verification-before-completion) |
+| Slash commands | `/opsx:propose/apply/verify/archive` | none added; rely on Skill tool |
+| Change ID | `change-id` (= slug) tied to OpenSpec workspace | `slug` only (tied to git worktree + RepoMem temp dir) |
+| Per-task contract docs | `openspec/changes/<id>/{proposal,design,specs,tasks}.md` | `<module>/docs/RepoMem/temp/<slug>/` + `<module>/docs/superpowers/{specs,plans}/` |
+| `openspec/` workspace | required, symlinked from repo root | removed |
+| `.claude/skills/openspec-*` | 4 skills installed | removed |
+| `.claude/commands/opsx/` | 4 commands | removed |
+
+**Detailed migration actions** logged in `docs/superpowers/specs/2026-05-31-SP-0-jarvankb-skeleton-design.md` §6.5.
+
+**Reintroduction conditions**: a sub-project whose external interface becomes a versioned SDK / API consumed by third parties MAY re-introduce OpenSpec **scoped to that module only**, via a new Full Rewrite entry. Cross-cutting reintroduction requires recipe v3.
+
+---
+
+## Pipeline v2 (authoritative)
+
+The 8-step per-task pipeline (compressed view also in `CLAUDE.md` §3):
+
+1. **`RepoMem.read`** — Subagent in `<module>/` cwd reads two layers: `<root>/docs/RepoMem/persist/` (background) + `<module>/docs/RepoMem/{architecture,decisions}.md` (actionable). Main orchestrator reads only global.
+
+2. **`Superpowers.brainstorming`** — Clarify vague intent. Auto-judge skip on:
+   - intent already `clear` and producing-the-design would be redundant
+   - trivial fix (typo, single-line bugfix, dep bump)
+   - pure refactor with no behavior change
+   - spike / <3h exploration with throwaway code
+   When spawning subagent for brainstorming, write `handoff.md` letter to `<root>/docs/sendbox/to<Role>/` and open a Type-B dashboard row.
+
+3. **`RepoMem.capture`** — Open task-level temp docs in the relevant module: `<module>/docs/RepoMem/temp/<slug>/{requirements,architecture,decisions}.md`. Cross-module task: open at `<root>/docs/RepoMem/temp/<slug>/` instead.
+
+4. **`Superpowers.writing-plans`** — Produce a step-by-step implementation plan. Land at `<module>/docs/superpowers/plans/YYYY-MM-DD-<slug>.md` (or root if cross-module). When subagent produces plan, send `plan-ready.md` letter back.
+
+5. **`using-git-worktrees` + `executing-plans` + TDD + `RepoMem.capture` (continuous)** — Execute the plan in an isolated worktree. TDD discipline. Capture tacit knowledge to `temp/<slug>/decisions.md` as decisions are made. Subagent boundary at ~A-12 → blocker letter.
+
+6. **`Superpowers.verification-before-completion`** — Single mandatory gate. Run tests + lint + typecheck + manual smoke as applicable; output evidence (commands run + outputs). No claim of "done" without this output.
+
+7. **`Superpowers.requesting-code-review` + `finishing-a-development-branch`** — Both **ask-first**. Reviewer (subagent or user) validates against spec + plan. Finishing produces merge / PR / cleanup decision.
+
+8. **`RepoMem.merge` (HITL)** — Promote `temp/<slug>/` lessons to durable layer. Module-scope decisions stay in `<module>/docs/RepoMem/decisions.md`. Global-scope decisions get promoted to `<root>/docs/RepoMem/persist/memory/` with `[Promoted to global ↗]` marker in module decisions. Any `from-<x>-promote-to-durable.md` letter lands here. Then `prune/split` per RepoMem hygiene.
+
+Sendbox letters & dashboard rows are **side-effects** of the steps above, not standalone steps.
+
+---
+
+## Local sendbox conventions (JarvanKB)
+
+In addition to the upstream cc-sendbox protocol (`~/.claude/skills/sendbox-protocol/SKILL.md`), JarvanKB enforces the following project-local conventions. These augment the upstream "roles over sessions" principle and are tracked upstream in CodeTeam#1.
+
+### Mailbox naming pattern
+
+**`docs/sendbox/to{Prefix}{Role}/`**
+
+- **`{Prefix}`** = a stable task-scope id, capitalized PascalCase. Examples: `SP0`, `SP1`, `ZhihuCrawl`, `BilibiliWatcher`, `CookieManager`. The prefix is omitted **only** for the singleton root orchestrator role (`toOrchestrator/`), preserving the cc-sendbox v0.2.1 legacy.
+- **`{Role}`** = the function of the session that reads this box. Canonical roles: `Orche`, `SubOrche`, `Impler`, `Reviewer`, `Author`. New roles MAY be coined per project need; document them where they first appear.
+
+### Supported hierarchies
+
+```
+Root Orche ──(handoff)──> Impler                     # e.g. toOrchestrator → toSP0Impler
+Root Orche ──(handoff)──> SubOrche ──> Impler        # e.g. toOrchestrator → toZhihuCrawlOrche → toZhihuCrawlImpler
+Root Orche ──(handoff)──> SubOrche ──> SubOrche → …  # deeper nesting allowed; same naming pattern
+```
+
+The convergence letter from a child session always lands in the **parent's** mailbox, named `from-<child-id-lower>-<topic>.md` (e.g. `from-sp0impler-sp0-done.md`).
+
+### Multiple peers of the same role
+
+If two implers report to the same orchestrator on the same task, append a numeric discriminator:
+- `toSP0Impler1/`, `toSP0Impler2/`
+
+This is rare; prefer task-decomposition (different prefixes) over peer multiplication.
+
+### Hard invariant
+
+**A single shared `toImpler/` or `toOrche/` (no prefix on a non-root role) is forbidden** whenever ≥2 sessions of that role can run concurrently. This was the failure mode that motivated the convention (see CodeTeam#1).
+
+---
+
+## Hard Invariants (v2)
+
+(See `CLAUDE.md` §4 for the compressed version. Both must stay in sync.)
+
+- **Single task identifier.** `<task> = <slug>`.
+- **Add-only on methods, with Full Rewrite escape valve.** Methods do not silently deactivate. Recipe migrations require a Full Rewrite entry in this file (as the v1→v2 entry above demonstrates).
+- **Single verification gate.** `Superpowers.verification-before-completion`. No replacements.
+- **Merge ordering.** `RepoMem.merge` AFTER `finishing-a-development-branch`, HITL, never before.
+- **No content duplication** across per-task doc sets.
+- **One sendbox per project.** `<root>/docs/sendbox/` only. Side cwds write by path.
+- **Per-task mailbox.** Every parallel non-root session reads/writes its own `to{Prefix}{Role}/` mailbox; shared role-only mailboxes forbidden for concurrent roles. See §Local sendbox conventions.
+- **Layered RepoMem.** Module reads two layers, writes one; HITL promotes module → global.
+- **One letter → N dashboard rows.** Independent lifecycles.
+- **No silent invariant skips.** Pipeline ordering, merge gates, verification topology are recipe invariants. Exceptions require a declared `Recipe Invariant Exception` in the relevant `temporary-<slug>.md` with reason + compensating action.
+
+---
+
+## Full Rewrite Conditions
+
+A recipe Full Rewrite (versioned migration like v1→v2) is allowed when:
+
+- Strategic scope changes (e.g. monolithic tool → multi-sub-project family)
+- A method's value/cost ratio becomes net negative for the project's formation (e.g. OpenSpec for thin-layer projects per R8 analysis)
+- Cross-platform constraints force a structural change
+
+Each Full Rewrite MUST:
+- Document the trigger, decision, net changes, and reintroduction conditions in this file
+- Reference the design/spec that motivated it
+- Be committed atomically with the code/doc changes that effect the migration
+
+---
+
+## Related Documents
+
+- `CLAUDE.md` — distilled session-load contract
+- `docs/HarnessStack/_toUser/README.md` — user-facing manual
+- `docs/HarnessStack/hooks/` — repo-local hook configs (e.g. cc-dashboard)
+- `docs/RepoMem/persist/version-plan.md` — phase plan, recipe version history
+- `docs/superpowers/specs/2026-05-31-SP-0-jarvankb-skeleton-design.md` — v2 migration design
+
+---
+
+## Archival: v1 Reference (DEPRECATED)
+
+The v1 recipe `openspec-superpowers-repomem-sendbox-dashboard` was active 2026-05-26 → 2026-05-31. Its 13-step pipeline added OpenSpec steps 3 (explore/propose), 5 (consume specs+tasks), 8b (verify), and 11 (archive) — these are now obsolete.
+
+The original v1 longterm.md content is preserved below for historical reference only. **Do not follow it.**
+
+---
+
 # longterm.md
 
 ## Document Meta
