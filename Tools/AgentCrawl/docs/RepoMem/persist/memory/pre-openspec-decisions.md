@@ -1,3 +1,5 @@
+> ⚠️ **Post-v2 status banner (2026-05-31)**: HarnessStack recipe moved to v2; OpenSpec is **no longer active**. The filename "pre-openspec-decisions" remains historically accurate. D3 (通义听悟 selection) was **superseded** by R5 finding (use BiliNote + bcut). Other D-decisions (D1, D2, D4–D7) remain technically valid where they apply.
+
 # Pre-OpenSpec Decisions — 2026-05 调研结论存档（**FROZEN LEGACY**）
 
 > ⚠️ **本文件是 pre-OpenSpec 时期的决策遗存。已冻结，不再追加。**

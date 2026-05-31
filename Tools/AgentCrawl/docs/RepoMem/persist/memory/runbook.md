@@ -1,18 +1,6 @@
 # Runbook — 环境配置 + 故障恢复
 
-## 0. 项目布局须知（OpenSpec workspace 软链）
-
-OpenSpec CLI v1.3.1 把工作区目录名硬编码为 `openspec`（`dist/core/config.js: OPENSPEC_DIR_NAME = 'openspec'`），且仅从 cwd 向上查找。**无任何配置项 / 环境变量 / flag 可改**（已查源码）。
-
-本仓库选择：
-- 物理工作区：`docs/openspec/`（与 RepoMem/sendbox 并列，符合 HarnessStack 约定）
-- 根目录：符号链接 `openspec → docs/openspec`，让 CLI 从仓库根 cwd 能发现
-
-**不要删这条软链**——删了之后 `openspec list`、`/opsx:*` 全报 `No OpenSpec changes directory found`。
-
-副作用提醒：
-- 跨平台 clone 到 **Windows** 时 git 不会自动建本地软链（除非启用 `core.symlinks=true` 并以管理员模式 clone）。如果未来要跨平台用，需要把工作区物理位置改回根 `openspec/`，并把 HarnessStack `longterm.md` 的 OpenSpec Root 改成 `./openspec/`（longterm.md 自己写明允许此切换）。
-- HarnessStack 升级时如果重跑 `openspec init`，可能会在根重新生成 `openspec/`（覆盖软链）。重 init 前先备份软链，init 完手动 `rm -rf openspec && ln -s docs/openspec openspec`。
+> Note: a `§0 OpenSpec workspace` section existed here in v1; OpenSpec was removed in recipe v2. See `docs/HarnessStack/longterm.md §Recipe v1→v2 Migration`.
 
 ## 1. 环境变量清单
 
