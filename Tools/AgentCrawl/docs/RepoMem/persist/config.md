@@ -6,27 +6,28 @@ translation_sync_policy: ask-after-persist-change
 
 # RepoMem Config — JarvanKB
 
-## Language Policy（正式化版本，2026-05-31）
+## Language Policy（正式化版本，2026-05-31，narrow H2A 版）
 
-按 H2A / A2A 受众二分。规则随 HarnessStack v2 生效。
+按文档**实际受众**二分，**不**按目录位置一刀切。规则随 HarnessStack v2 生效。
 
 | 文档类别 | 主要读者 | 语言 | 典型路径 |
 |---|---|---|---|
-| **A2A — agent 技术合同** | agent 在 session-load 时读 | **英文** | `CLAUDE.md`、`docs/HarnessStack/longterm.md`、`docs/HarnessStack/README.md`、sendbox 内 agent↔agent 信件（handoff/blocker/milestone-done/decisions/plan-ready 等）、`docs/superpowers/specs/`、`docs/superpowers/plans/`、`<module>/docs/superpowers/`、`<module>/docs/HarnessStack/temporary-*.md` |
-| **H2A — 用户可读参考** | user 经 Dashboard 跳转读 | **中文**（= `default_language`） | `docs/Dashboard/index.md`、`docs/RepoMem/persist/`（含 `config.md`、`version-plan.md`、`architecture/`、`memory/`）、`docs/sendbox/toUser/`、`README.md`、`docs/HarnessStack/_toUser/`、`<module>/docs/{README,interface,architecture,runbook}.md` |
-| **子模块内部 RepoMem** | agent 写、user 偶查 | **中文**（默认 H2A） | `<module>/docs/RepoMem/{architecture,decisions}.md`；模块内部纯技术决策可在文件首声明 `language: en` 后用英文（exception） |
+| **A2A — agent 技术合同 / agent memory** | agent 在 session-load 或工作流中读 | **英文** | `CLAUDE.md`、`docs/HarnessStack/longterm.md` / `README.md`、sendbox 内 agent↔agent 信件（handoff/blocker/milestone-done/decisions/plan-ready 等）、`docs/superpowers/specs/`、`docs/superpowers/plans/`、`<module>/docs/superpowers/`、`<module>/docs/HarnessStack/temporary-*.md`、**`docs/RepoMem/persist/` 大多数文件**（含 `version-plan.md`、`architecture/`、`memory/`），`<module>/docs/RepoMem/{architecture,decisions}.md` |
+| **H2A — user 直接读取的参考面** | user 经 Dashboard 跳转读，**或者** user 是文档唯一日常读者 | **{user_language}**（本仓 = 中文） | `docs/Dashboard/index.md`（**含 §SP Status Board / §Where else to look**）、`docs/sendbox/toUser/`、`README.md`、`docs/HarnessStack/_toUser/`、`<module>/docs/{README,interface,architecture,runbook}.md`（子模块对外说明） |
+| **Governance config / 策略文档** | agent + user 共读；策略阅读以 user 居多 | **{user_language}** + frontmatter `language` 显式声明 | `docs/RepoMem/persist/config.md`（本文件）、`docs/HarnessStack/hooks/*.md` |
 
 ### 边界与例外
 
-- **A2A 优先**：若文档既被 agent 加载又被 user 偶读，按 A2A 处理（英文）—— 因 agent 数量远高于读频
-- **H2A 优先**：若文档主要是 user 通过 Dashboard `§Where else to look` 进入的参考，按 H2A 处理（中文）—— 即便 agent 也会读
-- **声明覆盖**：单文件可在 frontmatter 加 `language: en` / `language: zh` 显式覆盖；缺省按上表
-- **代码标识符、命令、URL、文件路径**：永远 ASCII；段落语言不替换它们
+- **不按目录一刀切**：`docs/RepoMem/persist/` 大多数是 A2A（agent memory），只有内容本身面向 user 的（如有意做成 user 参考的 architecture overview）才是 H2A。判定标准 = "user 是否日常通过 Dashboard pointer 进入读取？"
+- **frontmatter 声明覆盖**：文件顶部 `language: en|zh` + `audience: A2A|H2A` 两字段显式声明优先
+- **历史 grandfather**：`docs/RepoMem/persist/{config.md, memory/runbook.md, memory/pre-openspec-decisions.md, architecture/crawl-pipeline.md}` 在 bootstrap 期以中文写就，**保留中文不翻译**（churn 代价高、收益边际；这些文件 v1 期间不会动）。新 persist 文件按上表（A2A=英文）
+- **代码标识符 / 命令 / URL / 路径**：永远 ASCII；段落语言不替换它们
+- **混合内容**：若一个文件含 A2A + H2A 两块内容（如曾经 version-plan 含 kanban）→ **拆分**到对应文档（kanban → Dashboard），不在单文件内混语言
 
 ### Rationale
 
-- **A2A 英文**：agent 模型对英文 token 训练更密；技术术语歧义最小；跨平台 / 跨工具一致
-- **H2A 中文**：与用户 `default_language: zh` 一致；降低用户认知负担
+- **A2A 英文**：agent 模型对英文 token 训练更密；技术术语歧义最小；跨平台 / 跨工具一致；RepoMem persist 主要是 agent 反复检索的"内部记忆"
+- **H2A {user_language}**：与用户 `default_language` 一致；降低用户认知负担；H2A 暴露面**少**（Dashboard + sendbox/toUser + README + 子模块对外说明），不是"凡 user 可读 = H2A"
 
 ### Sync Policy
 
@@ -34,18 +35,11 @@ translation_sync_policy: ask-after-persist-change
 
 ### 违反处理
 
-- 发现 H2A 文档（如 `docs/RepoMem/persist/version-plan.md`）误用英文 → translate to 中文
-- 发现 A2A 文档误用中文 → translate to 英文（罕见，因 agent 接近所有都是英文写）
-- 历史违反案例：2026-05-31 `version-plan.md` 初次 eager-materialize 时误用英文，已修复
-
----
-
-## Language（旧 §Language 段，保留兼容）
-
-- **Primary**: 中文（zh）—— 与用户工作语言一致，对应根 `CLAUDE.md` 的 `Always respond in 中文` 强制规则
-- **Secondary**: 无
-
-CLAUDE.md 与 HarnessStack/* 是英文技术合同（A2A，详见 §Language Policy），但**不归 RepoMem 治理**（它们属于 Harness 层契约），因此不需要进 `multi-lang/` 镜像。
+- 发现 A2A 文档误用 user_language → translate to 英文（除非 grandfather 例外）
+- 发现 H2A 文档误用英文 → translate to user_language
+- **历史违反与修订案例**：
+  - 2026-05-31 first commit `1be7989`：把 `version-plan.md` 从 A2A 英文翻成中文 + 声称 "所有 RepoMem persist = 中文"。**过扩展**。
+  - 2026-05-31 后续修订：kanban 移出 version-plan → Dashboard §SP Status Board；version-plan 恢复 A2A=英文；本节窄化 H2A scope。grandfather 既存 4 个中文 persist 文件
 
 ## Domains (current)
 
