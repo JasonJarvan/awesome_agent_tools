@@ -97,6 +97,24 @@ cc-dashboard 与 sendbox-protocol **lifecycle 独立**：
 - 一封信里 3 个 ask → 3 行；某行 done 时其他行仍 open
 - 信可能先 burn（收件人 lifecycle 结束）而衍生行仍 open（罕见，但允许）
 
+## H2A Coupling (JarvanKB local rule, 2026-05-31)
+
+所有 Human-to-Agent 交互 **必须** 经由下面之一暴露给 user，user 不应需要"记住有哪些路径"：
+
+1. `docs/sendbox/toUser/*.md` 信件（单收件人，lifecycle 受控）
+2. `docs/Dashboard/index.md § Active` 行（pending action，按 6 种 Type 分类）
+3. `docs/Dashboard/index.md § Where else to look`（指向用户可能需要读的长形文档；**链接而非复制**）
+
+**约束**：
+
+- RepoMem persist / superpowers specs / hook 配置 / HarnessStack longterm 均为 agent-internal —— 它们的内容如对 user 有价值，**必须**在 §Where else to look 加锚点（行类型按内容选择 D 类型 Read+Triage 或仅作为 reference link）
+- §Where else to look 的链接**不复制内容**，避免双真相源漂移（参见 R9 调研结论 anti-pattern #1）
+- 任何新增的 H2A 通道（如未来加 web UI、加 Slack bot）应被 wrap 进上述三个 surface 之一，而非自立门户
+
+**Rationale**：user 是项目的唯一人类参与者，应只在两个 surface 检查"我现在该做什么"（Dashboard）+"agent 给我留了什么信"（sendbox）。其他文档都是 agent 内部协作产物。
+
+**Upstream sync**：本规则待 SP-0 完成后汇总进 CodeTeam follow-up issue（与 CodeTeam#1 合并或独立 issue 视上游 maintainer 偏好）。
+
 ## Hook Boundary
 
 本 hook **不得**：

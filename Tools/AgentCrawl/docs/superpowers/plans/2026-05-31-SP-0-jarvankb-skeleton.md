@@ -1016,20 +1016,24 @@ Physical rename `Tools/AgentCrawl/` → `Tools/JarvanKB/` performed in a separat
 
 - **SP-0 in progress** (2026-05-31): repo skeleton + HarnessStack v2 migration. Design in `docs/superpowers/specs/2026-05-31-SP-0-jarvankb-skeleton-design.md`.
 
-## Planned sub-projects (10 v1 + 1 v1+)
+## Planned sub-projects (10 v1 + 1 v1+) — SP status board
 
-| ID | Path | Name | Phase enter gate |
-|---|---|---|---|
-| SP-1 | `Service/crawl/cookie-manager/` | CookieManager (fork CookieCloud + hook) | SP-0 done |
-| SP-2 | `Engine/zhihu/` | Zhihu Engine | SP-0 done + SP-1 protocol agreed |
-| SP-3 | `Skill/crawl/zhihu-crawl/` | Zhihu Skill | SP-2 implemented |
-| SP-4a | `Engine/bilibili/` | Bilibili Engine | SP-0 done; BN docker reachable |
-| SP-4b | `Skill/crawl/bilibili-crawl/` | Bilibili Skill | SP-4a implemented |
-| SP-5a | `Service/crawl/zhihu-watcher/` | Zhihu favorites watcher | SP-2 implemented |
-| SP-5b | `Service/crawl/bilibili-watcher/` | Bilibili favorites watcher | SP-4a implemented |
-| SP-6 | `Skill/ingester/crawl-md-saver/` | CrawlMdSaver Skill | SP-3 / SP-4b crawl skills register |
-| SP-7 | `Service/ingester/thino-ingester/` | Thino Ingester | SP-6 implemented |
-| SP-8 (v1+) | `Skill/router/web-search/` | Web Search Router | v1 done; Zhihu API key acquired |
+> This table doubles as the JarvanKB SP-level kanban (per R9 调研结论 "方案 1 增强"). When ≥2 implers run concurrently / single SP task count ≥10 / per-task comments needed → migrate to `antopolskiy/kanban-md`.
+> Status emoji: 🟡 wip / 🔴 blocked / ⚫ done / ⚪ queued / 🟢 ready
+
+| ID | Path | Name | Status | Owner Agent | Phase enter gate |
+|---|---|---|---|---|---|
+| SP-0 | `<root>/` | Skeleton + recipe v2 migration | 🟡 wip | sp0impler | (none — current) |
+| SP-1 | `Service/crawl/cookie-manager/` | CookieManager (fork CookieCloud + hook) | ⚪ queued | (none) | SP-0 done |
+| SP-2 | `Engine/zhihu/` | Zhihu Engine | ⚪ queued | (none) | SP-0 done + SP-1 protocol agreed |
+| SP-3 | `Skill/crawl/zhihu-crawl/` | Zhihu Skill | ⚪ queued | (none) | SP-2 implemented |
+| SP-4a | `Engine/bilibili/` | Bilibili Engine | ⚪ queued | (none) | SP-0 done; BN docker reachable |
+| SP-4b | `Skill/crawl/bilibili-crawl/` | Bilibili Skill | ⚪ queued | (none) | SP-4a implemented |
+| SP-5a | `Service/crawl/zhihu-watcher/` | Zhihu favorites watcher | ⚪ queued | (none) | SP-2 implemented |
+| SP-5b | `Service/crawl/bilibili-watcher/` | Bilibili favorites watcher | ⚪ queued | (none) | SP-4a implemented |
+| SP-6 | `Skill/ingester/crawl-md-saver/` | CrawlMdSaver Skill | ⚪ queued | (none) | SP-3 / SP-4b crawl skills register |
+| SP-7 | `Service/ingester/thino-ingester/` | Thino Ingester | ⚪ queued | (none) | SP-6 implemented |
+| SP-8 (v1+) | `Skill/router/web-search/` | Web Search Router | ⚪ queued | (none) | v1 done; Zhihu API key acquired |
 
 ## v1.0 OSS release plan
 
@@ -1145,7 +1149,23 @@ cat > docs/Dashboard/index.md <<'EOF'
 > Single source of truth for "what the user needs to do next" in JarvanKB.
 > Authors: any agent session may append. Reader: user.
 > Protocol contract: `~/.claude/skills/cc-dashboard/SKILL.md`
-> Repo-local hook (language policy, mark-done owner, triggers): `docs/HarnessStack/hooks/cc-dashboard.md`
+> Repo-local hook (language policy, mark-done owner, triggers, **H2A coupling**): `docs/HarnessStack/hooks/cc-dashboard.md`
+
+## Where else to look
+
+> All Human-to-Agent (H2A) interactions surface through `sendbox/` + this Dashboard. RepoMem / superpowers specs / hooks are agent-internal; pointers below let user find them without memorizing paths.
+
+| 想看 | 去哪 |
+|---|---|
+| 长期路线图 + SP 状态板（kanban-like） | `docs/RepoMem/persist/version-plan.md` §Planned sub-projects |
+| 当前 active session 的交接信 | `docs/sendbox/to{Prefix}{Role}/handoff.md`（例：`toSP0Impler/`、`toZhihuCrawlOrche/`） |
+| 收到的 milestone-done / blocker 信件 | `docs/sendbox/toOrchestrator/from-*.md` |
+| 用户单向信（agent → user） | `docs/sendbox/toUser/*.md` |
+| 历史决策 / 调研结论 / 架构 | `docs/RepoMem/persist/memory/` 与 `architecture/` |
+| 跨模块 design / plan | `docs/superpowers/{specs,plans}/` |
+| 调用 JarvanKB 工具的契约（caller agent） | `docs/sendbox/toAgent/handoff.md` |
+| HarnessStack v2 治理 | `docs/HarnessStack/longterm.md` |
+| 项目总览（人类可读） | `README.md` |
 
 ## Active
 
@@ -1154,6 +1174,7 @@ cat > docs/Dashboard/index.md <<'EOF'
 | UN-005 | B | 在独立 session 中执行物理改名：`mv Tools/AgentCrawl Tools/JarvanKB`，确认 git mv 路径无丢失，commit | `docs/superpowers/specs/2026-05-31-SP-0-jarvankb-skeleton-design.md` §2 | SP-1 brainstorming 启动（路径稳定后） | 2026-05-31 | open |
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-007 | B | 起一个独立 Claude Code session（cwd = `Tools/AgentCrawl/`），第一句话告诉它：`read docs/sendbox/toSP0Impler/handoff.md and execute the plan it references`。等它在 `docs/sendbox/toOrchestrator/` 写出 `from-sp0impler-sp0-done.md` 或 blocker letter 后告知 orche | `docs/sendbox/toSP0Impler/handoff.md` | SP-1 brainstorming 启动 | 2026-05-31 | open（impler 完成 SP-0 即可归档）|
+| UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
 
 ## Archive
 
@@ -1172,7 +1193,7 @@ EOF
 grep -c "UN-" docs/Dashboard/index.md
 ```
 
-Expected: 6 matches (2 active + 4 archive).
+Expected: 8 matches (4 active [UN-005/006/007/008] + 4 archive [UN-001..004]).
 
 - [ ] **Step 9.4: Commit**
 
