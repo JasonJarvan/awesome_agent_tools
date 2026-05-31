@@ -10,7 +10,7 @@
 
 - **10 sub-project directories** seeded under Engine/Skill/Service, each with `docs/{README,interface,architecture}.md` + `docs/RepoMem/{architecture,decisions}.md` + `src/` + `tests/` (51 stub .md files); `Skill/router/README.md` placeholds SP-8 (v1+).
 - **LLMClient skeleton** in `Engine/common/src/` (litellm-backed; constructor instantiable; `complete` / `stream` / `to_opencode` raise `NotImplementedError` per the v1 frozen contract) + `config/llm.yaml.example`.
-- **Spec layer fully removed**: workspace `docs/openspec/` + root symlink + `.claude/{commands/opsx,skills/openspec-*}` (the `.claude` artifacts were gitignored → filesystem-only removal; no commit). See `docs/HarnessStack/longterm.md §Recipe v1→v2 Migration` for the layer name + rationale.
+- **Spec layer fully removed**: its workspace directory + the root symlink + the per-repo `.claude/` command/skill artifacts (the `.claude/` ones were gitignored → filesystem-only removal, no commit). See `docs/HarnessStack/longterm.md §Recipe v1→v2 Migration` for the layer name, the exact removed paths, and rationale.
 - **Recipe v1 → v2 Full Rewrite** recorded in `longterm.md` (8-step pipeline, single verification gate, layered RepoMem, `to{Prefix}{Role}` mailbox convention); v1 content archived as DEPRECATED.
 - **v2 migration of all governance/memory docs**: `CLAUDE.md`, both HarnessStack READMEs, RepoMem persist (`runbook §0` removed + pre-v2 banner), RepoMem governance docs (`README` / `architecture/index` / `memory/index`), `hooks/cc-dashboard.md`, `Dashboard/index.md`, and top-level `README.md`.
 - **Mid-execution blocker** (Task 11 sweep residue in 4 unscoped files) raised + resolved via your decisions letter (D1=A, D2=A); those 4 files cleaned of Spec-layer references in commit `de4af04`.
