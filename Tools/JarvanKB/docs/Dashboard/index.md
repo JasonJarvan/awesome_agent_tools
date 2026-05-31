@@ -33,9 +33,9 @@
 |---|---|---|---|---|
 | SP-0 | 骨架 + recipe v2 迁移 | ⚫ done | sp0impler | （无）|
 | SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约 `Service/crawl/cookie-manager/docs/interface.md`）；Step 8 RepoMem.merge 已完成（impler-driven HITL，激活 credentials 域） |
-| SP-2 | 知乎引擎 | 🟢 ready | (无) | 进入条件已满足（SP-0 done ✓ + SP-1 协议敲定 ✓，契约 `Service/crawl/cookie-manager/docs/interface.md`）；待起 impler |
+| SP-2 | 知乎引擎 | 🟡 wip (Stage 1) | sp2impler | handoff 已写 `docs/sendbox/toSP2Impler/`；与 SP-4a 并行、互不依赖；**无 execute gate**（依赖全满足） |
 | SP-3 | 知乎 Skill | ⚪ queued | (无) | SP-2 实现完成 |
-| SP-4a | B 站引擎 | ⚪ queued | (无) | SP-0 完成；BN docker 可达 |
+| SP-4a | B 站引擎 | 🟡 wip (Stage 1) | sp4aimpler | handoff 已写 `docs/sendbox/toSP4aImpler/`；design+plan 与 SP-2 并行；**Stage 3 execute gate = BN docker 可达（UN-018）** |
 | SP-4b | B 站 Skill | ⚪ queued | (无) | SP-4a 实现完成 |
 | SP-5a | 知乎收藏夹监听服务 | ⚪ queued | (无) | SP-2 实现完成 |
 | SP-5b | B 站收藏夹监听服务 | ⚪ queued | (无) | SP-4a 实现完成 |
@@ -51,6 +51,9 @@
 |---|---|---|---|---|---|---|
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
+| UN-016 | B | **起 SP2Impler session**（新 Claude Code 会话，cwd=`Tools/JarvanKB/`，与 orche/SP4aImpler 并行），第一句：`read docs/sendbox/toSP2Impler/handoff.md and start SP-2`。知乎引擎,无 execute gate,可一路跑到 done | `docs/sendbox/toSP2Impler/handoff.md` | SP-2 落地 | 2026-06-01 | open |
+| UN-017 | B | **起 SP4aImpler session**（新会话，cwd=`Tools/JarvanKB/`，与 SP2Impler 并行），第一句：`read docs/sendbox/toSP4aImpler/handoff.md and start SP-4a`。B 站引擎,design+plan 可先跑,execute 等 UN-018 | `docs/sendbox/toSP4aImpler/handoff.md` | SP-4a 落地 | 2026-06-01 | open |
+| UN-018 | F | **部署 / 确认 BiliNote docker 可达**（`TRANSCRIBER_TYPE=bcut`）——SP-4a Stage 3 execute + 手动 smoke 的前置。SP4aImpler 会先出 BN docker-compose/config,你 `docker compose up` 起来并把 endpoint 告诉它(或它发 blocker 信时回) | SP4aImpler 的 `from-sp4aimpler-blocker-bn-docker.md`（待发） | SP-4a Stage 3 | 2026-06-01 | open |
 
 ## Archive
 

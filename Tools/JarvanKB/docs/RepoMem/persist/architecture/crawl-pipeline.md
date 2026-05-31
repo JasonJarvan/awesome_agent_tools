@@ -1,5 +1,11 @@
 # Architecture
 
+> ⚠️ **部分 SUPERSEDED（R5, 2026-05-31）**：下文 **B 站管线**（Tingwu 听悟 + OSS 上传 + yt-dlp 抽音频 +
+> Paraformer fallback）是 **R5 之前的旧设计，已废弃**。v1 B 站方案改为 **BiliNote Docker + bcut（B站必剪
+> 免费云端 ASR）+ 字幕优先级联**，Aliyun/OSS 退出 v1（见 `version-plan.md` §Compatibility notes、
+> `credentials.md`、SP-0 design §7 SP-4a）。SP-4a 的权威范围以 SP-0 §7 为准，**勿照本文件 B 站部分实现**。
+> **知乎链路**（CDP `Chrome:9222` → Jina Reader fallback）仍为 SP-2 的相关研究参考，未废弃。
+
 ## 总数据流
 
 ```
