@@ -1,6 +1,7 @@
 # SP-1 CookieManager — Design
 
 > Status: Stage 1 design (brainstorming output). Audience: A2A (English per `docs/RepoMem/persist/config.md`).
+> Chinese translation (H2A, for the user): `2026-05-31-SP-1-cookie-manager-design.zh.md` — keep in sync on edits.
 > Temp location per handoff §3.B; `git mv` into `Service/crawl/cookie-manager/docs/superpowers/specs/` at Stage 3 start.
 > Verified protocol facts + path analysis: `docs/RepoMem/temp/sp1-cookie-manager/research.md`.
 > Parent context: `docs/superpowers/specs/2026-05-31-SP-0-jarvankb-skeleton-design.md` §7 (SP-1 entry, dependency graph).
