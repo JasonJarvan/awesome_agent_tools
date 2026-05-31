@@ -1,0 +1,19 @@
+# JarvanKB LLM provider configuration
+# Copy to config/llm.yaml and fill credentials in .env (NEVER commit credentials).
+
+profiles:
+  default:
+    model: claude-opus-4-7              # litellm model id; switch freely
+    api_key_env: ANTHROPIC_API_KEY      # env var name to read at runtime
+
+  fallback:
+    model: dashscope/qwen-max
+    api_key_env: DASHSCOPE_API_KEY
+
+  local:
+    model: ollama/llama3
+    api_key_env: ""                      # ollama needs no key
+    api_base_env: OLLAMA_API_BASE
+
+# Active profile order — first available wins.
+active: [default, fallback]
