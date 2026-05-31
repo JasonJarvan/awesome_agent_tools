@@ -1,4 +1,4 @@
-# HarnessStack — `<target-repo>` at solo/long-lived
+# HarnessStack — `JarvanKB` at solo/long-lived
 
 > One-time distillation source for an AI agent operating in the target
 > repository. Read once, condense sections 1–4 into `CLAUDE.md`, then
@@ -9,49 +9,46 @@
 
 This repository runs HarnessStack at `solo` scale, horizon `long-lived`, type `platform`.
 
-- **Active recipe:** `openspec-superpowers-repomem-sendbox-dashboard`
+- **Active recipe:** `superpowers-repomem-sendbox-dashboard` (**v2**, effective 2026-05-31)
 - **Source template:** `harness-factory/assets/templates/longterm/solo.md`
-- **OpenSpec Root:** `docs/openspec/`
-- **Effective from:** `<YYYY-MM-DD>` (set on activation)
+- **Spec layer:** removed in the v2 Full Rewrite — see `longterm.md §Recipe v1→v2 Migration`, which records the prior (v1) recipe id and the full migration detail.
+- **Effective from:** 2026-05-31
 
 ## 2. Active Methods
 
-- `OpenSpec` — Spec layer; change cycle (propose → design → tasks → implement → archive). One task uses one `change-id`.
-- `Superpowers` — execution discipline; brainstorming and writing-plans plus the OpenSpec change cycle jointly carry the emergent primary-workflow responsibility.
-- `RepoMem` — long-term repository memory (persist + temporary split, HITL merge into long-term after `OpenSpec.archive`).
-- `sendbox-protocol` — file-based asynchronous channel for multi-session / cross-worktree coordination. Main agent's `docs/sendbox/` is the single source of truth; side cwds write to it by relative or absolute path.
+- `Superpowers` — execution discipline; brainstorming and writing-plans carry the emergent primary-workflow responsibility.
+- `RepoMem` — long-term repository memory (persist + temporary split; HITL merge into long-term after `finishing-a-development-branch`); **layered** (global `<root>/docs/RepoMem/persist/` + per-module `<module>/docs/RepoMem/`).
+- `sendbox-protocol` — file-based asynchronous channel for multi-session / cross-worktree coordination. Main agent's `docs/sendbox/` is the single source of truth; side cwds write to it by relative or absolute path. Per-task mailbox naming `to{Prefix}{Role}/` (see `longterm.md §Local sendbox conventions`).
 - `cc-dashboard` — single-file projection of pending user actions at `docs/Dashboard/index.md`. Atomic granularity (one letter with N asks → N rows). Independent lifecycle from letters.
+- Removed in v2: the Spec layer. See `longterm.md §Recipe v1→v2 Migration`.
 - Inactive by default: `ECC` / `ECC(light)`, `BMAD` / `gstack` / `GSD`.
 
 ## 3. Per-Task Pipeline (Compressed)
 
 > This is the compressed view. **It is not authoritative.** For the full
 > step list, conflict rules, and exception handling, see
-> `longterm.md § Pipeline`. Sendbox letter writes and dashboard row writes
+> `longterm.md § Pipeline v2`. Sendbox letter writes and dashboard row writes
 > are side-effects of the steps below, not separate steps.
 
-1. `RepoMem.read` — load long-term architecture and memory as task context.
+1. `RepoMem.read` — load global persist + per-module RepoMem (two layers).
 2. `Superpowers.brainstorming` — clarify vague intent. (Spawning a subagent → `handoff.md`; Type-B dashboard row.)
-3. `OpenSpec.explore / propose` — convert intent into a formal change with specs.
-4. `RepoMem.capture` — open task-level temporary docs.
-5. `Superpowers.writing-plans` — consume OpenSpec specs and tasks. (Subagent plan → `plan-ready.md`.)
-6. Execute — `using-git-worktrees` + `executing-plans` + TDD; `RepoMem.capture` continuous. (A-12 boundary → blocker letter.)
-7. `Superpowers.verification-before-completion` + `OpenSpec.verify` — dual-perspective verification.
-8. `Superpowers.requesting-code-review`. (Bundled `decisions.md` letters MAY be written here.)
-9. `Superpowers.finishing-a-development-branch`. (`archived.md` MAY be written here.)
-10. `OpenSpec.archive` — freeze change record.
-11. `RepoMem.merge` (HITL) — promote stable knowledge; any `promote-to-durable.md` content lands here.
-12. `RepoMem.prune / split` — periodic hygiene, not per-task.
+3. `RepoMem.capture` — open task-level temporary docs in the relevant module's `docs/RepoMem/temp/<slug>/`.
+4. `Superpowers.writing-plans` — produce plan; land at `<root>/docs/superpowers/plans/` or `<module>/docs/superpowers/plans/`. (Subagent plan → `plan-ready.md`.)
+5. Execute — `using-git-worktrees` + `executing-plans` + TDD; `RepoMem.capture` continuous. (A-12 boundary → blocker letter.)
+6. `Superpowers.verification-before-completion` — single gate; tests + evidence required before claiming done.
+7. `Superpowers.requesting-code-review` + `finishing-a-development-branch` — both ask-first.
+8. `RepoMem.merge` (HITL) — promote per-module decisions to global persist when warranted; any `promote-to-durable.md` content lands here; then `prune` / `split`.
 
 ## 4. Hard Invariants
 
-- **Add-only**: a method that has been activated never deactivates; upgrades are extensions, never replacements. Downgrades are NOT add-only — prefer leaving layers active-but-unexercised over removing them.
-- **Dual-verification gate**: both `OpenSpec.verify` AND `Superpowers.verification-before-completion` MUST pass before `finishing-a-development-branch`. RepoMem, sendbox, and cc-dashboard have no verification role.
-- **Merge ordering**: `RepoMem.merge` runs strictly AFTER `OpenSpec.archive`, never before, and is always HITL. Any sendbox `promote-to-durable.md` content flows through this gate, never via a parallel path.
-- **Single task identifier**: `<task>` = `change-id` = `<slug>` — one identifier across OpenSpec, RepoMem, and HarnessStack docs.
-- **No content duplication across task-level documents**: OpenSpec change docs own the per-change contract; RepoMem temporary memory owns WHY/context; writing-plans owns HOW. See `longterm.md § Cross-Layer Conflicts`.
-- **Sendbox cannot override OpenSpec**: an archived OpenSpec change is the durable per-change contract. A letter MAY cite the spec; if the letter implies the spec is wrong, open a new OpenSpec change — do not edit the archived spec via a letter.
+- **Add-only**: a method that has been activated never deactivates by stealth; recipe upgrades (e.g. the v1→v2 removal of the Spec layer) require a **Full Rewrite** entry in `longterm.md`. Downgrades are NOT silent — prefer leaving layers active-but-unexercised over removing them.
+- **Single verification gate**: `Superpowers.verification-before-completion` is the only mandatory pre-commit check. RepoMem, sendbox, and cc-dashboard have no verification role.
+- **Merge ordering**: `RepoMem.merge` runs strictly AFTER `finishing-a-development-branch`, never before, and is always HITL. Any sendbox `promote-to-durable.md` content flows through this gate, never via a parallel path.
+- **Single task identifier**: `<task>` = `<slug>` — one identifier across HarnessStack and RepoMem docs.
+- **No content duplication across task-level documents**: RepoMem temporary memory owns WHY/context; writing-plans owns HOW. See `longterm.md § Cross-Layer Conflicts`.
 - **One sendbox per project**: the main agent's `docs/sendbox/` is canonical. Subagents in side cwds write to it by relative or absolute path — never fan out under their own cwd.
+- **Per-task mailbox**: every parallel non-root session reads/writes its own `to{Prefix}{Role}/` mailbox; a single shared role-only mailbox is forbidden for concurrent roles. See `longterm.md §Local sendbox conventions`.
+- **Layered RepoMem**: a module reads two layers (global persist + module memory), writes one; HITL promotes module → global.
 - **One letter → N dashboard rows**: each atomic user action emits its own row.
 - **Sendbox and dashboard lifecycles are independent**: burning a letter does NOT cascade-delete dashboard rows; marking a row done does NOT trigger letter cleanup.
 
