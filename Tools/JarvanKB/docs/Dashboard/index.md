@@ -50,7 +50,8 @@
 | ID | Type | Action | Where (detail) | Blocker for | Since | Status |
 |---|---|---|---|---|---|---|
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
-| UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
+| UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
+| UN-011 | B | 当 g2 orche 上下文吃紧或你想换新 session 时，起一个新 Claude Code session（cwd = `Tools/JarvanKB/`，与 SP1Impler 并行），第一句告诉它：`read docs/sendbox/toOrchestrator/g3-handoff.md and inherit JarvanKB orchestration`。g2 session 由你关闭（or 留作 lookup 只读）。非紧急 — 仅在你判断 g2 上下文需要 prune 时触发 | `docs/sendbox/toOrchestrator/g3-handoff.md` | g2 退场 + g3 接管 SP1Impler 反馈链路 | 2026-05-31 | open |
 
 ## Archive
 

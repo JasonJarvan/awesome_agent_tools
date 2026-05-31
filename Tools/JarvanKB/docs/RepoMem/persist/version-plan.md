@@ -17,6 +17,18 @@ audience: A2A
 | v1 | `openspec-superpowers-repomem-sendbox-dashboard` | 2026-05-26 → 2026-05-31 | Bootstrap. Deprecated via Full Rewrite. |
 | **v2** | `superpowers-repomem-sendbox-dashboard` | 2026-05-31 → | OpenSpec removed for thin-layer formation. See longterm.md §Recipe v1→v2 Migration. |
 
+## Orchestrator generations
+
+Distinct from recipe version: same recipe can span multiple orchestrator sessions; a generation ends when the session writes an inheritance handoff letter (`docs/sendbox/toOrchestrator/g{N}-handoff.md`) and a new CC session is spawned to inherit.
+
+| Generation | Identity | Active range | EOL reason |
+|---|---|---|---|
+| g1 | bootstrap-orchestrator | 2026-05-26 → 2026-05-30 | Wrote inheritance `handoff.md` post-Phase-1 doc skeleton; burned in SP-0 closure commit (5c28447) |
+| g2 | Claude Opus 4.7 (this session) | 2026-05-30 → 2026-05-31 | Wrote `g3-handoff.md` post-SP-0 done + SP-1 launched; context heavy with R1–R9 调研 + 7 governance patches, prune-via-inheritance preferred over `/compact` |
+| g3 | TBD by user spawn (see Dashboard UN-011) | 2026-05-31 → | — |
+
+Naming convention: `g{N}-handoff.md` placed in `docs/sendbox/toOrchestrator/` (same box as inbound letters; new orche replaces predecessor, no parallel box). Letter lifecycle: `burn` after inheritor logs first orche-attributable commit (decision letter / Dashboard archive / new SP brainstorming kickoff).
+
 ## Project rename
 
 - **AgentCrawl** (2026-05-26 → 2026-05-31): original scope = Zhihu + Bilibili crawlers
