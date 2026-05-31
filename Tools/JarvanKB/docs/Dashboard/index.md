@@ -32,7 +32,7 @@
 | ID | 名称 | 状态 | Owner Agent | 进入条件 |
 |---|---|---|---|---|
 | SP-0 | 骨架 + recipe v2 迁移 | ⚫ done | sp0impler | （无）|
-| SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | 🟡 wip (Stage 3) | sp1impler | Stage 3 执行中（greenlit 2026-05-31，subagent-driven，worktree TDD）|
+| SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约见 module `docs/interface.md`）；待 orche Step 8 RepoMem.merge |
 | SP-2 | 知乎引擎 | ⚪ queued | (无) | SP-0 完成 + SP-1 协议敲定 |
 | SP-3 | 知乎 Skill | ⚪ queued | (无) | SP-2 实现完成 |
 | SP-4a | B 站引擎 | ⚪ queued | (无) | SP-0 完成；BN docker 可达 |
