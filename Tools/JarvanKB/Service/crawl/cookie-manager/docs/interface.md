@@ -38,7 +38,7 @@
 ## 5. 配置（flat per-hook YAML）
 
 见 `config/cookie-manager.example.yaml`。要点：
-- `server`: `host`/`port`(默认 48088)/`data_dir`/`body_limit`(默认 50mb)。
+- `server`: `host`/`port`(默认 48088)/`data_dir`/`body_limit`(默认 50mb)/`auth_token`(可选,共享密钥)/`auth_header`(默认 `X-CookieCloud-Token`)。设了 `auth_token` 后，除 `/health` 外所有请求须带该 header（否则 401，在解析 body 前拦截）。
 - `accounts: [{uuid, password}]`: 箱子 → 解密口令（**cookie 不写这里**）。
 - `hooks[]`: 每条含 `id`、`on`(`cookie-update`\|`cron`，cron 需 `schedule`)、`match`(`uuid` glob `*`/精确 + 可选 `domain`)、`action`(`exec`\|`write_file`)。
   - `exec`: `command` + `args[]` + `env{}` + `timeout_ms`。
@@ -68,4 +68,4 @@ Docker compose（见根 `README.md`）。本地监听 `127.0.0.1:48088`（Jarvan
 - 公网 HTTPS（推荐）：`https://www.zhaoricheng.fun:48098`（Nginx TLS/Let's Encrypt → frps `101.35.46.114` → frpc 代理 `jarvankb-cookie-manager` remotePort 48088 → 本服务）
 - 公网直连 HTTP：`http://101.35.46.114:48088`（无传输层 TLS，优先用 HTTPS）
 
-**安全**：协议仅靠 uuid+password 模糊保护 → 用长随机 uuid + 强密码。cookie 端到端 AES 加密、`/update` 不传密码，payload 即使明文 HTTP 也安全；公网访问**优先 HTTPS 入口**（尤其任何带 password 的 `/get`，否则密码会明文过网）。解密查看（`show`/`dump`）走本机 CLI，勿经公网。
+**安全**：公网暴露强烈建议开 **header 鉴权**（config 设 `server.auth_token`；扩展"请求Header"填一行无空格 `X-CookieCloud-Token:<token>`），可把无密钥的扫描请求挡在 401。基础层仍靠 uuid+password 模糊保护 → 用长随机 uuid + 强密码。cookie 端到端 AES 加密、`/update` 不传密码，payload 即使明文 HTTP 也安全；公网访问**优先 HTTPS 入口**（尤其任何带 password 的 `/get`，否则密码会明文过网）。解密查看（`show`/`dump`）走本机 CLI，勿经公网。

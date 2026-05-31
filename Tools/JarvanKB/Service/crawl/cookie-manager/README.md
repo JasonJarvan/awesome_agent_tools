@@ -22,7 +22,14 @@ server address at this service.
 (frp client config: `~/Codes/Infra/frpc/frpc.toml`; after editing it run `sudo systemctl restart frpc`.)
 
 ## Security
-The protocol's only protection is uuid+password obscurity → use a **long random uuid + strong password**.
+**Recommended for public exposure — shared-secret header auth.** Set `server.auth_token` in config; then
+every request except `/health` must carry `X-CookieCloud-Token: <token>` (401 otherwise, checked before
+body parsing). In the CookieCloud extension's **请求Header** field add ONE line, no spaces:
+`X-CookieCloud-Token:<token>`. This blocks unauthenticated scanners from `/update` (poisoning) and `/get`
+(blob retrieval) entirely — defense-in-depth on top of uuid+password. Leave `auth_token` empty to disable
+(LAN-only). The header *name* (`auth_header`) defaults to `X-CookieCloud-Token`; usually leave it.
+
+The protocol's base protection is uuid+password obscurity → also use a **long random uuid + strong password**.
 Cookies are end-to-end AES-encrypted and `/update` carries only `{uuid, encrypted}` (the password never
 transits), so the payload is safe even over plain HTTP. When reaching the service over the public internet,
 **prefer the HTTPS endpoint (`:48098`)** — especially for any `/get?password=` call, whose password would

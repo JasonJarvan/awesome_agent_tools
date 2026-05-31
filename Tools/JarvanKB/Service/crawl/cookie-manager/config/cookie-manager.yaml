@@ -3,13 +3,6 @@ server:
   port: 48088
   data_dir: ./data
   body_limit: 50mb       # raise above default 100kb; cookie dumps are large
-  # Shared-secret header auth (STRONGLY recommended when exposed publicly via frp).
-  # If set, every request except /health must carry header `X-CookieCloud-Token: <auth_token>`.
-  # In the CookieCloud extension's "请求Header" field put one line (NO spaces):
-  #   X-CookieCloud-Token:REPLACE-with-a-long-random-secret
-  # Leave auth_token unset/empty to disable auth (LAN-only deployments).
-  auth_token: ""         # e.g. "a-long-random-secret"; "" = disabled
-  auth_header: X-CookieCloud-Token   # header name (default; usually leave as-is)
 accounts:
   - uuid: "REPLACE-with-the-uuid-you-set-in-the-extension"
     password: "REPLACE-with-the-encryption-password-you-set-in-the-extension"

@@ -17,6 +17,30 @@ function app() {
   return { app: createServer(store, bus, { body_limit: '50mb' }), bus, store };
 }
 
+describe('header auth (when auth_token is set)', () => {
+  function authApp() {
+    const store = createStore(dir);
+    const bus = new EventEmitter();
+    return createServer(store, bus, { body_limit: '50mb', auth_token: 'sEcReT', auth_header: 'X-CookieCloud-Token' });
+  }
+  it('401 on /update without the token header', async () => {
+    expect((await request(authApp()).post('/update').send({ uuid: 'u', encrypted: 'B' })).status).toBe(401);
+  });
+  it('accepts /update with the correct token header', async () => {
+    const res = await request(authApp()).post('/update').set('X-CookieCloud-Token', 'sEcReT').send({ uuid: 'u', encrypted: 'B' });
+    expect(res.body).toEqual({ action: 'done' });
+  });
+  it('401 on a wrong token', async () => {
+    expect((await request(authApp()).post('/update').set('X-CookieCloud-Token', 'nope').send({ uuid: 'u', encrypted: 'B' })).status).toBe(401);
+  });
+  it('401 on /get without the token header', async () => {
+    expect((await request(authApp()).get('/get/u')).status).toBe(401);
+  });
+  it('leaves /health open (no token needed)', async () => {
+    expect((await request(authApp()).get('/health')).status).toBe(200);
+  });
+});
+
 describe('POST /update', () => {
   it('stores a JSON body and returns {action:"done"}', async () => {
     const { app: a } = app();

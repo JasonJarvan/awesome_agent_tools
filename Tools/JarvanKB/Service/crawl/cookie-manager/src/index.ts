@@ -12,7 +12,11 @@ export async function startApp(cfg: Config): Promise<RunningApp> {
   const bus = new EventEmitter();
   const engine = createEngine(cfg, store, bus);
   engine.start();
-  const app = createServer(store, bus, { body_limit: cfg.server.body_limit });
+  const app = createServer(store, bus, {
+    body_limit: cfg.server.body_limit,
+    auth_token: cfg.server.auth_token,
+    auth_header: cfg.server.auth_header,
+  });
 
   const server = await new Promise<Server>((resolve) => {
     const s = app.listen(cfg.server.port, cfg.server.host, () => resolve(s));

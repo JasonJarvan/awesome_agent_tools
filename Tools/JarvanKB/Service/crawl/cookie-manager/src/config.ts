@@ -39,6 +39,8 @@ export const ConfigSchema = z.object({
     port: z.number().int().default(48088),
     data_dir: z.string().default('./data'),
     body_limit: z.string().default('50mb'),
+    auth_token: z.string().optional(),
+    auth_header: z.string().default('X-CookieCloud-Token'),
   }).default({}),
   accounts: z.array(z.object({ uuid: z.string(), password: z.string() })).default([]),
   hooks: z.array(HookSchema).default([]),
