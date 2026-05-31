@@ -31,7 +31,7 @@
 
 | ID | 名称 | 状态 | Owner Agent | 进入条件 |
 |---|---|---|---|---|
-| SP-0 | 骨架 + recipe v2 迁移 | 🔴 blocked | sp0impler | Task 1–10 done；Task 11 final sweep 卡 OpenSpec residue（见 UN-010 / blocker letter）|
+| SP-0 | 骨架 + recipe v2 迁移 | ⚫ done | sp0impler | （无）|
 | SP-1 | CookieManager（fork CookieCloud + hook） | 🟡 wip (Stage 1) | sp1impler | Stage 1+2 与 SP-0 并行；Stage 3 等 SP-0 done |
 | SP-2 | 知乎引擎 | ⚪ queued | (无) | SP-0 完成 + SP-1 协议敲定 |
 | SP-3 | 知乎 Skill | ⚪ queued | (无) | SP-2 实现完成 |
@@ -54,8 +54,6 @@
 | UN-007 | B | 起一个独立 Claude Code session（cwd = `Tools/AgentCrawl/`），第一句话告诉它：`read docs/sendbox/toSP0Impler/handoff.md and execute the plan it references`。等它在 `docs/sendbox/toOrchestrator/` 写出 `from-sp0impler-sp0-done.md` 或 blocker letter 后告知 orche | `docs/sendbox/toSP0Impler/handoff.md` | SP-1 brainstorming 启动 | 2026-05-31 | open（impler 完成 SP-0 即可归档）|
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
 | UN-009 | B | 起一个独立 Claude Code session（cwd = `Tools/AgentCrawl/`，与 SP-0 impler 并行），第一句话告诉它：`read docs/sendbox/toSP1Impler/handoff.md and execute the pipeline it references`。它会做 brainstorming + design + writing-plans 三 stage（与 SP-0 并行），Stage 3 执行会自动等 SP-0 完成 | `docs/sendbox/toSP1Impler/handoff.md` | SP-1 落地（v1 第一个功能子项目） | 2026-05-31 | open |
-| UN-010 | A | **决定 SP-0 final-sweep residue 处理范围**：D1=OpenSpec 残留在 4 个未纳入任务的文件（`RepoMem/README.md`、`persist/architecture/index.md`、`persist/memory/index.md`、`hooks/cc-dashboard.md`）是否现在改 v2（impler 倾向 yes）；D2=AgentCrawl 串改名时机（impler 倾向延到 UN-005）。读 blocker letter 给 ack | `docs/sendbox/toOrchestrator/from-sp0impler-blocker-sweep-residue.md` | SP-0 收尾（done-letter + 销信 + tag）→ SP-1 Stage 3 | 2026-05-31 | open（impler 待 orche ack）|
-
 ## Archive
 
 | ID | Action | Done | By |
@@ -64,3 +62,4 @@
 | UN-002 | 把 handoff 带到 `~/Codes/AgentCrawlers/` 起 ruflo 会话 — **obsoleted**：2026-05-30 决定继续在当前 repo 开发，迁移取消 | 2026-05-30 | bootstrap session |
 | UN-003 | 起新 orchestrator 会话，按 handoff §7 执行 — **completed**：scope 扩展到 10 子项目，SP-0 design + plan 已落盘 | 2026-05-31 | orche session 2 |
 | UN-004 | 确认已开通阿里云 AK/SK + Tingwu + OSS bucket — **obsoleted**：R5 (2026-05-31) 决定切换 BN+bcut，v1 不再依赖 Aliyun 凭据 | 2026-05-31 | orche session 2 |
+| UN-010 | 决定 SP-0 final-sweep residue 处理范围 — **resolved**：orche decisions letter ack D1=A（4 文件改 v2）+ D2=A（AgentCrawl 串延到 UN-005）；sp0impler 已执行（commit `de4af04`） | 2026-05-31 | sp0impler + orche |
