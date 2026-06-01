@@ -24,6 +24,15 @@
 
 ## SP Status Board
 
+依赖图 → 现在能并行什么
+
+SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   ← 等 SP-2
+         │            ├─ SP-4b(B站Skill)  ← 等 SP-4a
+         │            ├─ SP-5a(知乎Watcher)← 等 SP-2
+         │            └─ SP-5b(B站Watcher) ← 等 SP-4a
+         ├─ SP-2(知乎引擎) 🟢 进入条件已满足
+         └─ SP-4a(B站引擎) 进入条件:SP-0 ✓ + BN docker 可达
+         
 > JarvanKB 子项目状态板（kanban-like）。一屏看全部 SP 状态 + 责任 agent + 进入条件。
 > 状态 emoji：🟡 wip / 🔴 blocked / ⚫ done / ⚪ queued / 🟢 ready
 >
@@ -33,7 +42,7 @@
 |---|---|---|---|---|
 | SP-0 | 骨架 + recipe v2 迁移 | ⚫ done | sp0impler | （无）|
 | SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约 `Service/crawl/cookie-manager/docs/interface.md`）；Step 8 RepoMem.merge 已完成（impler-driven HITL，激活 credentials 域） |
-| SP-2 | 知乎引擎 | 🟡 wip (Stage 1) | sp2impler | handoff 已写 `docs/sendbox/toSP2Impler/`；与 SP-4a 并行、互不依赖；**无 execute gate**（依赖全满足） |
+| SP-2 | 知乎引擎 | 🟡 wip (Stage 1: design 落盘待 review) | sp2impler | handoff 已写 `docs/sendbox/toSP2Impler/`；与 SP-4a 并行、互不依赖；**无 execute gate**；zse-96 方案敲定=纯 cookie+HTTP 无签名（对齐 user 的 Zhihu-Collections-MCP）；design=`Engine/zhihu/docs/superpowers/specs/2026-05-31-SP-2-zhihu-engine-design.md` |
 | SP-3 | 知乎 Skill | ⚪ queued | (无) | SP-2 实现完成 |
 | SP-4a | B 站引擎 | 🟡 wip (Stage 1) | sp4aimpler | handoff 已写 `docs/sendbox/toSP4aImpler/`；design+plan 与 SP-2 并行；**Stage 3 execute gate = BN docker 可达（UN-018）** |
 | SP-4b | B 站 Skill | ⚪ queued | (无) | SP-4a 实现完成 |
