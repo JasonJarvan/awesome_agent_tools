@@ -17,6 +17,15 @@
 translate, classify, save files, download images, poll favorites, or call an LLM. Those belong to
 the SP-3 Skill, SP-5a Watcher, and SP-6 CrawlMdSaver layers.
 
+### Design tenet — maximize extraction, consumers filter
+The engine **returns the full structured data it can obtain from the page(s) it actually fetches,
+without pre-judging value or redundancy** — deciding what to keep, summarize, or discard is the
+downstream consumer's (Skill / Service) job, not the engine's. The only hard boundary is the **request
+boundary**: whatever a single page load / its embedded `js-initialData` yields is returned **in full
+fidelity (no truncation)**; anything that would require **extra requests** (paginating all answers,
+following links) is out of scope and left to multi-page consumers (SP-5a). This keeps the engine
+general-purpose and reusable across all downstream consumers.
+
 ### In scope (v1)
 - Fetch one Zhihu URL → Markdown body + metadata (title, author, vote/comment counts, timestamps,
   url, fetched_at).
@@ -136,15 +145,17 @@ FetchResult:
     content_markdown: str                  # body; "" for thin question detail
     metadata:         dict                  # vote_count, comment_count, created_at,
                                             # updated_at, view_count?, follow_count? ...
-    answers_preview:  list[AnswerPreview]   # question type only; [] otherwise
+    answers:          list[EmbeddedAnswer]  # question type only; [] otherwise
     comments:         list[Comment]         # [] unless with_comments=True
     fetched_at:       str (ISO-8601)
     raw:              dict | None           # optional raw initialData/API slice, for debugging
 
-Author:        name, url, headline?
-AnswerPreview: answer_id, author, vote_count, excerpt, url     # preview only, NOT full body
-Comment:       id, parent_id (None = top-level), author, content, like_count,
-               created_at, reply_to_author?
+Author:         name, url, headline?
+EmbeddedAnswer: answer_id, author, vote_count, comment_count, created_at, updated_at,
+                url, content_markdown      # FULL content when the page's initialData carries it,
+                                           # NOT truncated; whatever the single page load yields
+Comment:        id, parent_id (None = top-level), author, content, like_count,
+                created_at, reply_to_author?
 ```
 
 Comments are a **flat two-layer list**: each top-level comment, then its direct child replies, all in
@@ -159,14 +170,16 @@ layers is the complete model. No tree construction.
 |---|---|---|
 | **answer** | `…/question/{qid}/answer/{aid}`, `/answer/{aid}` | answer body Markdown + author + vote/comment counts + timestamps |
 | **article** | `zhuanlan.zhihu.com/p/{pid}`, `/p/{pid}` | article body Markdown + author + counts + timestamps |
-| **question** | `…/question/{qid}` (no `/answer/`) | question title + detail body + counts (`answer_count`, `follow_count`, `view_count`) **+ `answers_preview`** |
+| **question** | `…/question/{qid}` (no `/answer/`) | question title + detail body + counts (`answer_count`, `follow_count`, `view_count`) **+ `answers`** (embedded, full-fidelity) |
 
-**Question handling (resolved with user):** a question page is fetched for its own value — title,
-detail, counts — **plus** a top-answers **preview** list (`AnswerPreview`: author, vote_count, excerpt,
-answer URL) extracted from the **same `js-initialData`** the page already ships. This is zero extra
-requests, non-redundant (previews, not full bodies), and gives the discussion landscape at a glance.
-The engine does **not** fetch full bodies of all answers (that is redundant — fetch a specific answer
-URL for that) and does **not** paginate beyond the first page's embedded answers.
+**Question handling (per the §1 design tenet):** a question page is fetched for its own value — title,
+detail, counts — **plus** the answers the page's own `js-initialData` already carries, returned as
+`EmbeddedAnswer` objects with **full content** (not truncated to excerpts) whenever the initialData
+provides it. This is **zero extra requests** (we parse the same blob we already fetch for the question
+detail). The engine deliberately does **not** paginate to fetch *all* of a question's answers — that
+crosses the request boundary into multi-page territory and belongs to SP-5a / the consumer, which can
+call `fetch()` on each individual answer URL. So: full fidelity for what one page load yields; no extra
+requests beyond it.
 
 ---
 
