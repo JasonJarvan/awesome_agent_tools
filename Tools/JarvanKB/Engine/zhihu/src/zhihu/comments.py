@@ -92,6 +92,9 @@ def fetch_comments(item_type: str, item_id: str, *, cookies: dict, limit: int | 
     # only a truncated `child_comments` preview + a `child_comment_count` total; when the total
     # exceeds the preview, paginate the child endpoint and REPLACE the preview with the full set so
     # `flatten_comments` (which reads each root's `child_comments`) emits the whole two-layer tree.
+    # `comment_limit` is enforced by the final `flat[:limit]` slice below (the hard cap); the
+    # `collected_total` counter here only SUPPRESSES needless child requests once the budget is full —
+    # it never drops a comment that the slice would have kept.
     collected_total = 0
     for page in pages:
         for c in page.get("data", []):
@@ -103,7 +106,7 @@ def fetch_comments(item_type: str, item_id: str, *, cookies: dict, limit: int | 
                 child_budget = None if limit is None else max(0, limit - collected_total)
                 full = fetch_child_comments(str(c.get("id")), cookies=cookies, limit=child_budget,
                                             headers=headers, page_size=page_size, max_pages=max_pages)
-                c["child_comments"] = full
+                c["child_comments"] = full  # intentional in-place rewrite of the local parsed page
                 collected_total += len(full)
             else:
                 collected_total += len(inline)

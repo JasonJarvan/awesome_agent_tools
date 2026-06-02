@@ -184,3 +184,44 @@ def test_fetch_comments_comment_limit_caps_total(httpx_mock):
         json=child_page)
     out = fetch_comments("answer", "8", cookies={"d_c0": "x"}, limit=2)
     assert [c.id for c in out] == ["r1", "c1"]   # total capped at 2 (root + 1 child)
+
+
+def test_fetch_comments_multiple_roots_each_fetch_children(httpx_mock):
+    # Two roots, each with a full child set on its OWN child endpoint. Pins per-root URL
+    # construction, collected_total accumulation across roots, and no id->name collision.
+    root_page = {"data": [
+        {"id": "r1", "content": "root1", "like_count": 0, "created_time": 1700000000,
+         "author": {"name": "Root1", "url_token": "root1"},
+         "child_comments": [], "child_comment_count": 2},
+        {"id": "r2", "content": "root2", "like_count": 0, "created_time": 1700000010,
+         "author": {"name": "Root2", "url_token": "root2"},
+         "child_comments": [], "child_comment_count": 2}],
+        "paging": {"is_end": True, "next": None}}
+    r1_children = {"data": [
+        {"id": "a1", "content": "a1", "like_count": 0, "created_time": 1700000001,
+         "author": {"name": "A1", "url_token": "a1"}, "reply_comment_id": "r1"},
+        {"id": "a2", "content": "a2", "like_count": 0, "created_time": 1700000002,
+         "author": {"name": "A2", "url_token": "a2"}, "reply_comment_id": "a1"}],
+        "paging": {"is_end": True, "next": None}}
+    r2_children = {"data": [
+        {"id": "b1", "content": "b1", "like_count": 0, "created_time": 1700000011,
+         "author": {"name": "B1", "url_token": "b1"}, "reply_comment_id": "r2"},
+        {"id": "b2", "content": "b2", "like_count": 0, "created_time": 1700000012,
+         "author": {"name": "B2", "url_token": "b2"}, "reply_comment_id": "b1"}],
+        "paging": {"is_end": True, "next": None}}
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/answers/9/root_comment?order_by=score&limit=20",
+        json=root_page)
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/comment/r1/child_comment?order_by=ts&limit=20",
+        json=r1_children)
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/comment/r2/child_comment?order_by=ts&limit=20",
+        json=r2_children)
+    out = fetch_comments("answer", "9", cookies={"d_c0": "x"}, limit=None)
+    assert [c.id for c in out] == ["r1", "a1", "a2", "r2", "b1", "b2"]   # each root's full set, in order
+    by_id = {c.id: c for c in out}
+    assert by_id["a1"].parent_id == "r1" and by_id["a2"].parent_id == "r1"
+    assert by_id["b1"].parent_id == "r2" and by_id["b2"].parent_id == "r2"
+    assert by_id["a2"].reply_to_author == "A1"   # resolved within r1's set
+    assert by_id["b2"].reply_to_author == "B1"   # resolved within r2's set, no cross-root collision
