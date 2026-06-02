@@ -33,3 +33,9 @@ def test_parse_question():
     assert "Rayleigh" in r.answers[0].content_markdown
     assert r.answers[0].vote_count == 9
     assert r.answers[0].url == "https://www.zhihu.com/question/123/answer/456"
+    assert r.metadata["view_count"] == 999
+    assert r.answers[0].author.url == "https://www.zhihu.com/people/alice"
+
+def test_parse_question_missing_returns_none():
+    assert parse_question({"initialState": {"entities": {"questions": {}}}},
+                          {"question_id": "0"}, url="u") is None
