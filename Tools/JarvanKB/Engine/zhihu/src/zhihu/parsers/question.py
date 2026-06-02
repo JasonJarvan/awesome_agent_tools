@@ -1,7 +1,7 @@
 from __future__ import annotations
 from ..models import FetchResult, ZhihuType, EmbeddedAnswer
 from ..markdown import html_to_markdown
-from .._entities import entities, epoch_to_iso, parse_author
+from .._entities import entities, epoch_to_iso, parse_author, first
 
 
 def parse_question(initial_data: dict, ids: dict, *, url: str) -> FetchResult | None:
@@ -18,9 +18,9 @@ def parse_question(initial_data: dict, ids: dict, *, url: str) -> FetchResult | 
         author=parse_author(raw.get("author")),
         content_markdown=html_to_markdown(raw.get("detail", "")),
         metadata={
-            "answer_count": raw.get("answerCount", raw.get("answer_count", 0)),
-            "follow_count": raw.get("followerCount", raw.get("follower_count", 0)),
-            "view_count": raw.get("visitCount", raw.get("visit_count", 0)),
+            "answer_count": first(raw, "answerCount", "answer_count", default=0),
+            "follow_count": first(raw, "followerCount", "follower_count", default=0),
+            "view_count": first(raw, "visitCount", "visit_count", default=0),
         },
         fetched_at="",
         answers=answers,
@@ -36,10 +36,10 @@ def _embedded_answers(answers_ent: dict, qid: str) -> list[EmbeddedAnswer]:
         items.append(EmbeddedAnswer(
             answer_id=str(a.get("id", aid)),
             author=parse_author(a.get("author")),
-            vote_count=a.get("voteup_count", 0),
-            comment_count=a.get("comment_count", 0),
-            created_at=epoch_to_iso(a.get("created_time")),
-            updated_at=epoch_to_iso(a.get("updated_time")),
+            vote_count=first(a, "voteupCount", "voteup_count", default=0),
+            comment_count=first(a, "commentCount", "comment_count", default=0),
+            created_at=epoch_to_iso(first(a, "createdTime", "created_time")),
+            updated_at=epoch_to_iso(first(a, "updatedTime", "updated_time")),
             url=f"https://www.zhihu.com/question/{qid}/answer/{a.get('id', aid)}",
             content_markdown=html_to_markdown(a.get("content", "")),
         ))

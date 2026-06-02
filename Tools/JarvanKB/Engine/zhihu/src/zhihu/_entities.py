@@ -7,6 +7,14 @@ def entities(initial_data: dict) -> dict:
     return (initial_data or {}).get("initialState", {}).get("entities", {})
 
 
+def first(raw: dict, *keys, default=None):
+    """Return raw[k] for the first present key. Bridges camelCase (initialData) vs snake_case (API)."""
+    for k in keys:
+        if k in raw:
+            return raw[k]
+    return default
+
+
 def epoch_to_iso(value) -> str | None:
     if not value:
         return None
@@ -19,7 +27,7 @@ def epoch_to_iso(value) -> str | None:
 def parse_author(raw: dict | None) -> Author | None:
     if not raw:
         return None
-    token = raw.get("url_token")
+    token = raw.get("urlToken") or raw.get("url_token")
     return Author(
         name=raw.get("name", ""),
         url=f"https://www.zhihu.com/people/{token}" if token else None,

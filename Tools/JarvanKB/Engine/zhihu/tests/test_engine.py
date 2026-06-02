@@ -50,11 +50,11 @@ def test_fetch_with_comments_answer(httpx_mock):
     httpx_mock.add_response(url="https://www.zhihu.com/question/123/answer/456",
                             text=load_fixture("answer_page.html"), status_code=200)
     httpx_mock.add_response(
-        url="https://www.zhihu.com/api/v4/comment_v5/answers/456/root_comment?order_by=score&limit=20&offset=0",
+        url="https://www.zhihu.com/api/v4/comment_v5/answers/456/root_comment?order_by=score&limit=20",
         json={"data": [{"id": "k1", "content": "nice", "like_count": 2, "created_time": 1700000000,
-                        "author": {"member": {"name": "Carol", "url_token": "carol"}},
+                        "author": {"name": "Carol", "url_token": "carol"},
                         "child_comments": []}],
-              "paging": {"is_end": True}})
+              "paging": {"is_end": True, "next": None}})
     r = fetch("https://www.zhihu.com/question/123/answer/456", cookies={"d_c0": "x"}, with_comments=True)
     assert len(r.comments) == 1
     assert r.comments[0].content == "nice"

@@ -28,3 +28,15 @@ def test_parse_answer():
 def test_parse_answer_missing_entity_returns_none():
     assert parse_answer({"initialState": {"entities": {"answers": {}}}},
                         {"answer_id": "999"}, url="u") is None
+
+def test_parse_answer_camelcase_initialdata():
+    initial = {"initialState": {"entities": {"answers": {"5": {
+        "id": 5, "content": "<p>body</p>", "voteupCount": 42, "commentCount": 7,
+        "createdTime": 1700000000, "updatedTime": 1700000100,
+        "author": {"name": "Cami", "urlToken": "cami"},
+        "question": {"id": 9, "title": "Q"}}}}}}
+    r = parse_answer(initial, {"answer_id": "5"}, url="u")
+    assert r.metadata["vote_count"] == 42
+    assert r.metadata["comment_count"] == 7
+    assert r.metadata["created_at"].startswith("20")
+    assert r.author.url == "https://www.zhihu.com/people/cami"

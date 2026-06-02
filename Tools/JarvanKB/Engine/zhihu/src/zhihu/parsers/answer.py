@@ -1,7 +1,7 @@
 from __future__ import annotations
 from ..models import FetchResult, ZhihuType
 from ..markdown import html_to_markdown
-from .._entities import entities, epoch_to_iso, parse_author
+from .._entities import entities, epoch_to_iso, parse_author, first
 
 
 def parse_answer(initial_data: dict, ids: dict, *, url: str) -> FetchResult | None:
@@ -17,11 +17,11 @@ def parse_answer(initial_data: dict, ids: dict, *, url: str) -> FetchResult | No
         author=parse_author(raw.get("author")),
         content_markdown=html_to_markdown(raw.get("content", "")),
         metadata={
-            "vote_count": raw.get("voteup_count", 0),
-            "comment_count": raw.get("comment_count", 0),
-            "created_at": epoch_to_iso(raw.get("created_time")),
-            "updated_at": epoch_to_iso(raw.get("updated_time")),
+            "vote_count": first(raw, "voteupCount", "voteup_count", default=0),
+            "comment_count": first(raw, "commentCount", "comment_count", default=0),
+            "created_at": epoch_to_iso(first(raw, "createdTime", "created_time")),
+            "updated_at": epoch_to_iso(first(raw, "updatedTime", "updated_time")),
         },
-        fetched_at="",  # set by engine
+        fetched_at="",
         raw=raw,
     )

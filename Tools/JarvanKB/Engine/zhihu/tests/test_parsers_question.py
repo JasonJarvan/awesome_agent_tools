@@ -39,3 +39,15 @@ def test_parse_question():
 def test_parse_question_missing_returns_none():
     assert parse_question({"initialState": {"entities": {"questions": {}}}},
                           {"question_id": "0"}, url="u") is None
+
+def test_parse_question_embedded_answers_camelcase():
+    initial = {"initialState": {"entities": {
+        "questions": {"3": {"id": 3, "title": "Q", "detail": "<p>d</p>",
+                            "answerCount": 1, "followerCount": 2, "visitCount": 3}},
+        "answers": {"8": {"id": 8, "content": "<p>x</p>", "voteupCount": 50, "commentCount": 1,
+                          "createdTime": 1700000000, "updatedTime": 1700000000,
+                          "author": {"name": "Z", "urlToken": "z"}, "question": {"id": 3}}}}}}
+    r = parse_question(initial, {"question_id": "3"}, url="u")
+    assert r.answers[0].vote_count == 50
+    assert r.answers[0].created_at.startswith("20")
+    assert r.answers[0].author.url == "https://www.zhihu.com/people/z"
