@@ -1,0 +1,28 @@
+# Minimal BiliNote deployment for SP-4a (Bilibili Engine).
+# Upstream: https://github.com/JefferyHcool/BiliNote  (all-in-one image built from Dockerfile.complete).
+# Running this is a USER action (Dashboard UN-018). After boot:
+#   1) open http://localhost:${APP_PORT}
+#   2) add an LLM provider under 模型供应商 (key stored in BiliNote's SQLite, not in git)
+#   3) copy that provider_id (+ this base_url) into config/bilibili-engine.yaml
+# `docker compose` auto-loads a sibling `.env` (copy from .env.example).
+services:
+  bilinote:
+    image: ghcr.io/jefferyhcool/bilinote:latest
+    container_name: jarvankb-bilinote
+    environment:
+      # bcut = B站必剪 free cloud ASR. The subtitle-first cascade means ASR only runs
+      # for videos without subtitles. You can also confirm/switch this in the web UI
+      # (音频转写配置 → 必剪).
+      - TRANSCRIBER_TYPE=${TRANSCRIBER_TYPE:-bcut}
+    ports:
+      - "${APP_PORT:-3015}:80"
+    volumes:
+      - bilinote-data:/app/backend/data        # SQLite (provider config, note history)
+      - bilinote-config:/app/backend/config     # transcriber.json runtime config
+      - bilinote-static:/app/backend/static     # screenshots / static assets
+    restart: unless-stopped
+
+volumes:
+  bilinote-data:
+  bilinote-config:
+  bilinote-static:
