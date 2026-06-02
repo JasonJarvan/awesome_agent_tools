@@ -20,10 +20,15 @@ consume. (Aliyun AK / OSS credentials are out of v1 scope — R5 switched ASR to
   reimplement the protocol instead of forking** — keeps license freedom + full control; byte-for-byte
   compatibility is guaranteed by reusing the same `crypto-js` the extension uses.
 - **Integration contract (downstream entry point):** `Service/crawl/cookie-manager/docs/interface.md`.
-  Cookie-consuming SPs (SP-3 Zhihu Skill, SP-4b Bilibili Skill, SP-5a/5b watchers) integrate against that
-  file — either **push** (configure a T1 `cookie-update` / T2 `cron` hook → `exec` / `write_file`) or
-  **pull** (`cookie-manager show domain=<x>` / `GET /get/:uuid` then decrypt). This is what satisfies
-  their "SP-1 协议敲定" entry condition.
+  Cookie-consuming SPs (SP-3 Zhihu Skill, SP-4b Bilibili Skill, SP-5a/5b watchers) integrate by **active
+  PULL** (`cookie-manager show domain=<x>` / `GET /get/:uuid` then client-side decrypt per interface §3).
+  **Decision (user-ratified 2026-06-02, cross-vertical — all crawl consumers): PULL is the sole delivery
+  path; the SP-1 _push_ delivery path** (a `cookie-update`/`cron` hook landing plaintext cookies for
+  consumers to read) **is permanently cancelled** — push left plaintext cookies on disk + a standing
+  cross-module config dep, while pull decrypts transiently in-memory and keeps each consumer
+  self-contained. SP-1's general hook engine (`exec`/`write_file`) stays as-is but **latent** (a future
+  non-decrypting consumer would be a config entry, not new code — nothing removed from SP-1). This satisfies
+  the consumers' "SP-1 协议敲定" entry condition.
 - **Flow:** extension → `POST /update {uuid, encrypted, crypto_type?}` (AES; `legacy` = CryptoJS
   passphrase/`Salted__`, or `aes-128-cbc-fixed`) → file-per-uuid store → hook engine + CLI + `/get`.
 - **Deployment / exposure:** local `127.0.0.1:48088` (JarvanKB **48xxx** service-port convention);
@@ -54,5 +59,5 @@ consume. (Aliyun AK / OSS credentials are out of v1 scope — R5 switched ASR to
 ## Open / future
 
 - Credential **refresh / keep-alive** strategy (handling cookie expiry) is deferred until the watchers
-  (SP-5a/5b) run — they decide push-hook vs pull cadence.
+  (SP-5a/5b) run — pull-on-demand cadence is theirs to set (the push path is cancelled; see Integration contract above).
 - Aliyun / OSS credentials: out of v1.

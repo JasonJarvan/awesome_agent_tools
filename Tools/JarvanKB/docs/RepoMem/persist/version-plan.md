@@ -59,6 +59,7 @@ When all v1 sub-projects (SP-0 through SP-7) verified end-to-end:
 
 - HarnessStack recipe upgrades: see `longterm.md` §Full Rewrite Conditions
 - ASR strategy (D3 in `pre-openspec-decisions.md`) revised in R5 (2026-05-31): **v1 switched from 通义听悟 to BiliNote + bcut (B站必剪 free cloud ASR)**. D3 marked as superseded but file not deleted (historical trace)
+- **Cookie delivery for all crawl consumers = active PULL** (user-ratified 2026-06-02, cross-vertical): consumers fetch SP-1 cookies via `GET /get/:uuid` + client decrypt (or `cookie-manager show domain=<x>`); the **SP-1 _push_ delivery path is permanently cancelled** (SP-1 hook engine retained but latent — a future non-decrypting consumer is a config entry, not new code). Relayed by ZhihuCrawl SubOrche; applies to SP-3/SP-5a now + **propagate to SP-4b/5b scope** when their handoffs are written. Detail: `architecture/credentials.md` §Integration contract.
 
 ## How this doc is updated
 
