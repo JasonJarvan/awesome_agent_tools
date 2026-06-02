@@ -274,8 +274,11 @@ At the gate, the implementer writes a blocker letter
 asking the user to bring BN up and confirm its endpoint. Stage 1/2 are NOT blocked on this.
 
 ### 6.3 Engine config
-`config/bilibili-engine.example.yaml` (committed) / `config/bilibili-engine.yaml` (gitignored), mirroring
-SP-1's config pattern:
+**Module-local** (mirroring SP-1's actual layout `Service/crawl/cookie-manager/config/`, NOT a repo-root
+`config/`): `Engine/bilibili/config/bilibili-engine.example.yaml` (committed) /
+`Engine/bilibili/config/bilibili-engine.yaml` (gitignored via the module's own `.gitignore`).
+`DEFAULT_CONFIG_PATH` is the relative `config/bilibili-engine.yaml` (resolved from the module dir). This
+keeps the module self-contained for the v1.0 fractal split. Schema:
 
 ```yaml
 bilinote:
@@ -361,6 +364,8 @@ Engine/bilibili/
 │   ├── config.py                       # EngineConfig loader
 │   └── cli.py                          # thin CLI
 ├── tests/                              # pytest; fixtures under tests/fixtures/
+├── config/                             # module-local engine config (per SP-1 precedent)
+│   └── bilibili-engine.example.yaml    # committed; real bilibili-engine.yaml gitignored
 ├── deploy/bilinote/                    # docker-compose.yml + .env.example + README (the gate)
 └── docs/
     ├── interface.md                    # frozen public contract (mirror of §4)
@@ -369,4 +374,6 @@ Engine/bilibili/
     └── RepoMem/{architecture,decisions}.md
 ```
 
-(Engine config lives at repo root `config/bilibili-engine.{yaml,example.yaml}`, per SP-1's pattern.)
+(Engine config is **module-local** at `Engine/bilibili/config/bilibili-engine.{yaml,example.yaml}`,
+mirroring SP-1's actual `Service/crawl/cookie-manager/config/` layout — keeps the module self-contained
+for the v1.0 fractal split.)
