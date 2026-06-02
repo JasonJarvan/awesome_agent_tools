@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bilibili-engine"
+version = "0.1.0"
+description = "JarvanKB Bilibili transcription engine (SP-4a): one video ref -> metadata + transcript + summary"
+requires-python = ">=3.11"
+dependencies = [
+    "bilibili-api-python>=17,<18",
+    "httpx>=0.27",
+    "PyYAML>=6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+bilibili-engine = "bilibili.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
