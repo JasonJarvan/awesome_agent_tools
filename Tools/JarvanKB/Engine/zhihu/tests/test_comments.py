@@ -146,3 +146,41 @@ def test_fetch_comments_fetches_full_child_tree(httpx_mock):
     by_id = {c.id: c for c in out}
     assert by_id["c1"].reply_to_author == "Root"   # c1 -> r1 -> Root
     assert by_id["c2"].reply_to_author == "U1"     # c2 -> c1 -> U1, resolved across the FULL set
+
+
+def test_fetch_comments_skips_child_fetch_when_preview_complete(httpx_mock):
+    root_page = {"data": [
+        {"id": "r1", "content": "root", "like_count": 0, "created_time": 1700000000,
+         "author": {"name": "Root", "url_token": "root"},
+         "child_comments": [
+             {"id": "c1", "content": "only child", "like_count": 0, "created_time": 1700000001,
+              "author": {"name": "U1", "url_token": "u1"}, "reply_comment_id": "r1"}],
+         "child_comment_count": 1}],   # preview already complete -> no child request
+        "paging": {"is_end": True, "next": None}}
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/answers/6/root_comment?order_by=score&limit=20",
+        json=root_page)
+    # NO child-endpoint mock: if the code calls it, pytest-httpx raises on the unmatched request.
+    out = fetch_comments("answer", "6", cookies={"d_c0": "x"}, limit=None)
+    assert [c.id for c in out] == ["r1", "c1"]
+
+
+def test_fetch_comments_comment_limit_caps_total(httpx_mock):
+    root_page = {"data": [
+        {"id": "r1", "content": "root", "like_count": 0, "created_time": 1700000000,
+         "author": {"name": "Root", "url_token": "root"},
+         "child_comments": [], "child_comment_count": 5}],
+        "paging": {"is_end": True, "next": None}}
+    child_page = {"data": [
+        {"id": f"c{i}", "content": f"child {i}", "like_count": 0, "created_time": 1700000000 + i,
+         "author": {"name": f"U{i}", "url_token": f"u{i}"}, "reply_comment_id": "r1"}
+        for i in range(1, 6)],
+        "paging": {"is_end": True, "next": None}}
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/answers/8/root_comment?order_by=score&limit=20",
+        json=root_page)
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/comment/r1/child_comment?order_by=ts&limit=20",
+        json=child_page)
+    out = fetch_comments("answer", "8", cookies={"d_c0": "x"}, limit=2)
+    assert [c.id for c in out] == ["r1", "c1"]   # total capped at 2 (root + 1 child)
