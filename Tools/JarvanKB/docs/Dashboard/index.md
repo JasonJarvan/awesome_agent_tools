@@ -44,10 +44,10 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟡 wip ← SP-
 | SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约 `Service/crawl/cookie-manager/docs/interface.md`）；Step 8 RepoMem.merge 已完成（impler-driven HITL，激活 credentials 域） |
 | SP-2 | 知乎引擎 | ⚫ done | sp2impler | 完成 2026-06-02（merge `f8c14cb`，51 tests + 真站 smoke 全过；纯 cookie+HTTP 无签名/无浏览器）；Step 8 RepoMem.merge 已完成（impler-driven HITL，提升知乎链路根因/坑到 `crawl-pipeline.md`）；契约 `Engine/zhihu/docs/interface.md`；**v1.1 评论完整树 ⚫ done**（merge `9081cbc`，58 tests + live smoke；Step 8 闭环：decisions.md D7 + 提升 child_comment offset 坑到 `crawl-pipeline.md` §知乎链路，by zhihucommentimpler） |
 | SP-3 | 知乎 Skill | 🟡 wip | sp3impler | SubOrche（UN-019）已 spawn → `toSP3Impler/handoff.md`（起会话=UN-020）。范围锁定：cookie=主动 pull、输出=可配置根目录(vault 无关)、**SP-3 落地 `Engine/common` LLMClient 真实现**（vague_path 分类；凭据待用户填 → verify gate）。SP-2 ✓ |
-| SP-4a | B 站引擎 | 🔴 blocked (Stage 3 — 离线全done，卡 BN gate) | sp4aimpler | 离线代码全部完成：**56 单测全过、subagent-driven 逐任务两阶段 review + 最终整体 review（READY-FOR-SMOKE）、引擎不调 LLM、无活网络**。11 单元 `Engine/bilibili/src/bilibili/`；契约 `Engine/bilibili/docs/interface.md`；BN 部署件 `Engine/bilibili/deploy/bilinote/`（`TRANSCRIBER_TYPE=bcut`）。**仅剩手动 smoke（Task 16）卡 BN 可达（UN-018）→ 见 `from-sp4aimpler-blocker-bn-docker.md`**。BN 起后我跑 smoke → verify → review/finish → Step 8 merge | |
-| SP-4b | B 站 Skill | ⚪ queued | (无) | SP-4a 实现完成 |
+| SP-4a | B 站引擎 | ⚫ done | sp4aimpler | 完成 2026-06-02：**59 单测全过 + 两条路径对真实 BN+真实B站 smoke 通过**（ASR `BV1GJ411x7h7` / 字幕 `BV1BXQABNE4y`→prefetched→mimo-v2.5-pro；prose 可读文本已验证）。subagent-driven 逐任务两阶段 review + 最终整体 review。契约 `Engine/bilibili/docs/interface.md`；部署件 `deploy/bilinote/`。Step 8 RepoMem.merge 已完成（impler-driven HITL，提升 B站 cookie 域=`bilibili.com`无点 + BN+bcut 运维坑到 `credentials.md`/`crawl-pipeline.md`）。done 信已发 orche | |
+| SP-4b | B 站 Skill | 🟢 ready | (无) | SP-4a 已完成 ✓（2026-06-02）→ 可起 impler；契约 `Engine/bilibili/docs/interface.md`；cookie=主动 PULL（`domain=bilibili.com` 无点，SESSDATA） |
 | SP-5a | 知乎收藏夹监听服务 | 🟡 wip | sp5aimpler | SubOrche（UN-019）已 spawn → `toSP5aImpler/handoff.md`（起会话=UN-021）。范围锁定：独立服务+自带调度器(默认30–60min)、高水位 `created`、cookie=主动 pull、输出=可配置目录(无分类)。**impler 务必先读 `crawl-pipeline.md` §知乎链路**。SP-2 ✓ |
-| SP-5b | B 站收藏夹监听服务 | ⚪ queued | (无) | SP-4a 实现完成 |
+| SP-5b | B 站收藏夹监听服务 | 🟢 ready | (无) | SP-4a 已完成 ✓（2026-06-02）→ 可起 impler；调 SP-4a 引擎；cookie=主动 PULL（`bilibili.com`，SESSDATA） |
 | SP-6 | CrawlMdSaver Skill（爬取-笔记整合） | ⚪ queued | (无) | SP-3 / SP-4b 已注册到 SP-6 |
 | SP-7 | Thino 块解析整理服务 | ⚪ queued | (无) | SP-6 实现完成 |
 | SP-8（v1+） | Web Search Router（聚合知乎 Skill + Tavily + Exa） | ⚪ queued | (无) | v1 全部完成；知乎 API key 已获取 |
@@ -62,12 +62,12 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟡 wip ← SP-
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
 | UN-020 | B | **起 SP3Impler session**（新会话，cwd=`Tools/JarvanKB/`），第一句：`read docs/sendbox/toSP3Impler/handoff.md and start SP-3`。范围已锁定，impler 跑 v2 8 步（含自己的 compressed brainstorm + Step 8 merge）；与 SP5aImpler 并行 | `docs/sendbox/toSP3Impler/handoff.md` | SP-3 落地 | 2026-06-02 | open |
 | UN-021 | B | **起 SP5aImpler session**（新会话，cwd=`Tools/JarvanKB/`），第一句：`read docs/sendbox/toSP5aImpler/handoff.md and start SP-5a`。impler 务必先读 `crawl-pipeline.md §知乎链路`；与 SP3Impler 并行 | `docs/sendbox/toSP5aImpler/handoff.md` | SP-5a 落地 | 2026-06-02 | open |
-| UN-018 | F | **起 BiliNote docker 并确认 endpoint** —— SP-4a 离线全done，仅卡此项做手动 smoke。部署件已出：`cd Engine/bilibili/deploy/bilinote && cp .env.example .env && docker compose up -d`（`TRANSCRIBER_TYPE=bcut`）→ 开 `http://localhost:3015` 加 LLM 供应商记 `provider_id` → 填 `Engine/bilibili/config/bilibili-engine.yaml`（从 `.example` 复制）→ 回复确认。完整步骤见 blocker 信 / `deploy/bilinote/README.md` | `from-sp4aimpler-blocker-bn-docker.md`（已发）+ `Engine/bilibili/deploy/bilinote/` | SP-4a Task 16 smoke | 2026-06-01 | open |
 
 ## Archive
 
 | ID | Action | Done | By |
 |---|---|---|---|
+| UN-018 | 起 BiliNote docker + 确认 endpoint — **done**：用户起容器（compose 映射后端 `:8483`，因 `latest` 镜像 nginx 坏）；SP4aImpler 经 API 配 `TRANSCRIBER_TYPE=bcut` + 注册 mimo-v2.5-pro 供应商，跑通 ASR + 字幕两条路径 smoke。SP-4a 已 done | 2026-06-02 | user + sp4aimpler |
 | UN-019 | 起 ZhihuCrawl SubOrche session（继承 Zhihu 垂直）— **done**：SubOrche 已 boot，compressed brainstorm 锁定 SP-3/SP-5a 跨 SP 边界（cookie=主动 pull、输出=可配置根 vault 无关、LLMClient 真实现归 SP-3）；产出 `toSP3Impler/`+`toSP5aImpler/` 两封 handoff + cookie-pull 决策升级信给 root（`from-zhihucrawlorche-cookie-pull-decisions.md`）；用户新动作转 UN-020/UN-021 | 2026-06-02 | user + zhihucrawl suborche |
 | UN-001 | 授权全局安装 OpenSpec CLI（`npm i -g @fission-ai/openspec` → v1.3.1） | 2026-05-27 | bootstrap session |
 | UN-002 | 把 handoff 带到 `~/Codes/AgentCrawlers/` 起 ruflo 会话 — **obsoleted**：2026-05-30 决定继续在当前 repo 开发，迁移取消 | 2026-05-30 | bootstrap session |
