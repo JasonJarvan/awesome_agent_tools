@@ -85,7 +85,7 @@ def _transcript_block(result: BilibiliResult, options: RenderOptions) -> str:
     if options.include_timestamps:
         lines = [f"[{format_timestamp(s.start)}] {s.text.strip()}" for s in segs if s.text.strip()]
         return "\n".join(lines)
-    return result.transcript.full_text
+    return merge_segments_to_prose(segs)
 
 
 def render_result(result: BilibiliResult, options: RenderOptions) -> RenderedOutput:

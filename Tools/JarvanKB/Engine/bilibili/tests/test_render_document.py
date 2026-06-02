@@ -27,7 +27,9 @@ def test_default_inline_has_frontmatter_summary_and_prose():
     assert "bvid: BV1x" in md
     assert "transcript_source: subtitle" in md
     assert "## Summary" in md
-    assert "你好世界" in md
+    # 75s gap between segments -> prose-merge splits into two paragraphs.
+    # This break form proves merge_segments_to_prose is wired in (full_text would be contiguous).
+    assert "你好\n\n世界" in md
     assert "[00:00]" not in md
 
 
@@ -39,7 +41,8 @@ def test_timestamps_mode_lists_segments():
 
 def test_include_transcript_false_omits_body():
     out = render_result(_result(), RenderOptions(include_transcript=False))
-    assert "你好世界" not in out.main_markdown
+    assert "你好" not in out.main_markdown
+    assert "世界" not in out.main_markdown
     assert "## Summary" in out.main_markdown
     assert out.transcript_markdown is None
 
@@ -47,8 +50,8 @@ def test_include_transcript_false_omits_body():
 def test_split_emits_two_documents_and_link():
     out = render_result(_result(), RenderOptions(split_transcript=True))
     assert out.transcript_markdown is not None
-    assert "你好世界" in out.transcript_markdown
-    assert "你好世界" not in out.main_markdown
+    assert "你好\n\n世界" in out.transcript_markdown
+    assert "世界" not in out.main_markdown
     assert "[全文转录](./BV1x.transcript.md)" in out.main_markdown
     assert out.suggested_names == {"main": "BV1x.md", "transcript": "BV1x.transcript.md"}
 
