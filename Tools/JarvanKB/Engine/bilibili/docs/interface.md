@@ -69,6 +69,10 @@ md = transcribe("BV1xx", credential=cred).to_markdown()
 音频下载）。下游 SP-4b/5b 从 SP-1 cookie-manager（`domain=.bilibili.com`，见
 `Service/crawl/cookie-manager/docs/interface.md`）取凭据再注入——引擎不依赖 SP-1。
 
+> **不传 credential（或字幕拉取失败）时**：元数据仍可取（公开 API 无需登录），但**字幕路径被跳过**
+> （`get_subtitle` 需 SESSDATA），直接走 **ASR 路径**。所以引擎对**公开视频可无凭据运行**（metadata + bcut ASR）；
+> 字幕优先仅在提供了有效 SESSDATA 时生效。字幕拉取的任何异常都不会让引擎崩溃，而是优雅回退到 ASR。
+
 ## 6. 错误
 
 `BilibiliEngineError` 基类 → `InvalidVideoRef` / `CredentialError` / `BiliNoteUnavailable`（BN 不可达，

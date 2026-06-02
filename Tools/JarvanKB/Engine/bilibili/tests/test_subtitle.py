@@ -48,3 +48,25 @@ def test_fetch_subtitle_returns_transcript():
 def test_fetch_subtitle_none_when_no_tracks():
     with patch("bilibili.subtitle._get_tracks_raw", return_value=[]):
         assert fetch_subtitle(bvid="BV1x", cid=2, cred=BilibiliCredential(sessdata="SS")) is None
+
+
+def test_fetch_subtitle_none_without_credential_skips_network():
+    # No SESSDATA → subtitle path skipped entirely (no track fetch); engine will use ASR.
+    with patch("bilibili.subtitle._get_tracks_raw") as m:
+        assert fetch_subtitle(bvid="BV1x", cid=2, cred=None) is None
+        assert fetch_subtitle(bvid="BV1x", cid=2, cred=BilibiliCredential(sessdata="")) is None
+    m.assert_not_called()
+
+
+def test_fetch_subtitle_falls_back_to_none_on_track_fetch_error():
+    # get_subtitle raising (e.g. CredentialNoSessdataException / network) must NOT crash the
+    # engine — return None so the cascade falls through to ASR.
+    with patch("bilibili.subtitle._get_tracks_raw", side_effect=Exception("CredentialNoSessdataException")):
+        assert fetch_subtitle(bvid="BV1x", cid=2, cred=BilibiliCredential(sessdata="SS")) is None
+
+
+def test_fetch_subtitle_falls_back_to_none_on_body_fetch_error():
+    tracks = [{"lan": "ai-zh", "ai_type": 1, "subtitle_url": "//x/sub.json"}]
+    with patch("bilibili.subtitle._get_tracks_raw", return_value=tracks), \
+         patch("bilibili.subtitle._get_body_raw", side_effect=Exception("timeout")):
+        assert fetch_subtitle(bvid="BV1x", cid=2, cred=BilibiliCredential(sessdata="SS")) is None

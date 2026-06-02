@@ -6,11 +6,14 @@ fixture-recording note. Returns a Transcript(source="subtitle") or None when no 
 """
 from __future__ import annotations
 import asyncio
+import logging
 from typing import Optional
 
 import httpx
 
 from .models import BilibiliCredential, Transcript, TranscriptSegment
+
+logger = logging.getLogger(__name__)
 
 
 def normalize_url(url: str) -> str:
@@ -87,11 +90,25 @@ def _get_body_raw(subtitle_url: str, cred: Optional[BilibiliCredential]) -> list
 
 
 def fetch_subtitle(bvid: str, cid: int, cred: Optional[BilibiliCredential]) -> Optional[Transcript]:
-    tracks = _get_tracks_raw(bvid, cid, cred)
+    # Subtitle tracks (incl. AI CC) require a logged-in session — bilibili-api-python's
+    # get_subtitle raises CredentialNoSessdataException without one. The subtitle path is
+    # best-effort and ASR is the fallback, so a missing credential or ANY subtitle-fetch
+    # failure returns None (→ engine takes the ASR path) instead of raising.
+    if cred is None or not cred.sessdata:
+        return None
+    try:
+        tracks = _get_tracks_raw(bvid, cid, cred)
+    except Exception as e:
+        logger.warning("subtitle track fetch failed for %s (cid=%s): %s — falling back to ASR", bvid, cid, e)
+        return None
     track = pick_track(tracks)
     if not track or not track.get("subtitle_url"):
         return None
-    body = _get_body_raw(track["subtitle_url"], cred)
+    try:
+        body = _get_body_raw(track["subtitle_url"], cred)
+    except Exception as e:
+        logger.warning("subtitle body fetch failed for %s: %s — falling back to ASR", bvid, e)
+        return None
     segs = parse_body(body)
     if not segs:
         return None
