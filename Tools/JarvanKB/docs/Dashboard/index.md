@@ -43,10 +43,10 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟢 ready ← S
 | SP-0 | 骨架 + recipe v2 迁移 | ⚫ done | sp0impler | （无）|
 | SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约 `Service/crawl/cookie-manager/docs/interface.md`）；Step 8 RepoMem.merge 已完成（impler-driven HITL，激活 credentials 域） |
 | SP-2 | 知乎引擎 | ⚫ done | sp2impler | 完成 2026-06-02（merge `f8c14cb`，51 tests + 真站 smoke 全过；纯 cookie+HTTP 无签名/无浏览器）；Step 8 RepoMem.merge 已完成（impler-driven HITL，提升知乎链路根因/坑到 `crawl-pipeline.md`）；契约 `Engine/zhihu/docs/interface.md`；v1.1 评论完整树已 handoff `toZhihuCommentImpler/` |
-| SP-3 | 知乎 Skill | 🟢 ready | (无) | SP-2 已完成 ✓（2026-06-02）→ 可起 impler |
+| SP-3 | 知乎 Skill | 🟢 ready | → ZhihuCrawl SubOrche | 已委派给 ZhihuCrawl SubOrche（UN-019），由其起 SP3Impler。SP-2 ✓；首个 `Engine/common` LLMClient 真实现可能落此（vague_path 分类） |
 | SP-4a | B 站引擎 | 🟡 wip (Stage 2 done → Stage 3 offline execute) | sp4aimpler | design+plan 已落盘+user approve；plan=16 TDD 任务；plan-ready 信已发 orche；BN HTTP 客户端 + 引擎主导字幕优先级联（命中喂 BN `prefetched_transcript`，未命中走 bcut ASR）；plan=`Engine/bilibili/docs/superpowers/plans/2026-05-31-SP-4a-bilibili-engine-plan.md`；**Tasks 1–14 离线可跑；手动 smoke（Task 15–16）gate = BN docker 可达（UN-018）** |
 | SP-4b | B 站 Skill | ⚪ queued | (无) | SP-4a 实现完成 |
-| SP-5a | 知乎收藏夹监听服务 | 🟢 ready | (无) | SP-2 已完成 ✓（2026-06-02）→ 可起 impler；务必读 `crawl-pipeline.md` §知乎链路 根因/坑 |
+| SP-5a | 知乎收藏夹监听服务 | 🟢 ready | → ZhihuCrawl SubOrche | 已委派给 ZhihuCrawl SubOrche（UN-019），由其起 SP5aImpler。SP-2 ✓；**impler 务必先读 `crawl-pipeline.md` §知乎链路 根因/坑** |
 | SP-5b | B 站收藏夹监听服务 | ⚪ queued | (无) | SP-4a 实现完成 |
 | SP-6 | CrawlMdSaver Skill（爬取-笔记整合） | ⚪ queued | (无) | SP-3 / SP-4b 已注册到 SP-6 |
 | SP-7 | Thino 块解析整理服务 | ⚪ queued | (无) | SP-6 实现完成 |
@@ -60,7 +60,7 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟢 ready ← S
 |---|---|---|---|---|---|---|
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
-| UN-017 | B | **起 SP4aImpler session**（新会话，cwd=`Tools/JarvanKB/`，与 SP2Impler 并行），第一句：`read docs/sendbox/toSP4aImpler/handoff.md and start SP-4a`。B 站引擎,design+plan 可先跑,execute 等 UN-018 | `docs/sendbox/toSP4aImpler/handoff.md` | SP-4a 落地 | 2026-06-01 | open |
+| UN-019 | B | **起 ZhihuCrawl SubOrche session**（新会话，cwd=`Tools/JarvanKB/`），第一句：`read docs/sendbox/toZhihuCrawlOrche/handoff.md and inherit the Zhihu vertical`。它再 spawn + 协调 SP3Impler + SP5aImpler（并行）；Root→SubOrche→Impler | `docs/sendbox/toZhihuCrawlOrche/handoff.md` | SP-3 + SP-5a 落地 | 2026-06-02 | open |
 | UN-018 | F | **部署 / 确认 BiliNote docker 可达**（`TRANSCRIBER_TYPE=bcut`）——SP-4a Stage 3 execute + 手动 smoke 的前置。SP4aImpler 会先出 BN docker-compose/config,你 `docker compose up` 起来并把 endpoint 告诉它(或它发 blocker 信时回) | SP4aImpler 的 `from-sp4aimpler-blocker-bn-docker.md`（待发） | SP-4a Stage 3 | 2026-06-01 | open |
 
 ## Archive
@@ -81,3 +81,4 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟢 ready ← S
 | UN-014 | SP-1 sendbox 后处理 — **done**：archive sp0-done、burn sp1-done + toSP1Impler/handoff + toFRPS/handoff；Step 8 merge 由 impler 完成（未重做）；`temp/sp1-cookie-manager/research.md` 保留（impler 刻意保留 + 下游 SP-2/3 参考） | 2026-06-01 | orche g3 |
 | UN-015 | 修订 merge 归属规范 — **done**：CLAUDE.md §3 step8 + §4、longterm §Pipeline v2 + §Hard Invariants 均加"impler owns merge closure"，并固化 handoff §3.F 措辞（commit `16da3b6`） | 2026-06-01 | orche g3 |
 | UN-016 | 起 SP2Impler session — **done**：SP-2 知乎引擎完成并 merge（`f8c14cb`，51 tests + 真站 smoke）；impler 闭环 Step 8（提升知乎链路根因到 crawl-pipeline.md）；orche 已 burn SP-2 sendbox 链 + codify promotion standard（`96c9548`） | 2026-06-02 | user + sp2impler + orche g3 |
+| UN-017 | 起 SP4aImpler session — **done**：SP4aImpler 已在跑（Stage 2 done，plan-ready 已发）；orche g3 审阅通过 → `toSP4aImpler/from-orche-sp4a-greenlight.md`（subagent-driven）；离线 Tasks 1–14 可跑，live smoke 仍 gate 在 UN-018 | 2026-06-02 | user + sp4aimpler + orche g3 |
