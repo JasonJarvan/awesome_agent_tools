@@ -85,3 +85,32 @@ def test_fetch_child_comments_paginates_via_next(httpx_mock):
     from zhihu.comments import fetch_child_comments
     out = fetch_child_comments("r1", cookies={"d_c0": "x"}, limit=None)
     assert [c["id"] for c in out] == ["c1", "c2"]   # raw dicts, both pages, follows next verbatim
+
+
+def test_fetch_child_comments_no_hang_on_empty_data(httpx_mock):
+    # data=[] + is_end False + a next: MUST break on empty data (not keep requesting -> would exhaust
+    # the single mocked response and raise; the guard returns [] after one request instead).
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/comment/r9/child_comment?order_by=ts&limit=20",
+        json={"data": [], "paging": {"is_end": False,
+              "next": "https://www.zhihu.com/api/v4/comment_v5/comment/r9/child_comment?order_by=ts&limit=20&offset=SAME"}})
+    from zhihu.comments import fetch_child_comments
+    out = fetch_child_comments("r9", cookies={"d_c0": "x"}, limit=None)
+    assert out == []   # one request, empty-data break, no hang
+
+
+def test_fetch_child_comments_breaks_on_self_referential_next(httpx_mock):
+    selfref = "https://www.zhihu.com/api/v4/comment_v5/comment/r8/child_comment?order_by=ts&limit=20&offset=STUCK"
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/comment/r8/child_comment?order_by=ts&limit=20",
+        json={"data": [{"id": "c1", "content": "x", "like_count": 0, "created_time": 1,
+                        "author": {"name": "U", "url_token": "u"}}],
+              "paging": {"is_end": False, "next": selfref}})
+    httpx_mock.add_response(
+        url=selfref,
+        json={"data": [{"id": "c2", "content": "y", "like_count": 0, "created_time": 2,
+                        "author": {"name": "U", "url_token": "u"}}],
+              "paging": {"is_end": False, "next": selfref}})  # next loops to itself
+    from zhihu.comments import fetch_child_comments
+    out = fetch_child_comments("r8", cookies={"d_c0": "x"}, limit=None)
+    assert [c["id"] for c in out] == ["c1", "c2"]   # 2 requests, then seen-next breaks, no hang
