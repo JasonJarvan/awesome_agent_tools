@@ -1,6 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, timezone
 from http.cookies import SimpleCookie
+import httpx
 
 from .url_router import classify
 from .models import ZhihuType, FetchResult, Author
@@ -57,7 +58,12 @@ def fetch(url: str, cookies: dict | str | None = None, *, with_comments: bool = 
 
     if result is None and status == 403 and ztype is ZhihuType.ANSWER:
         attempts.append("api-fallback")
-        result = _from_api_answer(url, ids, jar, timeout)
+        try:
+            result = _from_api_answer(url, ids, jar, timeout)
+        except httpx.HTTPStatusError as e:
+            raise ZhihuFetchError(
+                f"API fallback failed for {url}", url=url, attempts=attempts,
+                status=e.response.status_code) from e
 
     if result is None:
         raise ZhihuFetchError(
@@ -75,7 +81,10 @@ def fetch(url: str, cookies: dict | str | None = None, *, with_comments: bool = 
 
 
 def _from_api_answer(url: str, ids: dict, jar: dict, timeout: float) -> FetchResult:
-    data = fetcher.get_api_answer(ids["answer_id"], cookies=jar, timeout=timeout)
+    answer_id = ids.get("answer_id")
+    if not answer_id:
+        raise ZhihuFetchError("API fallback requires an answer_id", url=url, attempts=["api-fallback"])
+    data = fetcher.get_api_answer(answer_id, cookies=jar, timeout=timeout)
     author = data.get("author") or {}
     question = data.get("question") or {}
     return FetchResult(
