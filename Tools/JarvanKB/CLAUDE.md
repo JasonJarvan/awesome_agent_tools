@@ -30,7 +30,7 @@
 5. `using-git-worktrees` + `executing-plans` + **TDD** + `RepoMem.capture` (continuous)
 6. `Superpowers.verification-before-completion` — single gate; tests + evidence required before claiming done
 7. `Superpowers.requesting-code-review` + `finishing-a-development-branch` — both **ask-first**
-8. `RepoMem.merge` (HITL, **impler owns closure**) — the implementer drives merge to completion within its own task lifecycle (may delegate *execution* to orche, but tracks it to done before reporting); promote per-module decisions to global persist when warranted; then `prune` / `split`
+8. `RepoMem.merge` (HITL, **impler owns closure**) — the implementer drives merge to completion within its own task lifecycle (may delegate *execution* to orche, but tracks it to done before reporting); promote per-module decisions to global persist when warranted — **promote cross-SP-reusable root-causes / gotchas globally, NOT mechanism that lives in code; a downstream SP working in another module's cwd does not read your module's `decisions.md`** (full promotion standard: `longterm.md` §Pipeline v2 step 8); then `prune` / `split`
 
 Sendbox letters & dashboard rows are **side-effects** of the steps above, not standalone steps.
 
