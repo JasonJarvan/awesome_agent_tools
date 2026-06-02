@@ -87,6 +87,27 @@ def fetch_comments(item_type: str, item_id: str, *, cookies: dict, limit: int | 
             break
         seen_next.add(nxt)
         url = nxt
+
+    # Expand each root's inline child PREVIEW into its FULL child set (v1.1). A root response ships
+    # only a truncated `child_comments` preview + a `child_comment_count` total; when the total
+    # exceeds the preview, paginate the child endpoint and REPLACE the preview with the full set so
+    # `flatten_comments` (which reads each root's `child_comments`) emits the whole two-layer tree.
+    collected_total = 0
+    for page in pages:
+        for c in page.get("data", []):
+            collected_total += 1  # the root comment itself
+            inline = c.get("child_comments", [])
+            count = c.get("child_comment_count")
+            need_more = count is not None and count > len(inline)
+            if need_more and (limit is None or collected_total < limit):
+                child_budget = None if limit is None else max(0, limit - collected_total)
+                full = fetch_child_comments(str(c.get("id")), cookies=cookies, limit=child_budget,
+                                            headers=headers, page_size=page_size, max_pages=max_pages)
+                c["child_comments"] = full
+                collected_total += len(full)
+            else:
+                collected_total += len(inline)
+
     flat = flatten_comments(pages)
     return flat[:limit] if limit is not None else flat
 
