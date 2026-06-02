@@ -15,7 +15,11 @@ services:
       # (音频转写配置 → 必剪).
       - TRANSCRIBER_TYPE=${TRANSCRIBER_TYPE:-bcut}
     ports:
-      - "${APP_PORT:-3015}:80"
+      # Bind to LOCALHOST only — BiliNote has NO authentication, so it must never be
+      # exposed on a public interface. Reach it from the host via curl/localhost, or from
+      # a remote machine via an SSH tunnel (`ssh -L 3015:127.0.0.1:3015 <host>`).
+      # Matches the JarvanKB convention (SP-1 cookie-manager also binds 127.0.0.1).
+      - "127.0.0.1:${APP_PORT:-3015}:80"
     volumes:
       - bilinote-data:/app/backend/data        # SQLite (provider config, note history)
       - bilinote-config:/app/backend/config     # transcriber.json runtime config
