@@ -44,7 +44,7 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟢 ready ← S
 | SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约 `Service/crawl/cookie-manager/docs/interface.md`）；Step 8 RepoMem.merge 已完成（impler-driven HITL，激活 credentials 域） |
 | SP-2 | 知乎引擎 | ⚫ done | sp2impler | 完成 2026-06-02（merge `f8c14cb`，51 tests + 真站 smoke 全过；纯 cookie+HTTP 无签名/无浏览器）；Step 8 RepoMem.merge 已完成（impler-driven HITL，提升知乎链路根因/坑到 `crawl-pipeline.md`）；契约 `Engine/zhihu/docs/interface.md`；v1.1 评论完整树已 handoff `toZhihuCommentImpler/` |
 | SP-3 | 知乎 Skill | 🟢 ready | → ZhihuCrawl SubOrche | 已委派给 ZhihuCrawl SubOrche（UN-019），由其起 SP3Impler。SP-2 ✓；首个 `Engine/common` LLMClient 真实现可能落此（vague_path 分类） |
-| SP-4a | B 站引擎 | 🟡 wip (Stage 2 done → Stage 3 offline execute) | sp4aimpler | design+plan 已落盘+user approve；plan=16 TDD 任务；plan-ready 信已发 orche；BN HTTP 客户端 + 引擎主导字幕优先级联（命中喂 BN `prefetched_transcript`，未命中走 bcut ASR）；plan=`Engine/bilibili/docs/superpowers/plans/2026-05-31-SP-4a-bilibili-engine-plan.md`；**Tasks 1–14 离线可跑；手动 smoke（Task 15–16）gate = BN docker 可达（UN-018）** |
+| SP-4a | B 站引擎 | 🔴 blocked (Stage 3 — 离线全done，卡 BN gate) | sp4aimpler | 离线代码全部完成：**56 单测全过、subagent-driven 逐任务两阶段 review + 最终整体 review（READY-FOR-SMOKE）、引擎不调 LLM、无活网络**。11 单元 `Engine/bilibili/src/bilibili/`；契约 `Engine/bilibili/docs/interface.md`；BN 部署件 `Engine/bilibili/deploy/bilinote/`（`TRANSCRIBER_TYPE=bcut`）。**仅剩手动 smoke（Task 16）卡 BN 可达（UN-018）→ 见 `from-sp4aimpler-blocker-bn-docker.md`**。BN 起后我跑 smoke → verify → review/finish → Step 8 merge | |
 | SP-4b | B 站 Skill | ⚪ queued | (无) | SP-4a 实现完成 |
 | SP-5a | 知乎收藏夹监听服务 | 🟢 ready | → ZhihuCrawl SubOrche | 已委派给 ZhihuCrawl SubOrche（UN-019），由其起 SP5aImpler。SP-2 ✓；**impler 务必先读 `crawl-pipeline.md` §知乎链路 根因/坑** |
 | SP-5b | B 站收藏夹监听服务 | ⚪ queued | (无) | SP-4a 实现完成 |
@@ -61,7 +61,7 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟢 ready ← S
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
 | UN-019 | B | **起 ZhihuCrawl SubOrche session**（新会话，cwd=`Tools/JarvanKB/`），第一句：`read docs/sendbox/toZhihuCrawlOrche/handoff.md and inherit the Zhihu vertical`。它再 spawn + 协调 SP3Impler + SP5aImpler（并行）；Root→SubOrche→Impler | `docs/sendbox/toZhihuCrawlOrche/handoff.md` | SP-3 + SP-5a 落地 | 2026-06-02 | open |
-| UN-018 | F | **部署 / 确认 BiliNote docker 可达**（`TRANSCRIBER_TYPE=bcut`）——SP-4a Stage 3 execute + 手动 smoke 的前置。SP4aImpler 会先出 BN docker-compose/config,你 `docker compose up` 起来并把 endpoint 告诉它(或它发 blocker 信时回) | SP4aImpler 的 `from-sp4aimpler-blocker-bn-docker.md`（待发） | SP-4a Stage 3 | 2026-06-01 | open |
+| UN-018 | F | **起 BiliNote docker 并确认 endpoint** —— SP-4a 离线全done，仅卡此项做手动 smoke。部署件已出：`cd Engine/bilibili/deploy/bilinote && cp .env.example .env && docker compose up -d`（`TRANSCRIBER_TYPE=bcut`）→ 开 `http://localhost:3015` 加 LLM 供应商记 `provider_id` → 填 `Engine/bilibili/config/bilibili-engine.yaml`（从 `.example` 复制）→ 回复确认。完整步骤见 blocker 信 / `deploy/bilinote/README.md` | `from-sp4aimpler-blocker-bn-docker.md`（已发）+ `Engine/bilibili/deploy/bilinote/` | SP-4a Task 16 smoke | 2026-06-01 | open |
 
 ## Archive
 
