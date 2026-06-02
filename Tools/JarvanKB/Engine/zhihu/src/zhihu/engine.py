@@ -11,6 +11,7 @@ from . import fetcher, comments as comments_mod
 from .parsers.answer import parse_answer
 from .parsers.article import parse_article
 from .parsers.question import parse_question
+from .parsers.html_scrape import scrape_body
 
 _PARSERS = {ZhihuType.ANSWER: parse_answer, ZhihuType.ARTICLE: parse_article,
             ZhihuType.QUESTION: parse_question}
@@ -45,6 +46,14 @@ def fetch(url: str, cookies: dict | str | None = None, *, with_comments: bool = 
         data = extract_initial_data(text)
         if data is not None:
             result = _PARSERS[ztype](data, ids, url=url)
+
+    if result is None and status == 200:
+        attempts.append("html-css-scrape")
+        body = scrape_body(text)
+        if body:
+            result = FetchResult(
+                url=url, type=ztype, title="", author=None,
+                content_markdown=body, metadata={}, fetched_at="", raw=None)
 
     if result is None and status == 403 and ztype is ZhihuType.ANSWER:
         attempts.append("api-fallback")

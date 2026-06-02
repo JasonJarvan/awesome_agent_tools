@@ -30,3 +30,10 @@ def test_fetch_falls_back_to_api_on_403(httpx_mock):
                                   "author": {"name": "Alice"}, "question": {"title": "Q?"}})
     r = fetch("https://www.zhihu.com/question/123/answer/456", cookies={"d_c0": "x"})
     assert "API fallback body" in r.content_markdown
+
+
+def test_fetch_css_scrape_fallback(httpx_mock):
+    html = '<html><body><div class="RichContent-inner"><p>CSS body</p></div></body></html>'
+    httpx_mock.add_response(url="https://www.zhihu.com/answer/77", text=html, status_code=200)
+    r = fetch("https://www.zhihu.com/answer/77", cookies={"d_c0": "x"})
+    assert "CSS body" in r.content_markdown
