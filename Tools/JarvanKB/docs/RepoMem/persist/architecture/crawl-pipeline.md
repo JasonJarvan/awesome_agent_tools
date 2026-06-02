@@ -7,6 +7,34 @@
 > **知乎链路**：旧的 CDP `Chrome:9222` → Jina Reader 推测链 **已废弃**（SP-2 实测改走纯 cookie+HTTP，
 > 见下方 §知乎链路（SP-2 实现）+ `Engine/zhihu/docs/RepoMem/decisions.md`）。
 
+## B站链路（SP-4a 实现，BiliNote+bcut，已验证 2026-06-02）
+
+R5 后的真实 v1 管线（**取代下文 Tingwu/OSS 旧设计**）。SP-4a 是自托管 **BiliNote（BN）** 的 HTTP 客户端；
+引擎自身不调 LLM（BN 内部调）。契约见 `Engine/bilibili/docs/interface.md`，部署见 `Engine/bilibili/deploy/bilinote/`。
+
+**真实流（引擎主导的字幕优先级联）：**
+```
+video_ref → bilibili-api-python get_info（元数据，公开无需 cookie）
+          → get_subtitle(cid)（需 SESSDATA）
+   命中字幕 → 作 prefetched_transcript 喂 BN → BN 跳过下载+ASR，只跑 LLM 总结
+   未命中   → BN generate_note → yt-dlp 下音频 → bcut（B站必剪免费云 ASR）→ LLM 总结
+          → 引擎组装 BilibiliResult → 渲染 Markdown（确定性 prose 合并，无 LLM）
+```
+
+**可复用运维坑（SP-5b Watcher 同样消费 BN，务必先看）：**
+- **BN `ghcr.io/jefferyhcool/bilinote:latest` 全合一镜像的 nginx 是坏的**：`/` 代理到不存在的 `:8080`，
+  且残留 Debian 默认站点遮蔽 `/api/` 代理 → 经 :80 访问 `/api/*` 一律 404，而后端（FastAPI `:8483`）正常。
+  → 部署时**宿主端口直接映射后端 `:8483`**，绕开 nginx（引擎只用 `/api/*`，不需要 web UI）。
+- **`TRANSCRIBER_TYPE` 环境变量在该镜像里不可靠透传**（supervisord env 坑 + BN 把转写器配置 seed 进
+  持久化 SQLite）→ 用 `POST /api/transcriber_config {"transcriber_type":"bcut"}` **显式**设。
+- **bcut 本身无需任何 cookie**；BN 的 yt-dlp 下公开视频音频也无需 cookie（会员/付费才需，经
+  `POST /api/update_downloader_cookie` 推）。
+- **LLM 供应商走 `POST /api/add_provider`**（BN 后端是 OpenAI-compatible，任何兼容端点皆可；API 创建的
+  `type` 被强制 `custom`，`name` 须唯一）；读回 `provider_id` 经 `GET /api/get_all_providers`，填进
+  `Engine/bilibili/config/bilibili-engine.yaml`（gitignored，不含 key——key 在 BN 的 SQLite）。
+- **BN 无鉴权** → 端口只绑 `127.0.0.1`，公网经 SSH tunnel / frp，勿裸暴露。
+- 响应包装 `{code,msg,data}`（`code==0` 成功）；提交→轮询 `GET /api/task_status/{id}`（终态 SUCCESS/FAILED）。
+
 ## 总数据流
 
 ```

@@ -38,6 +38,19 @@ consume. (Aliyun AK / OSS credentials are out of v1 scope — R5 switched ASR to
 - Verified protocol reference: `Service/crawl/cookie-manager/docs/RepoMem/temp/sp1-cookie-manager/research.md`
 - Host ops (48xxx port rule, frp/frpc record): `~/.ops-doc-maintainer-docs/hosts/<host>/rules.md` + `manual-software.txt`
 
+## Bilibili (SP-4a engine) — verified 2026-06-02
+
+- **Cookie domain is `bilibili.com` (NO leading dot)** in the SP-1 cookie-manager store, NOT
+  `.bilibili.com` as earlier assumed. Verified from the live store: the box holds `SESSDATA` + `bili_jct`
+  (no `buvid3`). **Downstream SP-4b Skill / SP-5b Watcher must query `cookie-manager show domain=bilibili.com`**
+  (or `GET /get/:uuid` then pick the `bilibili.com` entry) — `.bilibili.com` returns nothing.
+- **What needs the cookie:** `bilibili-api-python.get_subtitle(cid)` requires `SESSDATA` (it *raises*
+  `CredentialNoSessdataException` without one — does not return empty). `get_info` (metadata) works
+  **without** any credential for public videos. So SP-4a's engine is usable cookie-less on public videos
+  (metadata + bcut ASR); the subtitle-first path only engages when a valid SESSDATA is injected.
+- **Engine contract:** SP-4a takes a structured `BilibiliCredential(sessdata, bili_jct?, buvid3?)` as
+  INPUT (it never fetches cookies itself); SP-4b/5b inject it. See `Engine/bilibili/docs/interface.md`.
+
 ## Open / future
 
 - Credential **refresh / keep-alive** strategy (handling cookie expiry) is deferred until the watchers
