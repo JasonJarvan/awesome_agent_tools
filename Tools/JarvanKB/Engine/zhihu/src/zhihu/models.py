@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from .markdown import render_frontmatter
 
 
 class ZhihuType(str, Enum):
@@ -54,5 +55,18 @@ class FetchResult:
     raw: dict | None = None
 
     def to_markdown(self, with_frontmatter: bool = True) -> str:
-        # Implemented in a later task (8b) once render_frontmatter exists; placeholder raises until then.
-        raise NotImplementedError
+        if not with_frontmatter:
+            return self.content_markdown
+        meta = {
+            "title": self.title,
+            "author": self.author.name if self.author else None,
+            "url": self.url,
+            "type": self.type.value,
+            "vote_count": self.metadata.get("vote_count"),
+            "comment_count": self.metadata.get("comment_count"),
+            "created_at": self.metadata.get("created_at"),
+            "updated_at": self.metadata.get("updated_at"),
+            "fetched_at": self.fetched_at,
+            "source": "zhihu",
+        }
+        return render_frontmatter(meta) + "\n" + self.content_markdown

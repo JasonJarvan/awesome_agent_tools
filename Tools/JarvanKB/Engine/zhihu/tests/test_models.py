@@ -1,4 +1,5 @@
 from zhihu.models import Author, Comment, EmbeddedAnswer, FetchResult, ZhihuType
+import pytest
 
 
 def test_fetchresult_defaults():
@@ -36,3 +37,19 @@ def test_comment_is_flat():
         reply_to_author="x",
     )
     assert child.parent_id == "1"
+
+
+def test_to_markdown_with_frontmatter():
+    r = FetchResult(
+        url="https://www.zhihu.com/answer/1", type=ZhihuType.ANSWER, title="T",
+        author=Author(name="A"), content_markdown="Body text",
+        metadata={"vote_count": 3, "comment_count": 1, "created_at": "2026-06-01T00:00:00Z",
+                  "updated_at": None}, fetched_at="2026-06-01T00:00:00Z",
+    )
+    md = r.to_markdown(with_frontmatter=True)
+    assert md.startswith("---\n")
+    assert "title: T" in md
+    assert "source: zhihu" in md
+    assert "Body text" in md
+    body_only = r.to_markdown(with_frontmatter=False)
+    assert body_only == "Body text"
