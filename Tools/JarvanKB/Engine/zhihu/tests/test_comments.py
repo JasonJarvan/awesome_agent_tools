@@ -28,3 +28,29 @@ def test_fetch_comments_paginates(httpx_mock):
         json=ROOT_PAGE)
     out = fetch_comments("answer", "456", cookies={"d_c0": "x"}, limit=None)
     assert len(out) == 2
+
+PAGE0 = {
+    "data": [{"id": "r0", "content": "p0", "like_count": 0, "created_time": 1700000000,
+              "author": {"member": {"name": "A", "url_token": "a"}}, "child_comments": []}],
+    "paging": {"is_end": False},
+}
+PAGE1 = {
+    "data": [{"id": "r1", "content": "p1", "like_count": 0, "created_time": 1700000001,
+              "author": {"member": {"name": "B", "url_token": "b"}}, "child_comments": []}],
+    "paging": {"is_end": True},
+}
+
+def test_fetch_comments_multi_page(httpx_mock):
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/answers/9/root_comment?order_by=score&limit=20&offset=0",
+        json=PAGE0)
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/answers/9/root_comment?order_by=score&limit=20&offset=20",
+        json=PAGE1)
+    out = fetch_comments("answer", "9", cookies={"d_c0": "x"}, limit=None)
+    assert [c.id for c in out] == ["r0", "r1"]
+
+def test_fetch_comments_bad_type_raises():
+    import pytest
+    with pytest.raises(ValueError):
+        fetch_comments("video", "1", cookies={}, limit=None)

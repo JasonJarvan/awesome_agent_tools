@@ -44,6 +44,8 @@ def fetch_comments(item_type: str, item_id: str, *, cookies: dict, limit: int | 
     NOTE: if Zhihu returns 403 here, comment signing is hard-enforced — see design.md §9
     and the smoke gate; this function will need the RSSHub-MIT signer branch.
     """
+    if item_type not in _TYPE_PATH:
+        raise ValueError(f"Unsupported comment item_type: {item_type!r} (expected one of {sorted(_TYPE_PATH)})")
     path = _TYPE_PATH[item_type]
     pages: list[dict] = []
     offset, collected = 0, 0

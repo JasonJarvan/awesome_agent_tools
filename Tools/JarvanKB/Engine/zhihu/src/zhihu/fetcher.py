@@ -35,6 +35,6 @@ def get_api_answer(answer_id: str, *, cookies: dict, timeout: float = 30.0) -> d
     """Unsigned /api/v4 answer fallback. Raises on non-2xx."""
     url = f"https://www.zhihu.com/api/v4/answers/{answer_id}?include=content"
     resp = httpx.get(url, cookies=cookies, headers=API_HEADERS, timeout=timeout,
-                     trust_env=False)
+                     follow_redirects=True, trust_env=False)
     resp.raise_for_status()
     return resp.json()

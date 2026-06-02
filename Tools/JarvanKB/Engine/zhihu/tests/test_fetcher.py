@@ -4,6 +4,7 @@ def test_nav_and_api_headers_have_no_signature():
     assert "x-zse-96" not in {k.lower() for k in NAV_HEADERS}
     assert "User-Agent" in NAV_HEADERS
     assert API_HEADERS["x-requested-with"] == "fetch"
+    assert "x-zse-96" not in {k.lower() for k in API_HEADERS}
 
 def test_get_page_returns_status_and_text(httpx_mock):
     httpx_mock.add_response(url="https://www.zhihu.com/answer/1", text="<html>hi</html>", status_code=200)
