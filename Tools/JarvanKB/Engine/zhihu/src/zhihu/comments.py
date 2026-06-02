@@ -87,5 +87,62 @@ def fetch_comments(item_type: str, item_id: str, *, cookies: dict, limit: int | 
             break
         seen_next.add(nxt)
         url = nxt
+
+    # Expand each root's inline child PREVIEW into its FULL child set (v1.1). A root response ships
+    # only a truncated `child_comments` preview + a `child_comment_count` total; when the total
+    # exceeds the preview, paginate the child endpoint and REPLACE the preview with the full set so
+    # `flatten_comments` (which reads each root's `child_comments`) emits the whole two-layer tree.
+    # `comment_limit` is enforced by the final `flat[:limit]` slice below (the hard cap); the
+    # `collected_total` counter here only SUPPRESSES needless child requests once the budget is full —
+    # it never drops a comment that the slice would have kept.
+    collected_total = 0
+    for page in pages:
+        for c in page.get("data", []):
+            collected_total += 1  # the root comment itself
+            inline = c.get("child_comments", [])
+            count = c.get("child_comment_count")
+            need_more = count is not None and count > len(inline)
+            if need_more and (limit is None or collected_total < limit):
+                child_budget = None if limit is None else max(0, limit - collected_total)
+                full = fetch_child_comments(str(c.get("id")), cookies=cookies, limit=child_budget,
+                                            headers=headers, page_size=page_size, max_pages=max_pages)
+                c["child_comments"] = full  # intentional in-place rewrite of the local parsed page
+                collected_total += len(full)
+            else:
+                collected_total += len(inline)
+
     flat = flatten_comments(pages)
     return flat[:limit] if limit is not None else flat
+
+
+def fetch_child_comments(root_comment_id: str, *, cookies: dict, limit: int | None,
+                         headers: dict | None = None, page_size: int = 20,
+                         max_pages: int = 50) -> list[dict]:
+    """Paginate ALL child replies of one root comment, following `paging.next` VERBATIM.
+
+    We never construct `offset` ourselves: doing so on `root_comment` caused the empty-data /
+    self-referential-cursor hang (decisions.md D3). Following `next` works whether the server's model
+    is cursor- or offset-based (the `next` URL embeds whatever it needs), so this is immune to that
+    poison. Returns raw child-comment dicts in the SAME schema as the inline `child_comments` preview,
+    so `flatten_comments` consumes them unchanged. Same loop guard as `fetch_comments`.
+    """
+    url = (f"https://www.zhihu.com/api/v4/comment_v5/comment/{root_comment_id}/child_comment"
+           f"?order_by=ts&limit={page_size}")
+    out: list[dict] = []
+    seen_next: set[str] = set()
+    for _ in range(max_pages):
+        resp = httpx.get(url, cookies=cookies, headers=headers or {}, timeout=30.0,
+                         follow_redirects=True, trust_env=False)
+        resp.raise_for_status()
+        page = resp.json()
+        data = page.get("data", [])
+        out.extend(data)
+        paging = page.get("paging", {})
+        nxt = paging.get("next")
+        if paging.get("is_end") or not data or not nxt or nxt in seen_next:
+            break
+        if limit is not None and len(out) >= limit:
+            break
+        seen_next.add(nxt)
+        url = nxt
+    return out[:limit] if limit is not None else out
