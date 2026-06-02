@@ -32,7 +32,7 @@ SP-5a is the **Zhihu favorites watcher**. It is a pure consumer of two upstream 
 |---|---|---|
 | D1 | Cookie active-pull mechanism | **HTTP `GET /get/:uuid` + decrypt in pure Python** (no Node CLI in image) |
 | D2 | Watermark / dedup mechanism | **Persistent seen-id set** (JSON), keyed on stable content id. NOT a content-`created` timestamp |
-| D3 | Scheduler + deployment | **APScheduler `AsyncIOScheduler`** (interval, `max_instances=1`) + **docker-compose** |
+| D3 | Scheduler + deployment | **APScheduler `BlockingScheduler`** (interval, `max_instances=1`) + **docker-compose**. (`BlockingScheduler`, not `AsyncIOScheduler`: the components are synchronous — httpx sync client + the sync SP-2 engine — so a blocking scheduler with a sync job is the correct fit; an async scheduler would block its event loop on the sync job.) |
 | D4 | Output `.md` content format | Reference repo conventions (see §4), images = **remote URLs, not downloaded** |
 | D5 | Filename / subfolder convention | Reference repo: subfolder-per-collection + `<title>.md` (collision → `_<url_id>`) |
 
@@ -80,11 +80,11 @@ sources left ambiguous. Findings (code-level):
 
 ## 3. Architecture
 
-A resident daemon. `APScheduler.AsyncIOScheduler` fires one "poll all configured collections" cycle
+A resident daemon. `APScheduler.BlockingScheduler` fires one "poll all configured collections" cycle
 every N minutes (`max_instances=1` so cycles never overlap; a slow cycle simply skips the next tick).
 
 ```
-APScheduler (AsyncIOScheduler, interval = poll_interval_minutes, max_instances=1)
+APScheduler (BlockingScheduler, interval = poll_interval_minutes, max_instances=1)
    └─> watcher.run_cycle()
          for collection in config.collections:
            cookies = cookie_provider.get_cookies()           # ① SP-1 GET + decrypt (transient)
@@ -114,7 +114,7 @@ APScheduler (AsyncIOScheduler, interval = poll_interval_minutes, max_instances=1
 ### 3.2 Cookie decryption (the only non-trivial crypto)
 
 SP-1 stores cookies as CookieCloud-style ciphertext and `GET /get/:uuid` returns `{encrypted, crypto_type}`
-without server-side decryption. The watcher decrypts in pure Python (dep: `pycryptodome`):
+without server-side decryption. The watcher decrypts in pure Python (dep: `cryptography`):
 
 - **Key derivation (both modes)**: `the_key = md5(f"{uuid}-{password}").hexdigest()[:16]` (UTF-8, literal hyphen, first 16 hex chars).
 - **`legacy` (default)**: ciphertext is an OpenSSL `Salted__` envelope (base64). Decode → assert 8-byte
