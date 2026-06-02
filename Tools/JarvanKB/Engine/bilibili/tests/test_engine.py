@@ -1,5 +1,7 @@
+import pytest
 from unittest.mock import patch, MagicMock
 from bilibili.engine import BilibiliEngine
+from bilibili.errors import TranscriptionFailed
 from bilibili.models import (
     EngineConfig, BilibiliCredential, BilibiliMetadata, Transcript, TranscriptSegment,
 )
@@ -43,6 +45,15 @@ def test_asr_path_pushes_cookie_and_sets_source_asr():
     assert kwargs["prefetched_transcript"] is None
     assert res.transcript.source == "asr"
     assert res.transcript.full_text == "world"
+
+
+def test_asr_path_raises_when_bn_returns_no_transcript():
+    bn = MagicMock()
+    bn.transcribe.return_value = (None, "## Summary")   # BN SUCCESS but no transcript dict
+    with patch("bilibili.engine.fetch_metadata", return_value=META), \
+         patch("bilibili.engine.fetch_subtitle", return_value=None):
+        with pytest.raises(TranscriptionFailed):
+            _engine(bn).transcribe("BV1GJ411x7h7", BilibiliCredential(sessdata="SS"))
 
 
 def test_asr_path_cookie_push_failure_is_best_effort():

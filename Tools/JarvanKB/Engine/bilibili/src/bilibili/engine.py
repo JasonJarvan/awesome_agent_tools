@@ -5,6 +5,7 @@ from typing import Optional
 
 from .bilinote_client import BiliNoteClient
 from .config import load_config, DEFAULT_CONFIG_PATH
+from .errors import TranscriptionFailed
 from .metadata import fetch_metadata
 from .models import (
     BilibiliCredential, BilibiliResult, EngineConfig, Transcript, TranscriptSegment,
@@ -52,11 +53,14 @@ class BilibiliEngine:
                 except Exception as e:
                     logger.warning("cookie push to BiliNote failed (best-effort): %s", e)
             asr, summary = self._bn.transcribe(meta.url, prefetched_transcript=None)
+            if not asr or "full_text" not in asr:
+                raise TranscriptionFailed(
+                    f"BiliNote SUCCESS but returned no usable transcript on the ASR path: {meta.url}")
             transcript = Transcript(
                 source="asr",
                 language=asr.get("language"),
                 full_text=asr["full_text"],
-                segments=[TranscriptSegment(s["start"], s["end"], s["text"]) for s in asr["segments"]],
+                segments=[TranscriptSegment(s["start"], s["end"], s["text"]) for s in asr.get("segments", [])],
             )
 
         return BilibiliResult(metadata=meta, transcript=transcript, summary_markdown=summary)
