@@ -15,11 +15,15 @@ services:
       # (音频转写配置 → 必剪).
       - TRANSCRIBER_TYPE=${TRANSCRIBER_TYPE:-bcut}
     ports:
-      # Bind to LOCALHOST only — BiliNote has NO authentication, so it must never be
-      # exposed on a public interface. Reach it from the host via curl/localhost, or from
-      # a remote machine via an SSH tunnel (`ssh -L 3015:127.0.0.1:3015 <host>`).
-      # Matches the JarvanKB convention (SP-1 cookie-manager also binds 127.0.0.1).
-      - "127.0.0.1:${APP_PORT:-3015}:80"
+      # Map host port -> the BACKEND (FastAPI, container :8483), NOT nginx (:80).
+      # The published `ghcr.io/jefferyhcool/bilinote:latest` image's bundled nginx is broken
+      # for our use: it proxies `/` to a non-existent :8080 and a leftover Debian default site
+      # shadows the `/api/` proxy, so `/api/*` 404s through :80. We only need the JSON `/api/*`
+      # surface (the engine never uses the web UI), so we hit the backend directly — robust and
+      # nginx-independent.
+      # Bind to LOCALHOST only — BiliNote has NO authentication; never expose it publicly.
+      # Remote browser/API access: SSH tunnel `ssh -L 3015:127.0.0.1:3015 <host>`.
+      - "127.0.0.1:${APP_PORT:-3015}:8483"
     volumes:
       - bilinote-data:/app/backend/data        # SQLite (provider config, note history)
       - bilinote-config:/app/backend/config     # transcriber.json runtime config
