@@ -1,8 +1,9 @@
 ---
 slug: zhihu-engine-comment-tree
-status: active
+status: merged
 domains: [crawl-pipeline, zhihu]
 updated_at: 2026-06-02
+merged_to: [Engine/zhihu/docs/RepoMem/decisions.md (D7), docs/RepoMem/persist/architecture/crawl-pipeline.md (§知乎链路)]
 ---
 
 # Design notes — full comment-tree crawl

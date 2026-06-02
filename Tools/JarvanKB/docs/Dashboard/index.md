@@ -42,7 +42,7 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟡 wip ← SP-
 |---|---|---|---|---|
 | SP-0 | 骨架 + recipe v2 迁移 | ⚫ done | sp0impler | （无）|
 | SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约 `Service/crawl/cookie-manager/docs/interface.md`）；Step 8 RepoMem.merge 已完成（impler-driven HITL，激活 credentials 域） |
-| SP-2 | 知乎引擎 | ⚫ done | sp2impler | 完成 2026-06-02（merge `f8c14cb`，51 tests + 真站 smoke 全过；纯 cookie+HTTP 无签名/无浏览器）；Step 8 RepoMem.merge 已完成（impler-driven HITL，提升知乎链路根因/坑到 `crawl-pipeline.md`）；契约 `Engine/zhihu/docs/interface.md`；v1.1 评论完整树已 handoff `toZhihuCommentImpler/` |
+| SP-2 | 知乎引擎 | ⚫ done | sp2impler | 完成 2026-06-02（merge `f8c14cb`，51 tests + 真站 smoke 全过；纯 cookie+HTTP 无签名/无浏览器）；Step 8 RepoMem.merge 已完成（impler-driven HITL，提升知乎链路根因/坑到 `crawl-pipeline.md`）；契约 `Engine/zhihu/docs/interface.md`；**v1.1 评论完整树 ⚫ done**（merge `9081cbc`，58 tests + live smoke；Step 8 闭环：decisions.md D7 + 提升 child_comment offset 坑到 `crawl-pipeline.md` §知乎链路，by zhihucommentimpler） |
 | SP-3 | 知乎 Skill | 🟡 wip | sp3impler | SubOrche（UN-019）已 spawn → `toSP3Impler/handoff.md`（起会话=UN-020）。范围锁定：cookie=主动 pull、输出=可配置根目录(vault 无关)、**SP-3 落地 `Engine/common` LLMClient 真实现**（vague_path 分类；凭据待用户填 → verify gate）。SP-2 ✓ |
 | SP-4a | B 站引擎 | 🔴 blocked (Stage 3 — 离线全done，卡 BN gate) | sp4aimpler | 离线代码全部完成：**56 单测全过、subagent-driven 逐任务两阶段 review + 最终整体 review（READY-FOR-SMOKE）、引擎不调 LLM、无活网络**。11 单元 `Engine/bilibili/src/bilibili/`；契约 `Engine/bilibili/docs/interface.md`；BN 部署件 `Engine/bilibili/deploy/bilinote/`（`TRANSCRIBER_TYPE=bcut`）。**仅剩手动 smoke（Task 16）卡 BN 可达（UN-018）→ 见 `from-sp4aimpler-blocker-bn-docker.md`**。BN 起后我跑 smoke → verify → review/finish → Step 8 merge | |
 | SP-4b | B 站 Skill | ⚪ queued | (无) | SP-4a 实现完成 |

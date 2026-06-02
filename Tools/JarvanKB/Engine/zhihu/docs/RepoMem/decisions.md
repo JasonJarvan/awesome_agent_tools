@@ -4,6 +4,25 @@
 > Each entry: date, slug, decision, rationale, what-changes-when-this-is-revisited.
 > When a decision is promoted to global, leave a `[Promoted to global ↗]` marker pointing to `<root>/docs/RepoMem/persist/memory/`.
 
+## 2026-06-02 · zhihu-engine-comment-tree (v1.1 follow-up)
+
+### D7 — child_comment is OFFSET-paginated, but `paging.next`-verbatim is the safe driver  ⚠️ verified live
+The full child-reply endpoint `/api/v4/comment_v5/comment/{root_id}/child_comment` is **offset**-based
+(its `paging.next` embeds `offset=`; paging keys `is_end/is_start/next/previous/totals`) — *different* from
+`root_comment`, which is cursor-based (D3). We deliberately do NOT construct `offset` ourselves; we follow
+`paging.next` **verbatim** (same discipline as `fetch_comments`), which works for cursor AND offset models
+and stays immune to the D3 offset-poison hang regardless. Two live gotchas (answer 2045055171106009805,
+root 11497692920, 28 children): (a) the root response's `child_comment_next_offset` was **`None` even
+though 28 children exist and the inline preview was empty** — so the decision "does this root need a child
+fetch?" must key off `child_comment_count > len(inline preview)`, **NOT** off `child_comment_next_offset`;
+(b) no `x-zse-96` on the child endpoint either (HTTP 200 plain cookies — D5 extends to child_comment).
+Mechanism lives in `src/zhihu/comments.py` (`fetch_child_comments` + the `fetch_comments` expansion block).
+Revisit if Zhihu changes the child-comment pagination contract.
+
+> D7 cross-SP-reusable gotcha (SP-5a Watcher fetches the same comment substrate). **[Promoted to global ↗]**
+> `<root>/docs/RepoMem/persist/architecture/crawl-pipeline.md` §知乎链路 — promoted 2026-06-02 (HITL-approved,
+> user). Global copy holds only the non-code gotcha; mechanism stays here + in code (no-duplication).
+
 ## 2026-06-02 · sp2-zhihu-engine
 
 ### D6 — Design tenet: engine maximizes extraction, consumers filter
@@ -53,15 +72,18 @@ endpoints behind the signature. Full rationale: `../superpowers/specs/2026-05-31
 > 2026-06-02 (HITL-approved, user). Global copy holds only the non-code root-causes/gotchas; mechanism
 > stays here + in code + interface.md (no-duplication).
 
-## Deferred → v1.1 (not in v1 scope)
+## Done in v1.1
 
-Priority order (user-set 2026-06-02): **comment full-tree > image dedup**.
+- **Comment full-tree crawl** — ✅ **DONE 2026-06-02** (merge `9081cbc`, task slug `zhihu-engine-comment-tree`,
+  58 unit tests + live smoke). Each root comment's FULL child set is now paginated via
+  `/api/v4/comment_v5/comment/{cid}/child_comment` and flattened two-layer (was: inline preview only).
+  See **D7** above for the empirical model/gotchas. Was Deferred item #1 (top priority).
 
-1. **[HANDED OFF to successor session]** Comment full-tree crawl — exhaustive: paginate child replies
-   via `/api/v4/comment_v5/comment/{cid}/child_comment` (+ `child_comment_next_offset`), not just the
-   inline `child_comments` preview the root response ships. v1 only flattens inline direct replies.
-   Handoff: `<root>/docs/sendbox/toZhihuCommentImpler/handoff.md` (task slug `zhihu-engine-comment-tree`).
-2. Image dedup — Zhihu HTML ships the same `<img>` twice (noscript + lazy-load) → Markdown shows
+## Deferred → still open (not in v1 / v1.1 scope)
+
+Priority order (user-set 2026-06-02): ~~comment full-tree~~ (done) > image dedup.
+
+1. Image dedup — Zhihu HTML ships the same `<img>` twice (noscript + lazy-load) → Markdown shows
    `![](url)![](url)`. Dedup by `src` in the markdown converter. Cosmetic; lower priority.
-3. Question answer-list pagination — intentionally NOT done (design tenet: single page in; full
+2. Question answer-list pagination — intentionally NOT done (design tenet: single page in; full
    answer-list belongs to SP-5a Watcher).

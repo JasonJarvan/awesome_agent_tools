@@ -86,6 +86,12 @@ SP-5a Watcher 复用必知**的根因/坑（分层读协议下 SP-5a 在 `Servic
 - **`comment_v5` 的 `offset` 是毒**：带 `offset` 请求返回空 `data` + 自引用 `paging.next`
   → 死循环。必须**游标分页**（首调只带 `order_by`+`limit`，跟 `paging.next` 到 `is_end`）。
   勿"简化"回 offset。
+- **子评论端点 `child_comment` 反而是 offset 模型**（v1.1 实测，区别于 `root_comment` 的游标）：
+  `/api/v4/comment_v5/comment/{root_id}/child_comment` 的 `paging.next` 内嵌 `offset=`。**但仍跟
+  `paging.next` 逐字翻页**（勿自构 offset）—— 对游标 / offset 两种模型都对，且免疫上面那条 offset 毒药。
+  两个坑：①root 响应的 `child_comment_next_offset` **可能是 `None` 即便该 root 有几十条子评论**（且内联
+  预览为空）→ 判定"是否要拉完整子树"必须看 `child_comment_count > len(内联预览)`，**别**信
+  `child_comment_next_offset`；②child 端点同样**无需 `x-zse-96`**（纯 cookie 200，D5 延伸到子端点）。
 - **`js-initialData`=camelCase（`voteupCount`/`createdTime`…），`/api/v4`=snake_case**：
   同一实体两套键名，解析需双向兜底（`first(raw, camel, snake)`）。
 - **`comment_v5` 无需 `x-zse-96`**（2026-06 实测确认，非假设）；若未来 403 再引 RSSHub

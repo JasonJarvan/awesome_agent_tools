@@ -1,9 +1,10 @@
 ---
 slug: zhihu-engine-comment-tree
-status: active
+status: merged
 task_type: feature
 domains: [crawl-pipeline, zhihu]
 updated_at: 2026-06-02
+merged_to: [Engine/zhihu/docs/RepoMem/decisions.md (D7 + Done-in-v1.1), docs/RepoMem/persist/architecture/crawl-pipeline.md (§知乎链路 child_comment gotcha)]
 ---
 
 # Zhihu Engine v1.1 — full comment-tree crawl (task working state)
