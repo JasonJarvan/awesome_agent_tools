@@ -44,7 +44,7 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   ← 等 SP-2
 | SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约 `Service/crawl/cookie-manager/docs/interface.md`）；Step 8 RepoMem.merge 已完成（impler-driven HITL，激活 credentials 域） |
 | SP-2 | 知乎引擎 | 🟡 wip (Stage 2 done → Stage 3 execute) | sp2impler | design+plan 已落盘+user approve；plan=15 TDD 任务；plan-ready 信已发 orche；zse-96=纯 cookie+HTTP 无签名（对齐 user 的 Zhihu-Collections-MCP）；plan=`Engine/zhihu/docs/superpowers/plans/2026-05-31-SP-2-zhihu-engine-plan.md` |
 | SP-3 | 知乎 Skill | ⚪ queued | (无) | SP-2 实现完成 |
-| SP-4a | B 站引擎 | 🟡 wip (Stage 1) | sp4aimpler | handoff 已写 `docs/sendbox/toSP4aImpler/`；design+plan 与 SP-2 并行；**Stage 3 execute gate = BN docker 可达（UN-018）** |
+| SP-4a | B 站引擎 | 🟡 wip (Stage 2 done → Stage 3 offline execute) | sp4aimpler | design+plan 已落盘+user approve；plan=16 TDD 任务；plan-ready 信已发 orche；BN HTTP 客户端 + 引擎主导字幕优先级联（命中喂 BN `prefetched_transcript`，未命中走 bcut ASR）；plan=`Engine/bilibili/docs/superpowers/plans/2026-05-31-SP-4a-bilibili-engine-plan.md`；**Tasks 1–14 离线可跑；手动 smoke（Task 15–16）gate = BN docker 可达（UN-018）** |
 | SP-4b | B 站 Skill | ⚪ queued | (无) | SP-4a 实现完成 |
 | SP-5a | 知乎收藏夹监听服务 | ⚪ queued | (无) | SP-2 实现完成 |
 | SP-5b | B 站收藏夹监听服务 | ⚪ queued | (无) | SP-4a 实现完成 |
