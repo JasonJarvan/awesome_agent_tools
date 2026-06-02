@@ -70,7 +70,7 @@ byproduct, surfaced as a best-effort `summary_markdown`.
 | BN role | Engine is a **BN HTTP client**; BN does ASR (bcut) + LLM summary | ❌ Engine speaks the bcut cloud API directly (re-implements BN's upload/poll; loses BN's subtitle cascade + summary) |
 | Cascade ownership | **Engine-driven** — engine fetches metadata + subtitle, decides path | ❌ BN-driven (engine blind to which path was taken; smoke can't prove it) |
 | BN LLM provider | **Manual config** — engine reads `provider_id` + `model_name` from `config/bilibili-engine.yaml`; engine is a pure read-side consumer of BN, never writes BN's provider DB | ❌ Auto-register via `POST /api/provider/add_provider` (couples engine to BN's provider API; idempotency + holding the LLM api_key) |
-| Cookie → BN | **best-effort push** of SESSDATA to BN (`POST /api/config/update_downloader_cookie`) on the ASR path, to cover member/charged videos | ❌ Never push (restricted-video ASR fails) |
+| Cookie → BN | **best-effort push** of SESSDATA to BN (`POST /api/update_downloader_cookie`) on the ASR path, to cover member/charged videos | ❌ Never push (restricted-video ASR fails) |
 | Credential input | **Structured** `BilibiliCredential(sessdata, bili_jct?, buvid3?)` (exactly what `bilibili-api-python` needs); BN cookie string derived from it | ❌ Raw cookie string only (harder to test; engine would re-parse) |
 | **BN dependency in v1** | **Hard-required; both paths route through BN; summary always produced** | ❌ BN-optional subtitle path / `summarize=False` (→ v2+) |
 
@@ -135,14 +135,18 @@ video_ref ─► url_parser ─► bvid (+ optional part)
 
 ### BiliNote API surface consumed (verified against upstream `JefferyHcool/BiliNote`)
 
-- `POST /api/note/generate_note` — body (`VideoRequest`): `video_url`, `platform="bilibili"`, `quality`,
+All routers are mounted under the `/api` prefix (verified: `backend/app/__init__.py`), and every response
+is wrapped by `ResponseWrapper` as `{ code, msg, data }` (`code == 0` = success) — the client unwraps `data`.
+
+- `POST /api/generate_note` — body (`VideoRequest`): `video_url`, `platform="bilibili"`,
+  `quality` (`DownloadQuality` ∈ `fast`/`medium`/`slow`; engine uses `fast` — audio-only is enough for ASR),
   `model_name`, `provider_id`, optional `prefetched_transcript={language, full_text, segments[{start,end,text}]}`,
-  optional `format`, `style`, `screenshot=false`, `link=false`. Returns `{ task_id }`. When
+  optional `format=[]`, `style`, `screenshot=false`, `link=false`. Returns `data={ task_id }`. When
   `prefetched_transcript` is supplied, BN writes it to its transcript cache and skips download + ASR.
-- `GET /api/note/task_status/{task_id}` — returns `{ status, message?, result? }`. `status` ∈
+- `GET /api/task_status/{task_id}` — returns `data={ status, message?, result? }`. `status` ∈
   `PENDING/PARSING/DOWNLOADING/TRANSCRIBING/SUMMARIZING/FORMATTING/SAVING/SUCCESS/FAILED`. On `SUCCESS`,
   `result` = `NoteResult` (`{ markdown, transcript:{language, full_text, segments[]}, audio_meta }`).
-- `POST /api/config/update_downloader_cookie` — body `{ platform:"bilibili", cookie:"<string>" }`.
+- `POST /api/update_downloader_cookie` — body `{ platform:"bilibili", cookie:"<string>" }`.
   The only way to give BN a cookie (BN has no per-request cookie field). Used on the ASR path.
 - `GET /api/sys_health` (or `/api/sys_check`) — readiness probe; used by `bilinote_client` to fail fast
   with `BiliNoteUnavailable` when BN is unreachable.
