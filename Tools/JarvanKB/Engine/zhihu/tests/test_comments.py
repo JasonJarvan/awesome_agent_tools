@@ -64,3 +64,24 @@ def test_fetch_comments_bad_type_raises():
     import pytest
     with pytest.raises(ValueError):
         fetch_comments("video", "1", cookies={}, limit=None)
+
+
+# --- v1.1: full child-comment tree -------------------------------------------------
+
+def test_fetch_child_comments_paginates_via_next(httpx_mock):
+    page0 = {"data": [{"id": "c1", "content": "child 1", "like_count": 0, "created_time": 1700000000,
+                       "author": {"name": "U1", "url_token": "u1"}, "reply_comment_id": "r1"}],
+             "paging": {"is_end": False,
+                        "next": "https://www.zhihu.com/api/v4/comment_v5/comment/r1/child_comment?order_by=ts&limit=20&offset=O2"}}
+    page1 = {"data": [{"id": "c2", "content": "child 2", "like_count": 0, "created_time": 1700000001,
+                       "author": {"name": "U2", "url_token": "u2"}, "reply_comment_id": "c1"}],
+             "paging": {"is_end": True, "next": None}}
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/comment/r1/child_comment?order_by=ts&limit=20",
+        json=page0)
+    httpx_mock.add_response(
+        url="https://www.zhihu.com/api/v4/comment_v5/comment/r1/child_comment?order_by=ts&limit=20&offset=O2",
+        json=page1)
+    from zhihu.comments import fetch_child_comments
+    out = fetch_child_comments("r1", cookies={"d_c0": "x"}, limit=None)
+    assert [c["id"] for c in out] == ["c1", "c2"]   # raw dicts, both pages, follows next verbatim
