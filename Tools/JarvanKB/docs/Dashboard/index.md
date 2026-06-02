@@ -60,7 +60,6 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟢 ready ← S
 |---|---|---|---|---|---|---|
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
-| UN-016 | B | **起 SP2Impler session**（新 Claude Code 会话，cwd=`Tools/JarvanKB/`，与 orche/SP4aImpler 并行），第一句：`read docs/sendbox/toSP2Impler/handoff.md and start SP-2`。知乎引擎,无 execute gate,可一路跑到 done | `docs/sendbox/toSP2Impler/handoff.md` | SP-2 落地 | 2026-06-01 | open |
 | UN-017 | B | **起 SP4aImpler session**（新会话，cwd=`Tools/JarvanKB/`，与 SP2Impler 并行），第一句：`read docs/sendbox/toSP4aImpler/handoff.md and start SP-4a`。B 站引擎,design+plan 可先跑,execute 等 UN-018 | `docs/sendbox/toSP4aImpler/handoff.md` | SP-4a 落地 | 2026-06-01 | open |
 | UN-018 | F | **部署 / 确认 BiliNote docker 可达**（`TRANSCRIBER_TYPE=bcut`）——SP-4a Stage 3 execute + 手动 smoke 的前置。SP4aImpler 会先出 BN docker-compose/config,你 `docker compose up` 起来并把 endpoint 告诉它(或它发 blocker 信时回) | SP4aImpler 的 `from-sp4aimpler-blocker-bn-docker.md`（待发） | SP-4a Stage 3 | 2026-06-01 | open |
 
@@ -81,3 +80,4 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟢 ready ← S
 | UN-013 | cookie-manager 公网暴露 — **done**：公网 HTTPS 全链路验证通（`https://www.zhaoricheng.fun:48098` / 直连 `:48088`）；frps AI 配了 Nginx SSL 代理。剩余"起正式服务 + 扩展填 HTTPS 地址"是用户例行操作，非 orche 待办 | 2026-05-31 | sp1impler + frps AI + user |
 | UN-014 | SP-1 sendbox 后处理 — **done**：archive sp0-done、burn sp1-done + toSP1Impler/handoff + toFRPS/handoff；Step 8 merge 由 impler 完成（未重做）；`temp/sp1-cookie-manager/research.md` 保留（impler 刻意保留 + 下游 SP-2/3 参考） | 2026-06-01 | orche g3 |
 | UN-015 | 修订 merge 归属规范 — **done**：CLAUDE.md §3 step8 + §4、longterm §Pipeline v2 + §Hard Invariants 均加"impler owns merge closure"，并固化 handoff §3.F 措辞（commit `16da3b6`） | 2026-06-01 | orche g3 |
+| UN-016 | 起 SP2Impler session — **done**：SP-2 知乎引擎完成并 merge（`f8c14cb`，51 tests + 真站 smoke）；impler 闭环 Step 8（提升知乎链路根因到 crawl-pipeline.md）；orche 已 burn SP-2 sendbox 链 + codify promotion standard（`96c9548`） | 2026-06-02 | user + sp2impler + orche g3 |
