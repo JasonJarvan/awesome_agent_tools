@@ -2,6 +2,7 @@ from __future__ import annotations
 import httpx
 from .models import Comment, Author
 from ._entities import epoch_to_iso
+from .markdown import html_to_markdown
 
 _TYPE_PATH = {"answer": "answers", "article": "articles"}
 
@@ -35,7 +36,7 @@ def flatten_comments(root_pages: list[dict]) -> list[Comment]:
             root_id = str(c.get("id"))
             out.append(Comment(
                 id=root_id, parent_id=None, author=_author(c.get("author")),
-                content=c.get("content", ""), like_count=c.get("like_count", 0),
+                content=html_to_markdown(c.get("content", "")), like_count=c.get("like_count", 0),
                 created_at=epoch_to_iso(c.get("created_time")),
             ))
             for ch in c.get("child_comments", []):
@@ -43,7 +44,7 @@ def flatten_comments(root_pages: list[dict]) -> list[Comment]:
                 reply_to = name_by_id.get(str(reply_cid)) if reply_cid else None
                 out.append(Comment(
                     id=str(ch.get("id")), parent_id=root_id,
-                    author=_author(ch.get("author")), content=ch.get("content", ""),
+                    author=_author(ch.get("author")), content=html_to_markdown(ch.get("content", "")),
                     like_count=ch.get("like_count", 0),
                     created_at=epoch_to_iso(ch.get("created_time")),
                     reply_to_author=reply_to,

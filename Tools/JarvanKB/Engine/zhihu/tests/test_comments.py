@@ -23,6 +23,17 @@ def test_flatten_two_layer_real_schema():
     assert out[1].author.name == "Bob"
     assert out[1].reply_to_author == "Alice"   # resolved from reply_comment_id -> id->name map
 
+
+def test_flatten_converts_comment_html_to_markdown():
+    page = {"data": [{"id": "x", "content": "see <a href=\"https://z.cn\">link</a> and <strong>bold</strong>",
+                      "like_count": 0, "created_time": 1700000000,
+                      "author": {"name": "A", "url_token": "a"}, "child_comments": []}],
+            "paging": {"is_end": True, "next": None}}
+    out = flatten_comments([page])
+    assert "**bold**" in out[0].content        # HTML converted to Markdown
+    assert "<strong>" not in out[0].content
+    assert "https://z.cn" in out[0].content
+
 def test_fetch_comments_cursor_pagination(httpx_mock):
     page0 = {"data": [{"id": "a", "content": "c-a", "like_count": 0, "created_time": 1700000000,
                        "author": {"name": "A", "url_token": "a"}, "child_comments": []}],
