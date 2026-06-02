@@ -18,5 +18,10 @@ def test_style_tags_stripped():
 def test_render_frontmatter():
     fm = render_frontmatter({"title": "T", "type": "answer", "source": "zhihu"})
     assert fm.startswith("---\n")
-    assert "title: T" in fm
+    assert 'title: "T"' in fm
     assert fm.rstrip().endswith("---")
+
+def test_render_frontmatter_quotes_special_chars():
+    fm = render_frontmatter({"title": "Why: the sky? [blue]", "vote_count": 5})
+    assert 'title: "Why: the sky? [blue]"' in fm   # colon/brackets safely quoted
+    assert "vote_count: 5" in fm                    # numbers stay bare

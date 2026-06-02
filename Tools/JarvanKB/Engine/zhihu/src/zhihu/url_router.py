@@ -11,6 +11,7 @@ _QUESTION = re.compile(r"/question/(?P<q>\d+)/?$")
 
 def classify(url: str) -> tuple[ZhihuType, dict]:
     """Classify a Zhihu URL into (type, ids). Raises ZhihuFetchError on unsupported URLs."""
+    url = url.split("?", 1)[0].split("#", 1)[0]
     m = _ANSWER_WITH_Q.search(url)
     if m:
         return ZhihuType.ANSWER, {"answer_id": m.group("a"), "question_id": m.group("q")}

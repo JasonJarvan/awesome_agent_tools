@@ -13,4 +13,4 @@ def test_cli_outputs_markdown(httpx_mock, capsys, tmp_path):
     assert rc == 0
     out = capsys.readouterr().out
     assert "Engine body" in out
-    assert "source: zhihu" in out
+    assert 'source: "zhihu"' in out

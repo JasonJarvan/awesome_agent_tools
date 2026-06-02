@@ -4,11 +4,12 @@ from http.cookies import SimpleCookie
 import httpx
 
 from .url_router import classify
-from .models import ZhihuType, FetchResult, Author
+from .models import ZhihuType, FetchResult
 from .errors import ZhihuFetchError
 from .initialdata import extract_initial_data
 from .markdown import html_to_markdown
 from . import fetcher, comments as comments_mod
+from ._entities import parse_author
 from .parsers.answer import parse_answer
 from .parsers.article import parse_article
 from .parsers.question import parse_question
@@ -39,7 +40,10 @@ def fetch(url: str, cookies: dict | str | None = None, *, with_comments: bool = 
     jar = _normalize_cookies(cookies)
     attempts: list[str] = []
 
-    status, text = fetcher.get_page(url, cookies=jar, timeout=timeout)
+    try:
+        status, text = fetcher.get_page(url, cookies=jar, timeout=timeout)
+    except httpx.HTTPError as e:
+        raise ZhihuFetchError(f"Network error fetching {url}: {e}", url=url, attempts=["html"]) from e
     result: FetchResult | None = None
 
     if status == 200:
@@ -60,10 +64,11 @@ def fetch(url: str, cookies: dict | str | None = None, *, with_comments: bool = 
         attempts.append("api-fallback")
         try:
             result = _from_api_answer(url, ids, jar, timeout)
-        except httpx.HTTPStatusError as e:
+        except httpx.HTTPError as e:
+            status_code = getattr(getattr(e, "response", None), "status_code", None)
             raise ZhihuFetchError(
                 f"API fallback failed for {url}", url=url, attempts=attempts,
-                status=e.response.status_code) from e
+                status=status_code) from e
 
     if result is None:
         raise ZhihuFetchError(
@@ -73,9 +78,15 @@ def fetch(url: str, cookies: dict | str | None = None, *, with_comments: bool = 
 
     if with_comments and ztype in _COMMENTABLE:
         item_id = ids.get("answer_id") or ids.get("article_id")
-        result.comments = comments_mod.fetch_comments(
-            _COMMENTABLE[ztype], item_id, cookies=jar, limit=comment_limit,
-            headers=fetcher.API_HEADERS)
+        try:
+            result.comments = comments_mod.fetch_comments(
+                _COMMENTABLE[ztype], item_id, cookies=jar, limit=comment_limit,
+                headers=fetcher.API_HEADERS)
+        except httpx.HTTPError as e:
+            status_code = getattr(getattr(e, "response", None), "status_code", None)
+            raise ZhihuFetchError(
+                f"Comment fetch failed for {url}: {e}", url=url,
+                attempts=attempts + ["comments"], status=status_code) from e
 
     return result
 
@@ -85,11 +96,10 @@ def _from_api_answer(url: str, ids: dict, jar: dict, timeout: float) -> FetchRes
     if not answer_id:
         raise ZhihuFetchError("API fallback requires an answer_id", url=url, attempts=["api-fallback"])
     data = fetcher.get_api_answer(answer_id, cookies=jar, timeout=timeout)
-    author = data.get("author") or {}
     question = data.get("question") or {}
     return FetchResult(
         url=url, type=ZhihuType.ANSWER, title=question.get("title", ""),
-        author=Author(name=author.get("name", "")) if author else None,
+        author=parse_author(data.get("author")),
         content_markdown=html_to_markdown(data.get("content", "")),
         metadata={"vote_count": data.get("voteup_count", 0),
                   "comment_count": data.get("comment_count", 0)},

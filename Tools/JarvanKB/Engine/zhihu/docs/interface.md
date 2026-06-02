@@ -93,7 +93,7 @@ class FetchResult:
     fetched_at: str                 # 抓取时间，ISO-8601 UTC，格式 "2026-06-01T12:00:00Z"
     answers: list[EmbeddedAnswer]   # 仅 QUESTION 类型填充；其余为空列表
     comments: list[Comment]         # 仅 with_comments=True 且类型为 ANSWER/ARTICLE 时填充
-    raw: dict | None                # 原始 API JSON（仅 api-fallback 路径填充；其余为 None）
+    raw: dict | None                # 原始来源实体 dict —— initialData 路径下为解析出的实体对象，api-fallback 路径下为 API JSON，仅 CSS-scrape 兜底路径为 None
 ```
 
 `metadata` 常见键（视内容类型和解析路径而定，可能缺失）：

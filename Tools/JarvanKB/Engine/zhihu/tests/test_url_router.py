@@ -19,3 +19,9 @@ def test_classify(url, expected_type, expected_ids):
 def test_classify_rejects_unknown():
     with pytest.raises(ZhihuFetchError):
         classify("https://www.zhihu.com/people/someone")
+
+def test_classify_strips_query_and_fragment():
+    t, ids = classify("https://www.zhihu.com/question/123?source=share")
+    assert t is ZhihuType.QUESTION and ids["question_id"] == "123"
+    t2, ids2 = classify("https://www.zhihu.com/question/123/answer/456#comments")
+    assert t2 is ZhihuType.ANSWER and ids2["answer_id"] == "456"

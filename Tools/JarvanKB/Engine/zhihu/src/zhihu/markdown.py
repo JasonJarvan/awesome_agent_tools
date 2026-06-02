@@ -20,11 +20,20 @@ def html_to_markdown(html: str) -> str:
 
 
 def render_frontmatter(meta: dict) -> str:
-    """Minimal, deterministic YAML frontmatter (flat scalar values only)."""
+    """Deterministic, YAML-safe frontmatter. String values are always double-quoted (so titles /
+    authors containing ':' '[' '#' etc. stay valid YAML and timestamps round-trip as strings);
+    bools/numbers emitted bare. None values skipped."""
     lines = ["---"]
     for key, value in meta.items():
         if value is None:
             continue
-        lines.append(f"{key}: {value}")
+        if isinstance(value, bool):
+            rendered = "true" if value else "false"
+        elif isinstance(value, (int, float)):
+            rendered = str(value)
+        else:
+            escaped = str(value).replace("\\", "\\\\").replace('"', '\\"')
+            rendered = f'"{escaped}"'
+        lines.append(f"{key}: {rendered}")
     lines.append("---")
     return "\n".join(lines) + "\n"

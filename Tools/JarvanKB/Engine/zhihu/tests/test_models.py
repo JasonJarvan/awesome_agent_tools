@@ -48,8 +48,8 @@ def test_to_markdown_with_frontmatter():
     )
     md = r.to_markdown(with_frontmatter=True)
     assert md.startswith("---\n")
-    assert "title: T" in md
-    assert "source: zhihu" in md
+    assert 'title: "T"' in md
+    assert 'source: "zhihu"' in md
     assert "Body text" in md
     body_only = r.to_markdown(with_frontmatter=False)
     assert body_only == "Body text"

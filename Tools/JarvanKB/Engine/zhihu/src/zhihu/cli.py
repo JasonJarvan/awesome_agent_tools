@@ -8,7 +8,8 @@ from .engine import fetch
 def _load_cookies(path: str | None) -> dict | None:
     if not path:
         return None
-    raw = json.loads(open(path, encoding="utf-8").read())
+    from pathlib import Path
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
     if isinstance(raw, list):  # browser-export form [{name, value}, ...]
         return {c["name"]: c["value"] for c in raw}
     return raw  # already a dict
