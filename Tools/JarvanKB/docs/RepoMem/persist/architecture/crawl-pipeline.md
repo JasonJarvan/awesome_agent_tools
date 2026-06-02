@@ -4,7 +4,8 @@
 > Paraformer fallback）是 **R5 之前的旧设计，已废弃**。v1 B 站方案改为 **BiliNote Docker + bcut（B站必剪
 > 免费云端 ASR）+ 字幕优先级联**，Aliyun/OSS 退出 v1（见 `version-plan.md` §Compatibility notes、
 > `credentials.md`、SP-0 design §7 SP-4a）。SP-4a 的权威范围以 SP-0 §7 为准，**勿照本文件 B 站部分实现**。
-> **知乎链路**（CDP `Chrome:9222` → Jina Reader fallback）仍为 SP-2 的相关研究参考，未废弃。
+> **知乎链路**：旧的 CDP `Chrome:9222` → Jina Reader 推测链 **已废弃**（SP-2 实测改走纯 cookie+HTTP，
+> 见下方 §知乎链路（SP-2 实现）+ `Engine/zhihu/docs/RepoMem/decisions.md`）。
 
 ## 总数据流
 
@@ -73,15 +74,25 @@ SenseVoice-Small local (only if RAM check passes)
 return {"error": ..., "fallback_used": [...]}
 ```
 
-知乎链路的 fallback：
+### 知乎链路（SP-2 实现，2026-06-02 落地）
 
-```
-Playwright CDP (本机已登录 Chrome:9222)
-  ↓ fail (CDP unreachable / login expired)
-Jina Reader (r.jina.ai, 转发 d_c0/z_c0 cookie)
-  ↓ fail
-return {"error": ..., "fallback_used": [...]}
-```
+实现 = **纯 cookie + HTTP（无浏览器、无 zse-96 签名器）**。机制细节见代码 +
+`Engine/zhihu/docs/{interface.md, RepoMem/decisions.md D1–D5}`。此处仅记**非代码可推导、
+SP-5a Watcher 复用必知**的根因/坑（分层读协议下 SP-5a 在 `Service/crawl/zhihu-watcher/` cwd
+不会读到 `Engine/zhihu` 的模块记忆，故提升于此）：
+
+- **旧「Playwright CDP `Chrome:9222` → Jina Reader」推测链：未采用、已废弃。** 实测知乎页面
+  导航 GET 内嵌 `js-initialData`（服务端渲染）即够，无需浏览器、无需 Jina 转发。
+- **`comment_v5` 的 `offset` 是毒**：带 `offset` 请求返回空 `data` + 自引用 `paging.next`
+  → 死循环。必须**游标分页**（首调只带 `order_by`+`limit`，跟 `paging.next` 到 `is_end`）。
+  勿"简化"回 offset。
+- **`js-initialData`=camelCase（`voteupCount`/`createdTime`…），`/api/v4`=snake_case**：
+  同一实体两套键名，解析需双向兜底（`first(raw, camel, snake)`）。
+- **`comment_v5` 无需 `x-zse-96`**（2026-06 实测确认，非假设）；若未来 403 再引 RSSHub
+  MIT 签名器（MediaCrawler 的禁商用、勿 vendor）。
+- **知乎直连**（`trust_env=False`）：宿主有 `HTTP_PROXY`/`ALL_PROXY`（给境外站），知乎是
+  陆站直连即达，走境外代理慢且招风控。
+- cookie 注入式（`d_c0`/`z_c0`/`__zse_ck`），来源 = SP-1 cookie-manager。
 
 ## 模块边界
 

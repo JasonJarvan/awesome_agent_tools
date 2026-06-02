@@ -26,11 +26,11 @@
 
 依赖图 → 现在能并行什么
 
-SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   ← 等 SP-2
+SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟢 ready ← SP-2 ✓
          │            ├─ SP-4b(B站Skill)  ← 等 SP-4a
-         │            ├─ SP-5a(知乎Watcher)← 等 SP-2
+         │            ├─ SP-5a(知乎Watcher)🟢 ready ← SP-2 ✓
          │            └─ SP-5b(B站Watcher) ← 等 SP-4a
-         ├─ SP-2(知乎引擎) 🟢 进入条件已满足
+         ├─ SP-2(知乎引擎) ⚫ done
          └─ SP-4a(B站引擎) 进入条件:SP-0 ✓ + BN docker 可达
          
 > JarvanKB 子项目状态板（kanban-like）。一屏看全部 SP 状态 + 责任 agent + 进入条件。
@@ -42,11 +42,11 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   ← 等 SP-2
 |---|---|---|---|---|
 | SP-0 | 骨架 + recipe v2 迁移 | ⚫ done | sp0impler | （无）|
 | SP-1 | CookieManager（自写 Express 复刻 CookieCloud 协议 + hook） | ⚫ done | sp1impler | 完成 2026-05-31（merge `b84ee0f`，40 tests，协议契约 `Service/crawl/cookie-manager/docs/interface.md`）；Step 8 RepoMem.merge 已完成（impler-driven HITL，激活 credentials 域） |
-| SP-2 | 知乎引擎 | 🟡 wip (Stage 2 done → Stage 3 execute) | sp2impler | design+plan 已落盘+user approve；plan=15 TDD 任务；plan-ready 信已发 orche；zse-96=纯 cookie+HTTP 无签名（对齐 user 的 Zhihu-Collections-MCP）；plan=`Engine/zhihu/docs/superpowers/plans/2026-05-31-SP-2-zhihu-engine-plan.md` |
-| SP-3 | 知乎 Skill | ⚪ queued | (无) | SP-2 实现完成 |
+| SP-2 | 知乎引擎 | ⚫ done | sp2impler | 完成 2026-06-02（merge `f8c14cb`，51 tests + 真站 smoke 全过；纯 cookie+HTTP 无签名/无浏览器）；Step 8 RepoMem.merge 已完成（impler-driven HITL，提升知乎链路根因/坑到 `crawl-pipeline.md`）；契约 `Engine/zhihu/docs/interface.md`；v1.1 评论完整树已 handoff `toZhihuCommentImpler/` |
+| SP-3 | 知乎 Skill | 🟢 ready | (无) | SP-2 已完成 ✓（2026-06-02）→ 可起 impler |
 | SP-4a | B 站引擎 | 🟡 wip (Stage 2 done → Stage 3 offline execute) | sp4aimpler | design+plan 已落盘+user approve；plan=16 TDD 任务；plan-ready 信已发 orche；BN HTTP 客户端 + 引擎主导字幕优先级联（命中喂 BN `prefetched_transcript`，未命中走 bcut ASR）；plan=`Engine/bilibili/docs/superpowers/plans/2026-05-31-SP-4a-bilibili-engine-plan.md`；**Tasks 1–14 离线可跑；手动 smoke（Task 15–16）gate = BN docker 可达（UN-018）** |
 | SP-4b | B 站 Skill | ⚪ queued | (无) | SP-4a 实现完成 |
-| SP-5a | 知乎收藏夹监听服务 | ⚪ queued | (无) | SP-2 实现完成 |
+| SP-5a | 知乎收藏夹监听服务 | 🟢 ready | (无) | SP-2 已完成 ✓（2026-06-02）→ 可起 impler；务必读 `crawl-pipeline.md` §知乎链路 根因/坑 |
 | SP-5b | B 站收藏夹监听服务 | ⚪ queued | (无) | SP-4a 实现完成 |
 | SP-6 | CrawlMdSaver Skill（爬取-笔记整合） | ⚪ queued | (无) | SP-3 / SP-4b 已注册到 SP-6 |
 | SP-7 | Thino 块解析整理服务 | ⚪ queued | (无) | SP-6 实现完成 |
