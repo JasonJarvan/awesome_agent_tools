@@ -72,3 +72,19 @@ def test_provider_get_cookies_end_to_end():
     provider = CookieProvider(src, http_client=client)
     cookies = provider.get_cookies()
     assert cookies == {"z_c0": "ZC0TOKEN", "d_c0": "DC0DEVID"}
+
+
+def test_default_client_uses_trust_env_false(monkeypatch):
+    # The default (non-injected) httpx client MUST set trust_env=False so it does not pick up
+    # the host's overseas proxy env (ALL_PROXY/HTTP_PROXY). SP-1 is reached direct.
+    captured = {}
+    real_client_cls = httpx.Client
+
+    def fake_client(*args, **kwargs):
+        captured.update(kwargs)
+        # return a harmless real client that never hits the network
+        return real_client_cls(transport=httpx.MockTransport(lambda r: httpx.Response(404)))
+
+    monkeypatch.setattr(httpx, "Client", fake_client)
+    CookieProvider(CookieSource(base_url="http://sp1.local", uuid="u", password="p"))
+    assert captured.get("trust_env") is False

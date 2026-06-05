@@ -83,7 +83,9 @@ def extract_zhihu_cookies(payload: dict) -> dict[str, str]:
 class CookieProvider:
     def __init__(self, cookie_source: CookieSource, http_client: httpx.Client | None = None):
         self._src = cookie_source
-        self._client = http_client or httpx.Client(timeout=30.0)
+        # trust_env=False: SP-1 is a local/mainland service reached direct — do NOT pick up the
+        # host's overseas proxy env (ALL_PROXY/HTTP_PROXY). Same stance as favorites_client + §知乎链路.
+        self._client = http_client or httpx.Client(timeout=30.0, trust_env=False)
 
     def get_cookies(self) -> dict[str, str]:
         url = f"{self._src.base_url.rstrip('/')}/get/{self._src.uuid}"
