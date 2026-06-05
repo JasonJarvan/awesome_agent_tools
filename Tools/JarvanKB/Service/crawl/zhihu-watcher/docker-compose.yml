@@ -1,0 +1,12 @@
+services:
+  zhihu-watcher:
+    build:
+      context: ../../..                      # repo root, so Engine/zhihu is in the build context
+      dockerfile: Service/crawl/zhihu-watcher/Dockerfile
+    container_name: jarvankb-zhihu-watcher
+    restart: unless-stopped
+    volumes:
+      - ./config:/config:ro                  # put zhihu-watcher.yaml here
+      - ./data/state:/data/state             # seen-id JSON (persisted)
+      - ./data/output:/data/output           # saved Markdown
+    # Zhihu is reached direct (the client sets trust_env=False); no proxy env needed.
