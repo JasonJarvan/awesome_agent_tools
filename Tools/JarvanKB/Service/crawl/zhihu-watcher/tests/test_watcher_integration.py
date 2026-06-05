@@ -147,3 +147,19 @@ def test_corrupt_seen_file_skips_collection_without_crashing(tmp_path):
     watcher.run_cycle()                 # must NOT raise despite the corrupt state file
     assert fetch_calls == []            # collection skipped -> nothing fetched
     assert not (Path(cfg.output_dir) / "Box1").exists()
+
+
+def test_main_once_runs_single_cycle(tmp_path, monkeypatch):
+    import zhihu_watcher.__main__ as m
+
+    calls = {"n": 0}
+
+    class _W:
+        def run_cycle(self):
+            calls["n"] += 1
+
+    monkeypatch.setattr(m, "build_watcher", lambda cfg: _W())
+    monkeypatch.setattr(m, "load_config", lambda path: object())
+
+    m.main(["--once", "--config", "irrelevant.yaml"])
+    assert calls["n"] == 1   # exactly one cycle, no scheduler started
