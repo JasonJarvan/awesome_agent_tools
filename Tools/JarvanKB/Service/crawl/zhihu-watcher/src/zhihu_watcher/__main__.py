@@ -41,13 +41,13 @@ def main(argv: list[str] | None = None) -> None:
         minutes=config.poll_interval_minutes,
         max_instances=1,
         coalesce=True,
-        next_run_time=None,  # also run immediately on startup via the explicit call below
     )
     logging.getLogger("zhihu_watcher").info(
         "starting scheduler: every %d min, %d collection(s)",
         config.poll_interval_minutes, len(config.collections),
     )
-    watcher.run_cycle()  # run once immediately, then on the interval
+    # run once immediately, then APScheduler fires every interval
+    watcher.run_cycle()
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):

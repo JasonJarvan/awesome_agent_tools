@@ -163,3 +163,41 @@ def test_main_once_runs_single_cycle(tmp_path, monkeypatch):
 
     m.main(["--once", "--config", "irrelevant.yaml"])
     assert calls["n"] == 1   # exactly one cycle, no scheduler started
+
+
+def test_main_default_schedules_unpaused_interval_job(tmp_path, monkeypatch):
+    import types as _t
+    import zhihu_watcher.__main__ as m
+
+    cycles = {"n": 0}
+
+    class _W:
+        def run_cycle(self):
+            cycles["n"] += 1
+
+    captured = {}
+
+    class _FakeScheduler:
+        def add_job(self, func, **kwargs):
+            captured["kwargs"] = kwargs
+
+        def start(self):
+            captured["started"] = True  # no-op so the test does not block
+
+        def shutdown(self):
+            pass
+
+    fake_cfg = _t.SimpleNamespace(poll_interval_minutes=45, collections=[1, 2])
+    monkeypatch.setattr(m, "load_config", lambda path: fake_cfg)
+    monkeypatch.setattr(m, "build_watcher", lambda cfg: _W())
+    monkeypatch.setattr(m, "BlockingScheduler", lambda: _FakeScheduler())
+
+    m.main([])  # default mode (no --once)
+
+    assert cycles["n"] == 1                                  # immediate run happened once
+    assert captured.get("started") is True                  # scheduler was started
+    assert captured["kwargs"]["trigger"] == "interval"
+    assert captured["kwargs"]["minutes"] == 45
+    assert captured["kwargs"]["max_instances"] == 1
+    # paused-job guard: next_run_time must NOT be explicitly None (that would pause the job)
+    assert captured["kwargs"].get("next_run_time", "absent") is not None
