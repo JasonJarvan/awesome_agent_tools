@@ -12,7 +12,7 @@ from typing import Any, Iterator
 
 import litellm
 
-from .config import resolve_candidates
+from .llm_config import resolve_candidates
 
 
 class LLMClient:

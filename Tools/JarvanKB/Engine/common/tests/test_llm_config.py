@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from jarvankb_common.config import load_llm_config, resolve_candidates
+from jarvankb_common.llm_config import load_llm_config, resolve_candidates
 
 
 def _write_cfg(tmp_path: Path) -> Path:
