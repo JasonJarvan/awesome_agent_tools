@@ -1,9 +1,0 @@
-Metadata-Version: 2.4
-Name: jarvankb-common
-Version: 0.1.0
-Summary: JarvanKB shared layer: LLMClient (litellm backend) + config loader
-Requires-Python: >=3.11
-Requires-Dist: litellm>=1.40
-Requires-Dist: pyyaml>=6.0
-Provides-Extra: dev
-Requires-Dist: pytest>=8.0; extra == "dev"
