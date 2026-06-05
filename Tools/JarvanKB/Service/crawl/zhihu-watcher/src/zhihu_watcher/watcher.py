@@ -57,7 +57,11 @@ class Watcher:
         except Exception as e:  # noqa: BLE001
             log.error("listing collection %s failed: %s", coll.id, e)
             return
-        seen = self._store.load(coll.id)
+        try:
+            seen = self._store.load(coll.id)
+        except Exception as e:  # noqa: BLE001 - a corrupt state file must not crash the cycle
+            log.error("loading seen-set for collection %s failed: %s — skipping", coll.id, e)
+            return
         new_count = 0
         for item in items:
             if item.key in seen:

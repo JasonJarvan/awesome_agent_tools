@@ -126,3 +126,24 @@ def test_unexpected_fetch_exception_does_not_crash_cycle(tmp_path):
     assert store.load("c1") == {"answer:2"}
     assert (Path(cfg.output_dir) / "Box1" / "Two.md").exists()
     assert not (Path(cfg.output_dir) / "Box1" / "One.md").exists()
+
+
+def test_corrupt_seen_file_skips_collection_without_crashing(tmp_path):
+    items = [CollectionItem(key="answer:1", url="https://www.zhihu.com/answer/1",
+                            content_type="answer", title="One")]
+    fetch_calls = []
+
+    def fetch_fn(url, cookies):
+        fetch_calls.append(url)
+        return FetchedDoc(title="One", content_markdown="ok")
+
+    cfg = _config(tmp_path)
+    # pre-write a corrupt state file for collection c1
+    state = Path(cfg.state_dir)
+    state.mkdir(parents=True, exist_ok=True)
+    (state / "seen-c1.json").write_text("{not valid json", encoding="utf-8")
+
+    watcher = Watcher(cfg, _FakeCookies(), _FakeFavorites(items), fetch_fn, WatermarkStore(cfg.state_dir))
+    watcher.run_cycle()                 # must NOT raise despite the corrupt state file
+    assert fetch_calls == []            # collection skipped -> nothing fetched
+    assert not (Path(cfg.output_dir) / "Box1").exists()
