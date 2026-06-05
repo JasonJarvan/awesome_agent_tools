@@ -3,15 +3,16 @@
 ## LLMClient
 
 ```python
-from Engine.common.src.llm_client import LLMClient
+from jarvankb_common import LLMClient          # pkg: jarvankb-common (pip install -e Engine/common)
 
-client = LLMClient(profile="default")   # profile defined in config/llm.yaml
-text  = client.complete([{"role": "user", "content": "..."}])
+client = LLMClient(profile="default")           # profile defined in config/llm.yaml
+text   = client.complete([{"role": "user", "content": "..."}])
 chunks = client.stream([{"role": "user", "content": "..."}])
 ```
 
-**Stability**: signatures (constructor + `complete` + `stream` + `to_opencode`) are the v1 frozen contract.
-**Body**: skeleton only in v1 SP-0; first real implementation lands with SP-3 or SP-6.
+**Stability**: signatures (`__init__` + `complete` + `stream` + `to_opencode`) are the v1 frozen contract.
+`__init__` accepts an optional `config_path` kwarg (defaults to `config/llm.yaml` / `$JARVANKB_LLM_CONFIG`).
+**Body**: **real impl landed in SP-3** (litellm backend, active-order fallthrough). SP-6 reuses as-is.
 
 ## Configuration
 
