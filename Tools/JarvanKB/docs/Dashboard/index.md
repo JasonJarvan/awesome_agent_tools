@@ -28,7 +28,7 @@
 
 SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟡 wip ← SP-2 ✓
          │            ├─ SP-4b(B站Skill)  ← 等 SP-4a
-         │            ├─ SP-5a(知乎Watcher)🟡 wip ← SP-2 ✓
+         │            ├─ SP-5a(知乎Watcher)⚫ done(v1.1=UN-024)
          │            └─ SP-5b(B站Watcher) ← 等 SP-4a
          ├─ SP-2(知乎引擎) ⚫ done
          └─ SP-4a(B站引擎) 进入条件:SP-0 ✓ + BN docker 可达
@@ -46,7 +46,7 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟡 wip ← SP-
 | SP-3 | 知乎 Skill | 🟡 wip | sp3impler | SubOrche（UN-019）已 spawn → `toSP3Impler/handoff.md`（起会话=UN-020）。范围锁定：cookie=主动 pull、输出=可配置根目录(vault 无关)、**SP-3 落地 `Engine/common` LLMClient 真实现**（vague_path 分类；凭据待用户填 → verify gate）。SP-2 ✓ |
 | SP-4a | B 站引擎 | ⚫ done | sp4aimpler | 完成 2026-06-02：**59 单测全过 + 两条路径对真实 BN+真实B站 smoke 通过**（ASR `BV1GJ411x7h7` / 字幕 `BV1BXQABNE4y`→prefetched→mimo-v2.5-pro；prose 可读文本已验证）。subagent-driven 逐任务两阶段 review + 最终整体 review。契约 `Engine/bilibili/docs/interface.md`；部署件 `deploy/bilinote/`。Step 8 RepoMem.merge 已完成（impler-driven HITL，提升 B站 cookie 域=`bilibili.com`无点 + BN+bcut 运维坑到 `credentials.md`/`crawl-pipeline.md`）。done 信已发 orche | |
 | SP-4b | B 站 Skill | 🟢 ready | → BilibiliCrawl SubOrche | 已委派给 BilibiliCrawl SubOrche（UN-022），由其起 SP4bImpler。结构同 SP-3；契约 `Engine/bilibili/docs/interface.md`；cookie=主动 PULL（`domain=bilibili.com` 无点，SESSDATA）；**复用 SP-3 落地的 LLMClient，勿重写** |
-| SP-5a | 知乎收藏夹监听服务 | 🟡 wip | sp5aimpler | **Stage 1–4 done**（design+plan 已落、user 批准；commits `1cc8990`/`6a3934f`；plan-ready 信已发 SubOrche）。设计细化:去重改 **seen-id 集合**(API 不可靠暴露收藏时间;`content.created`≠收藏时间)、输出套**参考 repo `Zhihu-Collections-MCP`** 格式(无 frontmatter、远程图)、调度 **BlockingScheduler**+compose、cookie=HTTP GET+Python 解密。**好消息**:收藏夹端点纯 cookie 无需 x-zse-96(参考 repo 实证)。下一步:起 worktree + subagent-driven TDD。SP-2 ✓ |
+| SP-5a | 知乎收藏夹监听服务 | ⚫ done | sp5aimpler | 完成 2026-06-07(merge `7acacb2`,**32 tests + 真站 smoke**:收藏夹端点 200 无 x-zse-96、168 条→140 落盘、二轮去重 0 新增;28 条专栏因 SP-2 api-fallback 仅覆盖 ANSWER 而 403)。纯 cookie+HTTP、seen-id 去重、BlockingScheduler+compose、cookie=SP-1 主动拉取内存解密(绝不落盘明文)。契约 `Service/crawl/zhihu-watcher/docs/interface.md`。Step 8 RepoMem.merge 已闭环(`4a0b45c`,impler-driven HITL:提升收藏夹端点无签名/offset 分页/专栏-403 坑到 `crawl-pipeline.md §知乎链路`)。done 信已发 SubOrche。**v1.1**(两种目标解析模式)handoff 已草拟 → UN-024 |
 | SP-5b | B 站收藏夹监听服务 | 🟢 ready | → BilibiliCrawl SubOrche | 已委派给 BilibiliCrawl SubOrche（UN-022），由其起 SP5bImpler。结构同 SP-5a（高水位 `fav_time`，默认 15–30min）；调 SP-4a 引擎；cookie=主动 PULL（`bilibili.com`）；**impler 务必先读 `crawl-pipeline.md` §B站链路** |
 | SP-6 | CrawlMdSaver Skill（爬取-笔记整合） | ⚪ queued | (无) | SP-3 / SP-4b 已注册到 SP-6 |
 | SP-7 | Thino 块解析整理服务 | ⚪ queued | (无) | SP-6 实现完成 |
@@ -62,6 +62,7 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   🟡 wip ← SP-
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
 | UN-023 | B | **起 g4 root orche session 继承编排**（g3 上下文吃紧）：新会话 cwd=`Tools/JarvanKB/`，第一句：`read docs/sendbox/toOrchestrator/g4-handoff.md and inherit JarvanKB root orchestration`。g3 退场，g4 接管治理 + 两条 SubOrche 线 + SP-6/7 排程 | `docs/sendbox/toOrchestrator/g4-handoff.md` | g3 退场 + g4 接管 | 2026-06-07 | open |
 | UN-022 | B | **起 BilibiliCrawl SubOrche session**（新会话，cwd=`Tools/JarvanKB/`），第一句：`read docs/sendbox/toBilibiliCrawlOrche/handoff.md and inherit the Bilibili vertical`。它再 spawn + 协调 SP4bImpler + SP5bImpler（并行）；Root→SubOrche→Impler，与 ZhihuCrawl SubOrche 对称 | `docs/sendbox/toBilibiliCrawlOrche/handoff.md` | SP-4b + SP-5b 落地 | 2026-06-04 | open |
+| UN-024 | B | **起 ZhihuWatcherV11Impler session**（新会话，cwd=`Tools/JarvanKB/`），第一句：`read docs/sendbox/toZhihuWatcherV11Impler/handoff.md and start SP-5a v1.1`。SP-5a v1 已 done+merged；v1.1=两种收藏夹目标解析模式(Mode1 按 UserId 列全部 / Mode2 显式 List)，Server 层定位已锁;parent=ZhihuCrawl SubOrche | `docs/sendbox/toZhihuWatcherV11Impler/handoff.md` | SP-5a v1.1 落地 | 2026-06-07 | open |
 
 ## Archive
 
