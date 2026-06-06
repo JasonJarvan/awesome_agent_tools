@@ -56,6 +56,15 @@ consume. (Aliyun AK / OSS credentials are out of v1 scope — R5 switched ASR to
 - **Engine contract:** SP-4a takes a structured `BilibiliCredential(sessdata, bili_jct?, buvid3?)` as
   INPUT (it never fetches cookies itself); SP-4b/5b inject it. See `Engine/bilibili/docs/interface.md`.
 
+## Consumer-side decrypt — verified Python reference impl (SP-3, 2026-06-07)
+
+The pull + client-side decrypt protocol (interface §3) now has a verified Python reference:
+`Skill/crawl/zhihu-crawl/src/zhihu_crawl/cookie.py` — `the_key = md5(f"{uuid}-{password}").hexdigest()[:16]`;
+`legacy` = OpenSSL `Salted__` + EVP_BytesToKey(MD5) → AES-256-CBC; `aes-128-cbc-fixed` = 16-byte key + zero
+IV; cookies decrypted **in memory only, never persisted**. The `legacy` path is tested against real `openssl`
+(interop). SP-4b/SP-5b reuse it with `domain=bilibili.com`; minor per-SP duplication of this small routine
+is accepted in v1.
+
 ## Open / future
 
 - Credential **refresh / keep-alive** strategy (handling cookie expiry) is deferred until the watchers

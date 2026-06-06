@@ -62,6 +62,19 @@ When all v1 sub-projects (SP-0 through SP-7) verified end-to-end:
 - ASR strategy (D3 in `pre-openspec-decisions.md`) revised in R5 (2026-05-31): **v1 switched from 通义听悟 to BiliNote + bcut (B站必剪 free cloud ASR)**. D3 marked as superseded but file not deleted (historical trace)
 - **Cookie delivery for all crawl consumers = active PULL** (user-ratified 2026-06-02, cross-vertical): consumers fetch SP-1 cookies via `GET /get/:uuid` + client decrypt (or `cookie-manager show domain=<x>`); the **SP-1 _push_ delivery path is permanently cancelled** (SP-1 hook engine retained but latent — a future non-decrypting consumer is a config entry, not new code). Relayed by ZhihuCrawl SubOrche; applies to SP-3/SP-5a now + **propagate to SP-4b/5b scope** when their handoffs are written. Detail: `architecture/credentials.md` §Integration contract.
 
+## Shared LLM layer (LLMClient) — v1 landed (SP-3), LLMService v2 roadmap
+
+- **v1 (landed 2026-06-07, SP-3):** `Engine/common` packaged as `jarvankb-common`; `LLMClient` real litellm
+  body (`from jarvankb_common import LLMClient`). In-process **library**; single repo-root `config/llm.yaml`
+  (profiles + `active` fallthrough; literal `api_base` for custom OpenAI-compatible providers, verified live
+  with `mimo-v2.5-pro`). Consumers SP-4b/SP-6/SP-7 **reuse — do not reimplement**. Detail:
+  `memory/llm-shared-layer.md` + `Engine/common/docs/interface.md`.
+- **v2 (roadmap — new platform-level SP, decide with root/SubOrche):** promote LLMClient into a standalone
+  `Service/.../llm-service` (HTTP, OpenAI-compatible) for runtime-central config / metering / rate-limit /
+  cache / one endpoint / language-agnostic access, with per-consumer provider selection. **Non-breaking:**
+  the `LLMClient` interface is frozen, so the swap (litellm-in-process → service call) leaves consumer call
+  sites unchanged. (User decision 2026-06-05 "不扩": keep v1 a library; defer the service to v2.)
+
 ## How this doc is updated
 
 Append-most. Major changes (phase scope reshuffle, recipe upgrade, project rename) go through `RepoMem.merge` HITL review.
