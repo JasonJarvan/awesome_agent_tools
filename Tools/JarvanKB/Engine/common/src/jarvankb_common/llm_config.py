@@ -49,7 +49,8 @@ def _resolve_profile(name: str, raw: dict) -> LLMConfig:
         profile=name,
         model=prof["model"],
         api_key=os.environ.get(key_env) if key_env else None,
-        api_base=os.environ.get(base_env) if base_env else None,
+        # literal `api_base` (non-secret, for custom OpenAI-compatible endpoints) wins; else `api_base_env`
+        api_base=prof.get("api_base") or (os.environ.get(base_env) if base_env else None),
     )
 
 

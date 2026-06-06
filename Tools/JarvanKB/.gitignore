@@ -2,3 +2,9 @@
 .mcp.json
 # 个人本地覆盖（含 disabledMcpjsonServers 等）—— 不入库
 .claude/settings.local.json
+# 本地 LLM/运行时配置 + 凭据 —— 不入库（*.example 模板才入库）
+config/llm.yaml
+.env
+*.egg-info/
+__pycache__/
+*.pyc
