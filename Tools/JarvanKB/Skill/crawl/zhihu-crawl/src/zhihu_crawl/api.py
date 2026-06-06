@@ -37,7 +37,7 @@ def save_zhihu(url: str, save_path: str | None = None, *,
     proposed_new = False
     if vague:
         client = LLMClient(profile=profile or cfg.llm_profile)
-        cat = classify.classify(result, cfg.output_root, client)
+        cat = classify.classify(result, cfg.output_root, client, snippet_chars=cfg.classify_snippet_chars)
         category, proposed_new = cat.name, cat.is_new
 
     target = saver.resolve_target(save_path, cfg.output_root, category, result.title)

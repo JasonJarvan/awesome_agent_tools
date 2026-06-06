@@ -15,6 +15,7 @@ class ModuleConfig:
     output_root: Path
     cookie: CookieSource
     llm_profile: str
+    classify_snippet_chars: int = 240
 
 
 def _default_path() -> Path:
@@ -38,4 +39,5 @@ def load_config(config_path: str | Path | None = None) -> ModuleConfig:
             password=os.environ.get(ck["password_env"], ""),
         ),
         llm_profile=raw.get("llm", {}).get("profile", "default"),
+        classify_snippet_chars=int(raw.get("classify_snippet_chars", 240)),
     )

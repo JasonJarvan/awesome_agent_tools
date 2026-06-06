@@ -11,6 +11,24 @@ from .saver import slugify
 _FENCE_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 _OBJ_RE = re.compile(r"\{.*?\}", re.DOTALL)   # non-greedy: each flat {...} object
 
+# markdown-noise strippers for the classification lead (save tokens — drop what carries no topic signal)
+_FENCE_BLOCK_RE = re.compile(r"```.*?```", re.DOTALL)
+_IMG_RE = re.compile(r"!\[[^\]]*\]\([^)]*\)")
+_LINK_RE = re.compile(r"\[([^\]]*)\]\([^)]*\)")
+_MD_MARKS_RE = re.compile(r"[#>*`~]+")
+_WS_RE = re.compile(r"\s+")
+
+
+def _lead_text(markdown: str, max_chars: int) -> str:
+    """Plain-text lead of a markdown body for classification — strips markdown noise, caps length."""
+    t = markdown or ""
+    t = _FENCE_BLOCK_RE.sub(" ", t)   # drop fenced code blocks
+    t = _IMG_RE.sub(" ", t)            # drop images (alt text + URL)
+    t = _LINK_RE.sub(r"\1", t)         # links -> link text only
+    t = _MD_MARKS_RE.sub(" ", t)       # drop heading/quote/emphasis/code marks
+    t = _WS_RE.sub(" ", t).strip()     # collapse whitespace
+    return t[:max_chars]
+
 
 @dataclass
 class Category:
@@ -54,10 +72,10 @@ def _parse(raw: str) -> dict:
     raise ValueError(f"LLM classification did not return parseable JSON: {raw[:200]!r}")
 
 
-def classify(result, output_root: Path, client) -> Category:
+def classify(result, output_root: Path, client, *, snippet_chars: int = 240) -> Category:
     subs = existing_subfolders(output_root)
     typ = getattr(result.type, "value", str(result.type))
-    snippet = (result.content_markdown or "")[:500]
+    snippet = _lead_text(result.content_markdown, snippet_chars)
     raw = client.complete([{"role": "user", "content": _build_prompt(subs, result.title, typ, snippet)}])
     data = _parse(raw)
     name = slugify(str(data["category"]))

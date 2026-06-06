@@ -21,7 +21,7 @@ def _patch_common(monkeypatch, tmp_path, fetch_result=None, classify_name="tech"
     monkeypatch.setattr(api, "fetch", lambda url, **kw: fetch_result or _fake_result())
     monkeypatch.setattr(api, "LLMClient", lambda profile=None: object())
     monkeypatch.setattr(api.classify, "classify",
-                        lambda result, root, client: api.classify.Category(classify_name, classify_new))
+                        lambda result, root, client, **kw: api.classify.Category(classify_name, classify_new))
     return mc
 
 
