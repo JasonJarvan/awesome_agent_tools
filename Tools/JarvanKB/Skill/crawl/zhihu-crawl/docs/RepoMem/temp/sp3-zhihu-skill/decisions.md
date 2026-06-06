@@ -13,6 +13,17 @@ task_type: requirement
 > Task-scoped. At Step-8 HITL merge, promote the cross-SP-reusable ones to module
 > `decisions.md` / global `persist/` and leave a `[Promoted ↗]` marker.
 
+## D-SP3-5 (2026-06-06) — Code-review outcome: 2 Important fixed, 3 Minor deferred
+Reviewer verdict: "ready to merge with fixes" (no Critical). Fixed (commit 1671d82, red→green tests):
+- `classify._parse` greedy regex → non-greedy + prefer-last + `ValueError` on unparseable LLM output.
+- `saver.resolve_target` now slugs `category` (idempotent) — defense-in-depth vs path traversal from a
+  future caller passing a raw category (SP-5a will reuse this pattern).
+- `LLMClient.stream` no longer replays tokens on a fallback provider after a mid-stream error.
+**Deferred (Minor, follow-up — not blocking merge):**
+- #4 `cli.py` collapses non-fetch errors to a one-line message (no traceback); consider `--debug`/env to re-raise.
+- #5 `config.load_config` raises bare `KeyError` on a malformed config; map to a `ValueError` with the missing key.
+- #6 both config loaders resolve the default path relative to CWD (documented; env-var/`--config` override exists).
+
 ## D-SP3-4 (2026-06-05) — LLMClient stays a library in v1; LLMService deferred to v2 (new platform SP)
 - **User decision** (chat, 2026-06-05, "不扩"): keep the v1 shared LLM layer as an **in-process library**
   (`jarvankb_common.LLMClient` + single repo-root `config/llm.yaml`). Do NOT stand up a separate LLM
