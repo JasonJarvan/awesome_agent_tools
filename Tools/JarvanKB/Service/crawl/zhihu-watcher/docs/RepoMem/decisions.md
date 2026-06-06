@@ -5,6 +5,26 @@
 > When a decision is promoted to global, leave a `[Promoted to global ↗]` marker pointing to
 > `<root>/docs/RepoMem/persist/memory/` (or `architecture/`).
 
+## 2026-06-07 · sp5a-zhihu-watcher · Step 8 merge closure + live smoke
+
+**v1 merged** to `feat/agentcrawl-bootstrap` (merge `7acacb2`); worktree + branch cleaned up.
+
+**Live smoke (real SP-1 + real collection 343827655, 2026-06-07):**
+- Cookie pull from SP-1 + in-memory decrypt: OK (15 `.zhihu.com` cookies).
+- Collections endpoint **HTTP 200, no `x-zse-96`** — 168 items over 9 offset pages. **Confirms the
+  promotion candidate by our own live run** (not just the reference repo).
+- 140/168 fetched + saved (`> url` + body, no frontmatter). The 28 failures are **专栏 ARTICLE**
+  (`zhuanlan.zhihu.com/p/...`): the SP-2 engine's api-fallback only covers ANSWER+403, so articles 403
+  with no fallback. Watcher degraded gracefully (no crash, exit 0).
+- **Dedup invariant confirmed live**: 2nd `--once` → "0 new item(s)", only re-attempted the 28 unsaved.
+
+**[Promoted to global ↗]** the no-`x-zse-96` + offset-paging + article-403 findings →
+`<root>/docs/RepoMem/persist/architecture/crawl-pipeline.md §知乎链路` (now live-confirmed, not a candidate).
+
+**v1+ note**: the 28 permanently-403 articles are re-attempted every cycle (not marked seen). Bounded
+(no infinite loop within a cycle) but wasteful → a failed-attempt counter / backoff is a v1+ improvement.
+This + the two target-resolution modes (by-userId list-all; explicit list) are the SP-5a v1.1 increment.
+
 ## 2026-06-05 · sp5a-zhihu-watcher · Implementation deltas vs the approved plan
 
 Three corrections made during subagent-driven implementation (all reviewer- or empirically-confirmed):
@@ -45,11 +65,11 @@ Also guarded `watermark_store.load()` against a corrupt state file (skip that co
   "no Obsidian taxonomy / vault-agnostic" boundary (so no `![[...]]` wikilinks, no `assets/`). Revisit: if a
   later vertical wants offline images, add an opt-in download that emits standard `![](assets/..)` links.
 
-### Global-promotion candidate (resolve at Step 8 RepoMem.merge, HITL)
+### Global promotion — DONE at Step 8 (2026-06-07, HITL)
 
-- **"The Zhihu collections-items endpoint needs no `x-zse-96` (plain cookie + browser headers, 2026-06)."**
-  This extends `crawl-pipeline.md §知乎链路` D5 (which established no-signing on the answer/comment path) to a
-  third endpoint. Cross-SP-reusable (SP-5b's analog, future Zhihu work) → candidate to promote into the
-  global `crawl-pipeline.md §知乎链路`. **Caveat:** sourced from the reference repo's code, NOT yet our own
-  2026-06 live run — promote only after the live smoke confirms a 200 with plain cookie (a 403 would make
-  this a blocker instead).
+- **"The Zhihu collections-items endpoint needs no `x-zse-96` (plain cookie + browser headers)."**
+  Extends `crawl-pipeline.md §知乎链路` D5 (no-signing on the answer/comment path) to the collections +
+  user-collections-list endpoints. **[Promoted to global ↗]** `crawl-pipeline.md §知乎链路` — the 2026-06-07
+  live smoke confirmed it by our own run (200, 168 items, plain cookie), so it is no longer a candidate
+  caveated to the reference repo. The offset-paging stop rule and the ARTICLE-403-no-fallback gotcha were
+  promoted alongside it.

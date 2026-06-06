@@ -127,6 +127,15 @@ SP-5a Watcher 复用必知**的根因/坑（分层读协议下 SP-5a 在 `Servic
 - **知乎直连**（`trust_env=False`）：宿主有 `HTTP_PROXY`/`ALL_PROXY`（给境外站），知乎是
   陆站直连即达，走境外代理慢且招风控。
 - cookie 注入式（`d_c0`/`z_c0`/`__zse_ck`），来源 = SP-1 cookie-manager。
+- **收藏夹端点同样无需 `x-zse-96`**（SP-5a Watcher **2026-06-07 真站确认**,168 条/9 页）：
+  `GET /api/v4/collections/{id}/items?offset=&limit=20` 纯 cookie + 浏览器 headers 即 200,**offset 翻页**
+  ——停止条件用 `paging.is_end` 或 `len(已收集) >= paging.totals`,**勿用 `offset >= totals`**(API 把少于
+  `totals` 的条目分散到多页 + `is_end` 迟到时会早停漏条)。用户收藏夹列表
+  `GET /api/v4/people/{url_token}/collections?...&offset=&limit=20` 同属导航端点、同样纯 cookie。
+- **收藏夹抓正文的坑(SP-5a 真站)**:列表给的内容 URL,**答案页导航 GET 常 403**,但 SP-2 引擎的
+  **api-fallback(仅 ANSWER + 403 → `/api/v4/answers/{id}`,无签名)** 能救回;**专栏 ARTICLE
+  (`zhuanlan.zhihu.com/p/...`)无此兜底 → 403 即抓不到**(实测 168 条:140 答案救回、28 专栏失败)。
+  监听类下游:失败项不入水位会每轮重试 → 考虑失败计数/退避(v1+)。
 
 ## 模块边界
 
