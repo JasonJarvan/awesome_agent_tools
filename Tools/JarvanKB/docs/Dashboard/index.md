@@ -60,7 +60,6 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   ⚫ done ← SP-
 |---|---|---|---|---|---|---|
 | UN-006 | F | 决定 v1.0 GitHub Organization 名（候选：JarvanKB / Jarvan / JarvanWorks）— 此项非阻塞 v1 实现，可推迟到 v1 完成度临近 | `docs/RepoMem/persist/version-plan.md` §v1.0 OSS release plan | v1.0 切分 | 2026-05-31 | open |
 | UN-008 | D | Review CodeTeam#1（含 SubOrche 泛化评论）+ CodeTeam#2（HarnessStack v2 consolidated proposal），决定推动上游修复节奏还是先在本仓库本地约定中沉淀 | https://github.com/JasonJarvan/CodeTeam/issues/1 | 后续 sub-project 一致采用 `to{Prefix}{Role}` 命名 | 2026-05-31 | open |
-| UN-023 | B | **起 g4 root orche session 继承编排**（g3 上下文吃紧）：新会话 cwd=`Tools/JarvanKB/`，第一句：`read docs/sendbox/toOrchestrator/g4-handoff.md and inherit JarvanKB root orchestration`。g3 退场，g4 接管治理 + 两条 SubOrche 线 + SP-6/7 排程 | `docs/sendbox/toOrchestrator/g4-handoff.md` | g3 退场 + g4 接管 | 2026-06-07 | open |
 | UN-022 | B | **起 BilibiliCrawl SubOrche session**（新会话，cwd=`Tools/JarvanKB/`），第一句：`read docs/sendbox/toBilibiliCrawlOrche/handoff.md and inherit the Bilibili vertical`。它再 spawn + 协调 SP4bImpler + SP5bImpler（并行）；Root→SubOrche→Impler，与 ZhihuCrawl SubOrche 对称 | `docs/sendbox/toBilibiliCrawlOrche/handoff.md` | SP-4b + SP-5b 落地 | 2026-06-04 | open |
 | UN-024 | B | **起 ZhihuWatcherV11Impler session**（新会话，cwd=`Tools/JarvanKB/`），第一句：`read docs/sendbox/toZhihuWatcherV11Impler/handoff.md and start SP-5a v1.1`。SP-5a v1 已 done+merged；v1.1=两种收藏夹目标解析模式(Mode1 按 UserId 列全部 / Mode2 显式 List)，Server 层定位已锁;parent=ZhihuCrawl SubOrche | `docs/sendbox/toZhihuWatcherV11Impler/handoff.md` | SP-5a v1.1 落地 | 2026-06-07 | open |
 
@@ -68,6 +67,7 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   ⚫ done ← SP-
 
 | ID | Action | Done | By |
 |---|---|---|---|
+| UN-023 | 起 g4 root orche session 继承编排 — **done**：g4（Claude Opus 4.8 1M）已读 `g4-handoff.md`、跑完引导检查（git log + 三个 SubOrche 收件箱 + 五大 must-read）、确认 SP-3/SP-5a 已 done+merged 且 SP-3 LLM 凭据 gate 已解（live `mimo-v2.5-pro`）；g3 退场，g4 接管治理 + 两条 SubOrche 线 + SP-6/7 排程；`g4-handoff.md` 已 burn，version-plan generations g4 行已标识 | 2026-06-07 | user + orche g4 |
 | UN-021 | 起 SP5aImpler session — **done**：会话已起并在跑;Stage 1–4(design+plan)已落、user 批准;进度跟踪走 §SP Status Board SP-5a 行 | 2026-06-02 | user + sp5aimpler |
 | UN-020 | 起 SP3Impler session — **done**：SP-3 已在跑（LLMClient 真实现已落、interface 冻结、code-review 完；近完成，卡用户 LLM 凭据做 live smoke）；进度走 §SP Status Board SP-3 行 | 2026-06-07 | user + sp3impler |
 | UN-018 | 起 BiliNote docker + 确认 endpoint — **done**：用户起容器（compose 映射后端 `:8483`，因 `latest` 镜像 nginx 坏）；SP4aImpler 经 API 配 `TRANSCRIBER_TYPE=bcut` + 注册 mimo-v2.5-pro 供应商，跑通 ASR + 字幕两条路径 smoke。SP-4a 已 done | 2026-06-02 | user + sp4aimpler |
