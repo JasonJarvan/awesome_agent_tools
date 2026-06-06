@@ -43,6 +43,7 @@ class LLMClient:
     def stream(self, messages: list[dict], **kwargs: Any) -> Iterator[str]:
         last_err: Exception | None = None
         for cfg in self._candidates:
+            emitted = False
             try:
                 stream = litellm.completion(
                     model=cfg.model, messages=messages,
@@ -51,10 +52,13 @@ class LLMClient:
                 for chunk in stream:
                     piece = chunk.choices[0].delta.content
                     if piece:
+                        emitted = True
                         yield piece
                 return
             except Exception as e:  # noqa: BLE001
                 last_err = e
+                if emitted:
+                    raise  # tokens already streamed to the caller; don't replay on another provider
         raise RuntimeError(f"All LLM profiles failed for {self.profile!r}") from last_err
 
     def to_opencode(self) -> Any:

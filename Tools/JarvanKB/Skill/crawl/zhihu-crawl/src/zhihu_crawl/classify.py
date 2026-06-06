@@ -9,7 +9,7 @@ from pathlib import Path
 from .saver import slugify
 
 _FENCE_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
-_OBJ_RE = re.compile(r"\{.*\}", re.DOTALL)
+_OBJ_RE = re.compile(r"\{.*?\}", re.DOTALL)   # non-greedy: each flat {...} object
 
 
 @dataclass
@@ -37,8 +37,21 @@ def _build_prompt(subfolders: list[str], title: str, typ: str, snippet: str) -> 
 
 
 def _parse(raw: str) -> dict:
-    m = _FENCE_RE.search(raw) or _OBJ_RE.search(raw)
-    return json.loads(m.group(1) if m and m.re is _FENCE_RE else (m.group(0) if m else raw))
+    text = raw.strip()
+    fence = _FENCE_RE.search(text)
+    if fence:
+        text = fence.group(1).strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    # tolerate prose-wrapped output: prefer the LAST parseable object (models answer last)
+    for candidate in reversed(_OBJ_RE.findall(text)):
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+    raise ValueError(f"LLM classification did not return parseable JSON: {raw[:200]!r}")
 
 
 def classify(result, output_root: Path, client) -> Category:

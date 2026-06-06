@@ -38,7 +38,10 @@ def resolve_target(save_path: str | None, output_root: Path,
         p = Path(save_path).expanduser()
         if p.suffix.lower() == ".md":
             return p
-    base = Path(output_root).expanduser() / (category or "")
+    # slug the category too — it may originate from LLM output; this keeps it a single safe
+    # folder name under output_root (idempotent for the already-slugged classify result).
+    safe_category = slugify(category) if category else ""
+    base = Path(output_root).expanduser() / safe_category
     return _dedup(base / f"{slugify(title)}.md")
 
 
