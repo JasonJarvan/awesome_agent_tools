@@ -1,11 +1,17 @@
 ---
 slug: zhihu-engine-article-fallback
-status: blocked
+status: active
 domains:
   - crawl-pipeline
-updated_at: 2026-06-07
+updated_at: 2026-06-09
 task_type: feature
 ---
+
+> **UNBLOCKED 2026-06-09 (user chose A + extras).** Root/user acked the blocker: do **NOT** add the
+> (infeasible) article API fallback and do **NOT** add a signer (B rejected). Instead **re-scope v1.2 to an
+> engine-side rate-limit hardening**: a **proactive rate-limiter (pacing)** to avoid tripping risk-control AND
+> a **reactive backoff/retry** on 403/429. See §"Rate-limit characterization (2026-06-09)" + §"v1.2 design"
+> below. The original mirror-ANSWER premise stays dead (Findings 1–3 unchanged, kept for the record).
 
 # SP-2 v1.2 — ARTICLE api-fallback: live-probe findings (GATE — handoff §4)
 
@@ -78,9 +84,48 @@ types — answer/article/question — within D1 "no signer"), NOT an article API
 article-API need would require the `x-zse-96` signer (D1's deferred RSSHub-MIT route) — root's call, not mine.
 Options + tentative pick are in the blocker letter; this doc holds only the raw evidence (no duplication).
 
+## Rate-limit characterization (2026-06-09 — safe, measurement-only probe)
+
+Throwaway `/tmp/zhihu_ratelimit_probe.py` (not committed). Safe-by-design: sequential, single-threaded,
+STOP at first 403, hard cap 60, dump 403 headers if any.
+
+**Result: 60/60 consecutive nav-GETs returned 200 — zero throttle.** Each request carries ~350–800ms of
+full-page (~180 KB) download latency, so 60 back-to-back ran at **~2 req/s for ~30s with no block**.
+
+**Inference — the throttle is BURST/CONCURRENCY-sensitive, not cumulative-count-based:**
+- A gentle sequential cadence (~2 req/s, self-paced by download latency) is **safe well past 60 requests**.
+- The watcher's "28 专栏失败" (and the answer nav-GETs that 403'd and were rescued via api-fallback) were
+  caused by an **aggressive cadence** — likely concurrency / no inter-request gap / multiple requests per
+  item (nav-GET + api-fallback + comments). The trip condition is instantaneous rate, not total volume.
+- This tells the proactive limiter exactly what to control: **smooth bursts / cap the rate**, not "count
+  requests." A conservative ~2 req/s ceiling is empirically safe; we default below that with jitter.
+
+**No 403 headers captured** (never tripped). Deliberately did NOT force a trip via a concurrent burst:
+(a) it would throttle the real account and could disrupt the SP-5a watcher service if it is polling, and
+(b) the only payoff is confirming a `Retry-After` header, which the reactive backoff handles defensively
+regardless (honor `Retry-After` if present, else exponential backoff + jitter). Cost > benefit on a live,
+shared account — characterized from the safe direction instead.
+
+## v1.2 design (re-scoped — proactive limiter + reactive backoff, no signer)
+
+1. **Proactive rate-limiter** — a module-level shared limiter (min-interval-with-jitter or token bucket)
+   wrapping **all** outbound httpx calls (`get_page`, `get_api_answer`, future `get_api_*`, comments). Shared
+   process-wide so a **bulk** consumer (watcher: many `fetch()` calls in one process) is auto-paced, while a
+   **single-URL** consumer (SP-3) is ~unaffected (one request never waits). Conservative configurable default
+   (below the ~2 req/s safe ceiling, e.g. min-interval ≈ 0.4–0.6s + jitter); can be tuned/disabled.
+2. **Reactive backoff/retry** — on **403/429**, retry up to N (default ~3) with exponential backoff + jitter;
+   **honor `Retry-After`** if the response carries it, else backoff. Retries exhausted → preserve current
+   behavior (the 403 falls through to `ZhihuFetchError` as today). Network errors: optional same treatment.
+3. **Contract: non-breaking (handoff §8 still binds).** No change to `fetch()` signature or `FetchResult`.
+   Limiter/retry are module-level configurable (e.g. `zhihu.configure(...)`) with safe defaults — existing
+   callers get the hardening for free, no code change. `interface.md` gains a "built-in pacing + 403/429
+   backoff" note (behavior add, not a breaking change).
+
 ## Status / next
 
-- BLOCKED awaiting root's decision (blocker letter + Dashboard UN-028).
-- No worktree, no commits. Baseline `pytest -q` = 58 passed.
-- On unblock: if "retry/backoff" → re-scope to TDD a retry on `fetcher.get_page` (test-first) + live smoke;
-  if "signer" → separate task, out of this impler's charter; if "no engine change" → close v1.2, watcher owns pacing.
+- UNBLOCKED → implementing A. No worktree/commits yet for the impl. Baseline `pytest -q` = 58 passed.
+- Plan: `Engine/zhihu/docs/superpowers/plans/2026-06-09-zhihu-ratelimit-hardening-plan.md` (writing-plans).
+- Then worktree + TDD (limiter unit tests w/ injectable clock; retry tests w/ pytest-httpx queued 403→200;
+  Retry-After honor test) → verify (full suite + a gentle live smoke confirming pacing holds) → finish (ask-first)
+  → Step-8 merge: promote the BURST-sensitive-throttle gotcha + "answers unsigned / articles signature-gated"
+  asymmetry to global `crawl-pipeline.md §知乎链路` (cross-SP reusable); keep limiter mechanism in module + code.
