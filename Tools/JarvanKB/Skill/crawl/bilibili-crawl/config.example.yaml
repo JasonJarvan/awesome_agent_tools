@@ -1,0 +1,19 @@
+# Copy to config.yaml (gitignored). Secrets live in .env, never here.
+output_root: ~/KB/bilibili        # base dir for vague-path saves; may point into an Obsidian vault subdir
+
+cookie:
+  base_url: http://127.0.0.1:48088   # SP-1 cookie-manager; or the frp HTTPS entry
+  uuid: <your-cookiecloud-uuid>
+  password_env: COOKIE_MANAGER_PASSWORD   # env var name holding the decrypt password
+
+llm:
+  profile: mimo                    # which config/llm.yaml profile to use for vague-path classification
+
+# default saved-note shape (all overridable). single-file: AI summary + readable transcript inline.
+render:
+  include_transcript: true
+  include_timestamps: false        # false -> readable merged paragraphs; true -> [mm:ss] lines
+  split_transcript: false          # true -> main note links to a separate <name>.transcript.md
+
+# vague-path classification reads only this many chars of the (markdown-cleaned) summary/transcript lead
+classify_snippet_chars: 240
