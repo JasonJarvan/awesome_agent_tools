@@ -1,0 +1,13 @@
+services:
+  bilibili-watcher:
+    build:
+      context: ../../..                      # repo root, so Engine/bilibili is in the build context
+      dockerfile: Service/crawl/bilibili-watcher/Dockerfile
+    container_name: jarvankb-bilibili-watcher
+    restart: unless-stopped
+    network_mode: host                       # must reach BN at 127.0.0.1:3015 + SP-1 at :48088
+    volumes:
+      - ./config:/config:ro                  # put bilibili-watcher.yaml here
+      - ./data/state:/data/state             # per-folder state JSON (persisted)
+      - ./data/output:/data/output           # saved Markdown
+    # bilibili + SP-1 are reached direct (clients set trust_env=False); no proxy env needed.
