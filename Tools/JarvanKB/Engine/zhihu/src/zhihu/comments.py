@@ -1,5 +1,5 @@
 from __future__ import annotations
-import httpx
+from . import fetcher
 from .models import Comment, Author
 from ._entities import epoch_to_iso
 from .markdown import html_to_markdown
@@ -72,8 +72,7 @@ def fetch_comments(item_type: str, item_id: str, *, cookies: dict, limit: int | 
     collected = 0
     seen_next: set[str] = set()
     for _ in range(max_pages):
-        resp = httpx.get(url, cookies=cookies, headers=headers or {}, timeout=30.0,
-                         follow_redirects=True, trust_env=False)
+        resp = fetcher._request(url, cookies=cookies, headers=headers or {}, timeout=30.0)
         resp.raise_for_status()
         page = resp.json()
         data = page.get("data", [])
@@ -131,8 +130,7 @@ def fetch_child_comments(root_comment_id: str, *, cookies: dict, limit: int | No
     out: list[dict] = []
     seen_next: set[str] = set()
     for _ in range(max_pages):
-        resp = httpx.get(url, cookies=cookies, headers=headers or {}, timeout=30.0,
-                         follow_redirects=True, trust_env=False)
+        resp = fetcher._request(url, cookies=cookies, headers=headers or {}, timeout=30.0)
         resp.raise_for_status()
         page = resp.json()
         data = page.get("data", [])
