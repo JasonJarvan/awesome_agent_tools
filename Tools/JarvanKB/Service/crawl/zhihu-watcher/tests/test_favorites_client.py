@@ -98,3 +98,34 @@ def test_parses_favorited_at_and_excerpt_per_type():
     assert items[0].excerpt == 'lead "quoted" body'        # excerpt_title, html-unescaped
     assert items[1].excerpt == "answer lead"               # answer uses content.excerpt
     assert items[1].favorited_at == datetime.fromisoformat("2026-05-13T13:13:03+08:00")
+
+
+from zhihu_watcher.favorites_client import UserCollection
+
+def _coll(cid, title, is_default=False, item_count=10):
+    return {"id": cid, "title": title, "is_default": is_default, "item_count": item_count}
+
+def test_list_user_collections_pages_and_parses():
+    pages = {
+        0: {"data": [_coll(721323262, "我的收藏", is_default=True, item_count=109),
+                     _coll(865315034, "技术-AI生成", item_count=94)],
+            "paging": {"totals": 3, "is_end": False}},
+        20: {"data": [_coll(630144608, "赚钱-金融市场", item_count=212)],
+             "paging": {"totals": 3, "is_end": True}},
+    }
+    def handler(request):
+        assert "x-zse-96" not in {k.lower() for k in request.headers}
+        assert request.url.path == "/api/v4/people/zhao-cheng-57-99-79/collections"
+        return httpx.Response(200, json=pages[int(dict(request.url.params)["offset"])])
+    fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    cols = fc.list_user_collections("zhao-cheng-57-99-79", {"z_c0": "x"})
+    assert [(c.id, c.title, c.is_default, c.item_count) for c in cols] == [
+        ("721323262", "我的收藏", True, 109),
+        ("865315034", "技术-AI生成", False, 94),
+        ("630144608", "赚钱-金融市场", False, 212),
+    ]
+
+def test_list_user_collections_non_200_raises():
+    fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(403, json={}))))
+    with pytest.raises(ZhihuApiError):
+        fc.list_user_collections("zhao-cheng-57-99-79", {})

@@ -37,6 +37,14 @@ class CollectionItem:
     excerpt: str = ""  # per-type body lead (article: excerpt_title; answer: excerpt), html-unescaped
 
 
+@dataclass
+class UserCollection:
+    id: str
+    title: str
+    is_default: bool
+    item_count: int
+
+
 class ZhihuApiError(Exception):
     def __init__(self, status: int, url: str):
         super().__init__(f"Zhihu API {status} for {url}")
@@ -114,3 +122,37 @@ class FavoritesClient:
                 break
         log.info("collection %s: listed %d items", collection_id, len(items))
         return items
+
+    def list_user_collections(self, url_token: str, cookies: dict[str, str]) -> list["UserCollection"]:
+        cols: list[UserCollection] = []
+        offset = 0
+        while True:
+            url = (
+                f"https://www.zhihu.com/api/v4/people/{url_token}/collections"
+                f"?offset={offset}&limit={self._limit}"
+            )
+            resp = self._client.get(url, cookies=cookies)
+            if resp.status_code != 200:
+                raise ZhihuApiError(resp.status_code, url)
+            body = resp.json()
+            data = body.get("data") or []
+            for c in data:
+                if c.get("id") is None:
+                    continue
+                cols.append(UserCollection(
+                    id=str(c.get("id")),
+                    title=str(c.get("title") or c.get("id")),
+                    is_default=bool(c.get("is_default", False)),
+                    item_count=int(c.get("item_count") or 0),
+                ))
+            paging = body.get("paging") or {}
+            if paging.get("is_end") is True:
+                break
+            offset += self._limit
+            totals = paging.get("totals")
+            if totals is not None and len(cols) >= totals:
+                break
+            if not data:
+                break
+        log.info("user %s: listed %d collection(s)", url_token, len(cols))
+        return cols
