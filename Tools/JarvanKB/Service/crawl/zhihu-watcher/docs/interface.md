@@ -25,6 +25,8 @@ python -m zhihu_watcher [--config PATH] [--once]
 
 样例见 `config/zhihu-watcher.example.yaml`。所有字段:
 
+### 3.1 顶级标量
+
 | 键 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | `poll_interval_minutes` | int | 否(默认 45)| 轮询间隔(分钟);必须 > 0。建议 30–60 |
@@ -33,14 +35,37 @@ python -m zhihu_watcher [--config PATH] [--once]
 | `cookie_source.base_url` | str | **是** | SP-1 CookieManager 地址(如 `http://127.0.0.1:48088`,或其公网/局域网入口) |
 | `cookie_source.uuid` | str | **是** | CookieCloud 箱子 uuid |
 | `cookie_source.password` | str | **是** | 箱子解密口令(仅用于内存内解密,绝不落盘明文)|
-| `collections` | list | **是** | 至少一个收藏夹 |
-| `collections[].id` | str | **是** | 收藏夹 id 或完整 URL(`https://www.zhihu.com/collection/<id>`,内部会取末段) |
-| `collections[].name` | str | 否(默认 = id)| 输出目录下的子目录名 |
+| `only_after` | str | 否 | ISO 8601 带时区偏移的时间戳(如 `2026-01-01T00:00:00+08:00`);只保存此时刻**之后**收藏的条目,用于跳过历史回填。**必须带时区偏移**,裸 naive 时间戳会被拒绝 |
+| `backfill_on_first_run` | bool | 否(默认 false)| `false`(默认):首次见到某收藏夹时记录"从现在起"基线,已有历史**不**回填;`true`:首次抓取全量历史 |
+| `max_consecutive_failures` | int | 否(默认 3)| 403 退避:连续失败 N 次后进入冷却 |
+| `failure_cooldown_hours` | int | 否(默认 24)| 触发退避后的冷却时长(小时) |
 
 > `crypto_type` **不在配置里**:它由 SP-1 `GET /get/:uuid` 的响应携带,服务按响应里的
 > `crypto_type`(`legacy` / `aes-128-cbc-fixed`)自动选择解密方式。
 
-校验:缺任一必填字段、`collections` 为空、或 `poll_interval_minutes <= 0` → 启动即抛 `ValueError`。
+### 3.2 `targets` 列表
+
+`targets` 替代旧版的 `collections`。列表项有两种类型:
+
+#### type: collection — 显式指定单个收藏夹
+
+| 键 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `type` | str | **是** | 固定为 `"collection"` |
+| `id` | str | **是** | 收藏夹 id 或完整 URL(`https://www.zhihu.com/collection/<id>`,内部取末段) |
+| `name` | str | 否(默认 = id)| 输出目录下的子目录名;建议与已有子目录名对齐 |
+
+#### type: user — 自动发现该用户的所有**具名**收藏夹
+
+| 键 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `type` | str | **是** | 固定为 `"user"` |
+| `url_token` | str | **是** | `"me"`(当前 cookie 对应用户)或明文 url_token |
+| `name_prefix` | str | 否 | 子目录名前缀(可选) |
+| `skip_empty` | bool | 否(默认 true)| `true`:跳过 `item_count == 0` 的收藏夹 |
+| `include_default` | bool | 否(默认 false)| `false`(默认):跳过"我的收藏"(默认收藏夹,留待未来分类器处理);`true`:将其平铺抓取 |
+
+校验:缺任一必填字段、`targets` 为空、或 `poll_interval_minutes <= 0` → 启动即抛 `ValueError`。
 
 ## 4. 与上下游的契约
 
