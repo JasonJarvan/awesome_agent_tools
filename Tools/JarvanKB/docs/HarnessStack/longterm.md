@@ -35,20 +35,20 @@
 
 The 8-step per-task pipeline (compressed view also in `CLAUDE.md` §3):
 
-1. **`RepoMem.read`** — Subagent in `<module>/` cwd reads two layers: `<root>/docs/RepoMem/persist/` (background) + `<module>/docs/RepoMem/{architecture,decisions}.md` (actionable). Main orchestrator reads only global.
+1. **`RepoMem.read`** — Subagent in `<module>/` cwd reads two layers: `<root>/docs/RepoMem/persist/` (background) + `<module>/docs/RepoMem/{architecture,decisions}.md` (actionable). Main orchestrator reads only global. For in-repo **symbol / caller / impact lookups**, prefer the codegraph code-map (`codegraph query|callers|impact`, MCP or CLI) over ad-hoc grep — codegraph is the up-to-date structural map; RepoMem stays the durable why-layer. Fall back to grep where the graph is sparse (`callees`/`affected` on dynamic Python — most of this repo). See §Harness Enhancement Layer (v2).
 
 2. **`Superpowers.brainstorming`** — Clarify vague intent. Auto-judge skip on:
    - intent already `clear` and producing-the-design would be redundant
    - trivial fix (typo, single-line bugfix, dep bump)
    - pure refactor with no behavior change
    - spike / <3h exploration with throwaway code
-   When spawning subagent for brainstorming, write `handoff.md` letter to `<root>/docs/sendbox/to<Role>/` and open a Type-B dashboard row.
+   When spawning subagent for brainstorming, write `handoff.md` letter to `<root>/docs/sendbox/to<Role>/` and open a Type-B dashboard row. On a **full-lane** task, after a draft design/spec exists and before step 4, the agent MAY run project skill `grill-with-docs` (auto-judge: grill when a non-trivial design exists, else skip with a one-line note in the plan). See §Lane Tiering (v2).
 
 3. **`RepoMem.capture`** — Open task-level temp docs in the relevant module: `<module>/docs/RepoMem/temp/<slug>/{requirements,architecture,decisions}.md`. Cross-module task: open at `<root>/docs/RepoMem/temp/<slug>/` instead.
 
-4. **`Superpowers.writing-plans`** — Produce a step-by-step implementation plan. Land at `<module>/docs/superpowers/plans/YYYY-MM-DD-<slug>.md` (or root if cross-module). When subagent produces plan, send `plan-ready.md` letter back.
+4. **`Superpowers.writing-plans`** — Produce a step-by-step implementation plan. Land at `<module>/docs/superpowers/plans/YYYY-MM-DD-<slug>.md` (or root if cross-module). When subagent produces plan, send `plan-ready.md` letter back. The plan-doc frontmatter carries the task's `Lane:` declaration (§Lane Tiering (v2)).
 
-5. **`using-git-worktrees` + `executing-plans` + TDD + `RepoMem.capture` (continuous)** — Execute the plan in an isolated worktree. TDD discipline. Capture tacit knowledge to `temp/<slug>/decisions.md` as decisions are made. Subagent boundary at ~A-12 → blocker letter.
+5. **`using-git-worktrees` + `executing-plans` + TDD + `RepoMem.capture` (continuous)** — Execute the plan in an isolated worktree. TDD discipline. Capture tacit knowledge to `temp/<slug>/decisions.md` as decisions are made. Subagent boundary at ~A-12 → blocker letter. Worktrees are separate checkouts: budget a one-time `codegraph init` (~30 s, ~30 MB) per worktree, or run `CODEGRAPH_NO_DAEMON=1 codegraph sync` for a one-shot incremental refresh (no file watcher in sandboxed worktrees), then `codegraph query`/`impact` as plain synchronous CLI.
 
 6. **`Superpowers.verification-before-completion`** — Single mandatory gate. Run tests + lint + typecheck + manual smoke as applicable; output evidence (commands run + outputs). No claim of "done" without this output.
 
@@ -56,7 +56,7 @@ The 8-step per-task pipeline (compressed view also in `CLAUDE.md` §3):
 
 8. **`RepoMem.merge` (HITL — implementer owns closure)** — **The implementer closes merge within its OWN task lifecycle**: runs it HITL after `finishing-a-development-branch`, or delegates *execution* to orche but tracks it to completion before reporting done — never fire-and-forget. Impler-handoff briefs MUST state this ownership (never frame Step 8 as "NOT YOUR JOB"); they may name orche as delegated executor, but the impler remains the closer. Promote `temp/<slug>/` lessons to durable layer. Module-scope decisions stay in `<module>/docs/RepoMem/decisions.md`. Global-scope decisions get promoted to `<root>/docs/RepoMem/persist/memory/` with `[Promoted to global ↗]` marker in module decisions. Any `from-<x>-promote-to-durable.md` letter lands here. Then `prune/split` per RepoMem hygiene.
 
-   > **RepoMem.merge promotion standard** (codified from the SP-2 empirical lesson, 2026-06-02): When promoting module findings to global `persist/`, promote **ONLY what is NOT derivable from code / `interface.md` / module `decisions.md`** — decision rationale, root causes, gotchas, and cross-SP guidance. **Never duplicate mechanism that lives in code** (no-duplication invariant). **Crucially, cross-SP-reusable gotchas MUST be promoted to global persist**, because the **layered-read protocol** means a downstream SP working in *another module's cwd* does NOT read the originating module's `decisions.md`; a reusable gotcha left only in the origin module will be rediscovered the hard way by the next SP. *(Concrete case: SP-2's `comment_v5` offset-poison + `js-initialData` camelCase gotchas had to go to `architecture/crawl-pipeline.md` §知乎链路 so SP-5a Watcher — running in `Service/crawl/zhihu-watcher/` cwd — will see them.)*
+   > **RepoMem.merge promotion standard** (codified from the SP-2 empirical lesson, 2026-06-02): When promoting module findings to global `persist/`, promote **ONLY what is NOT derivable from code / `interface.md` / module `decisions.md`** — decision rationale, root causes, gotchas, and cross-SP guidance. **Never duplicate mechanism that lives in code** (no-duplication invariant). **Crucially, cross-SP-reusable gotchas MUST be promoted to global persist**, because the **layered-read protocol** means a downstream SP working in *another module's cwd* does NOT read the originating module's `decisions.md`; a reusable gotcha left only in the origin module will be rediscovered the hard way by the next SP. *(Concrete case: SP-2's `comment_v5` offset-poison + `js-initialData` camelCase gotchas had to go to `architecture/crawl-pipeline.md` §知乎链路 so SP-5a Watcher — running in `Service/crawl/zhihu-watcher/` cwd — will see them.)* **Codegraph de-dup rule (promote-time counterpart of the step-1 read-time rule):** do NOT promote structural facts codegraph answers from current code — symbol locations, call graphs, impact sets. `persist/architecture/` holds only what codegraph cannot derive: decisions, constraints, rejected alternatives, the WHY.
 
 Sendbox letters & dashboard rows are **side-effects** of the steps above, not standalone steps.
 
@@ -96,6 +96,60 @@ This is rare; prefer task-decomposition (different prefixes) over peer multiplic
 
 ---
 
+## Harness Enhancement Layer (v2)
+
+Three active methods enhance the harness around the pipeline (compressed rows in `CLAUDE.md §2`):
+
+1. **`sendbox-protocol`** — asynchronous file-based agent↔agent mail. Full local conventions: §Local sendbox conventions above.
+2. **`cc-dashboard`** — `docs/Dashboard/index.md` projects pending user actions. Hook config: `docs/HarnessStack/hooks/cc-dashboard.md`.
+3. **`code-map` (codegraph)** — structured local code map (CodeTeam #3, instantiated 2026-06-10):
+   - **What:** https://github.com/colbymchenry/codegraph — MIT, Node, local SQLite + tree-sitter index in `.codegraph/` (gitignored, machine-local). CLI + on-demand stdio MCP server; no resident daemon, no autostart; the MCP server is spawned per Claude Code session, scoped to this repo.
+   - **Install (machine-local):** `npm i -g @colbymchenry/codegraph` (no sudo). `.mcp.json` is gitignored here (holds keys), so each machine adds the server entry locally:
+     `"codegraph": { "type": "stdio", "command": "codegraph", "args": ["serve", "--mcp"] }`
+   - **Usage rule (Pipeline step 1):** prefer codegraph for in-repo symbol/caller/impact lookups over ad-hoc grep. **Map vs why:** codegraph answers what-is-where / what-calls-what from current code; RepoMem holds decisions, constraints, rationale.
+   - **Strength caveat:** `query`/`callers`/`impact` are the strong commands; `callees`/`affected` are sparse on dynamic Python — and JarvanKB is predominantly Python (Engine/Service/Skill; only cookie-manager is Node). Fall back to grep where the graph is sparse.
+   - **Worktree fallback (Pipeline step 5):** each worktree is a separate checkout — one-time `codegraph init` (~30 s, ~30 MB) per worktree, or `CODEGRAPH_NO_DAEMON=1 codegraph sync` for a one-shot refresh without the file watcher; then `query`/`impact` as synchronous CLI.
+   - **Promote-time de-dup (Pipeline step 8):** never promote to RepoMem what codegraph derives from code.
+
+---
+
+## Lane Tiering (v2)
+
+Instantiated from CodeTeam #4 (2026-06-10), translated from the OpenSpec-based original to v2 doc sets. Full item-by-item mapping: `docs/superpowers/specs/2026-06-10-harnessstack-codegraph-lanetiering-design.md`.
+
+**Axis.** Every task carries `Lane: <fast|full>`, default **fast**. `Lane` is the STRUCTURAL axis — which document artifacts must exist. The step-2 auto-judge skip is the PROCEDURAL axis — how readily a step is skipped. They are orthogonal; all four combinations are valid; `Lane` never changes a step's policy (steps with external side effects keep their policy on both lanes).
+
+**Declaration.** In the plan-doc frontmatter (`docs/superpowers/plans/YYYY-MM-DD-<slug>.md`), e.g. `**Lane:** full`. A handoff letter MAY pre-declare a lane; the plan doc is authoritative. A task trivial enough to have no plan is implicitly fast.
+
+**Selection rule (full if ANY, else fast):**
+- touches dependencies
+- cross-cutting: ≥2 of Engine|Service|Skill, or crosses the Python↔Node boundary
+- produces a durable `RepoMem/persist/` asset
+- adds net-new reusable public contract surface
+
+**Lane → document set:**
+
+| Artifact | fast | full |
+|---|---|---|
+| `docs/superpowers/plans/` plan doc | required (may be minimal) | required |
+| `docs/superpowers/specs/` design doc | optional-by-default; omission noted in one line in the plan | expected; collapsible — MAY be just its `### Dn` decision list when the decision count is small |
+| `RepoMem/temp/<slug>/` | **skipped entirely** | per RepoMem capture rules |
+| `temporary-<task>.md` | unchanged from v2: optional recipe patch on BOTH lanes (required on neither) | same |
+| `grill-with-docs` design gate (`.claude/skills/grill-with-docs/`) | ineligible (no design tree) | MAY run (auto-judge); window: draft spec → before writing-plans |
+
+**Fast-lane promote-candidate lesson:** if a fast-lane task still surfaces a genuinely durable lesson, it goes through step-8 HITL merge directly from the session (no temp staging) — the merge reviewer is the existing non-duplication checkpoint.
+
+**Invariants (translated from #4 "Invariants preserved"):**
+- No data migration: Lane governs NEW tasks only; existing docs keep their structure.
+- No layer removed: `persist/` untouched; pipeline ordering, merge gate, verification topology unchanged.
+- Single-identifier vacuous satisfaction: a fast-lane task produces no `temp/<slug>/`; `<task> = <slug>` (CLAUDE.md §4) holds vacuously. Absence of the temp dir is NOT a divergence and needs NO Recipe Invariant Exception.
+- Absence-by-lane ≠ skip: a document absent because the lane does not require it is absence-by-lane-definition, not an auto-judge skip — no skip note beyond the one-liners defined above.
+- Reversible: `fast→full` mid-flight is cheap — flip the field in the plan doc, create `temp/<slug>/`, back-fill. Residual under-classification risk is mitigated by the fast default, the cheap promotion path, and the step-8 HITL reviewer.
+
+**Not mapped from #4 (recorded, intentionally skipped):** the `00-INDEX` self-attestation drop (JarvanKB never had `00-INDEX`; non-duplication is already HITL-enforced at step 8); `proposal.md`/`tasks.md` doc names (v2 has no OpenSpec — the plan doc is the analog).
+
+---
+
 ## Hard Invariants (v2)
 
 (See `CLAUDE.md` §4 for the compressed version. Both must stay in sync.)
@@ -108,6 +162,7 @@ This is rare; prefer task-decomposition (different prefixes) over peer multiplic
 - **One sendbox per project.** `<root>/docs/sendbox/` only. Side cwds write by path.
 - **Per-task mailbox.** Every parallel non-root session reads/writes its own `to{Prefix}{Role}/` mailbox; shared role-only mailboxes forbidden for concurrent roles. See §Local sendbox conventions.
 - **Layered RepoMem.** Module reads two layers, writes one; HITL promotes module → global.
+- **Lane axis: structural, additive, reversible.** `Lane: fast|full` (default fast, declared in the plan doc) changes only which doc artifacts exist, never a step's policy. Fast-lane absence of `temp/<slug>/` vacuously satisfies the single-task-identifier invariant; absence-by-lane is NOT an auto-judge skip; `fast→full` promotion is cheap. See §Lane Tiering (v2).
 - **One letter → N dashboard rows.** Independent lifecycles.
 - **No silent invariant skips.** Pipeline ordering, merge gates, verification topology are recipe invariants. Exceptions require a declared `Recipe Invariant Exception` in the relevant `temporary-<slug>.md` with reason + compensating action.
 
@@ -135,6 +190,7 @@ Each Full Rewrite MUST:
 - `docs/HarnessStack/hooks/` — repo-local hook configs (e.g. cc-dashboard)
 - `docs/RepoMem/persist/version-plan.md` — phase plan, recipe version history
 - `docs/superpowers/specs/2026-05-31-SP-0-jarvankb-skeleton-design.md` — v2 migration design
+- `docs/superpowers/specs/2026-06-10-harnessstack-codegraph-lanetiering-design.md` — CodeTeam #3/#4 instantiation mapping (U1–U4)
 
 ---
 

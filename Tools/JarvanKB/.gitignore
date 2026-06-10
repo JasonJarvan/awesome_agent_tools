@@ -8,3 +8,7 @@ config/llm.yaml
 *.egg-info/
 __pycache__/
 *.pyc
+# codegraph 本地索引 —— 机器本地，不入库（见 docs/HarnessStack/longterm.md §Harness Enhancement Layer (v2)）
+.codegraph/
+# 仓库根 .gitignore 忽略所有 .claude/；此处重新纳入项目级 skills（settings.local.json 仍按上方规则忽略）
+!.claude/
