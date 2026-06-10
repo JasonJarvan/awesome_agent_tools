@@ -1,4 +1,10 @@
 from __future__ import annotations
+import threading
+import time
+import random
+from dataclasses import dataclass
+from email.utils import parsedate_to_datetime
+from datetime import datetime, timezone
 import httpx
 
 _UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -22,6 +28,40 @@ API_HEADERS = {
     "Referer": "https://www.zhihu.com/",
     "x-requested-with": "fetch",
 }
+
+# Injectable clock hooks (monkeypatched in tests for instant, deterministic runs)
+_now = time.monotonic
+_sleep = time.sleep
+_rand = random.uniform
+
+
+@dataclass
+class _Config:
+    min_interval: float = 0.3          # min seconds between request *starts* (proactive pacing)
+    jitter: float = 0.2                # add U(0, jitter) to each pacing/backoff wait
+    max_retries: int = 3               # reactive retries on a retryable status
+    backoff_base: float = 0.5          # backoff = base * 2**attempt (+ jitter)
+    retry_statuses: tuple = (403, 429)
+    enabled: bool = True               # master switch for pacing+retry
+
+
+_cfg = _Config()
+
+
+def configure(*, min_interval=None, jitter=None, max_retries=None, backoff_base=None,
+              retry_statuses=None, enabled=None) -> None:
+    """Tune the engine's built-in proactive rate-limiter + reactive backoff (process-wide).
+
+    Conservative defaults suit bulk crawling without tripping Zhihu's burst-sensitive throttle
+    (empirically ~2 req/s sequential is safe). A single-URL caller is ~unaffected (one request
+    never waits). Pass ``enabled=False`` to disable both pacing and retry.
+    """
+    if min_interval is not None: _cfg.min_interval = min_interval
+    if jitter is not None: _cfg.jitter = jitter
+    if max_retries is not None: _cfg.max_retries = max_retries
+    if backoff_base is not None: _cfg.backoff_base = backoff_base
+    if retry_statuses is not None: _cfg.retry_statuses = tuple(retry_statuses)
+    if enabled is not None: _cfg.enabled = enabled
 
 
 def get_page(url: str, *, cookies: dict, timeout: float = 30.0) -> tuple[int, str]:
