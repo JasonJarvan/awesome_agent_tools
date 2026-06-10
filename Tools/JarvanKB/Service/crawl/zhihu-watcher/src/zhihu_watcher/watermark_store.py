@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 
 
@@ -29,3 +30,22 @@ class WatermarkStore:
         tmp = final.with_suffix(".json.tmp")
         tmp.write_text(json.dumps(sorted(seen), ensure_ascii=False), encoding="utf-8")
         os.replace(tmp, final)  # atomic on POSIX
+
+    def _baseline_path(self, collection_id: str) -> Path:
+        return self._dir / f"baseline-{collection_id}.json"
+
+    def get_baseline(self, collection_id: str) -> datetime | None:
+        p = self._baseline_path(collection_id)
+        if not p.exists():
+            return None
+        try:
+            return datetime.fromisoformat(json.loads(p.read_text(encoding="utf-8"))["baseline"])
+        except (json.JSONDecodeError, KeyError, ValueError, OSError):
+            return None
+
+    def set_baseline(self, collection_id: str, when: datetime) -> None:
+        self._dir.mkdir(parents=True, exist_ok=True)
+        final = self._baseline_path(collection_id)
+        tmp = final.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps({"baseline": when.isoformat()}, ensure_ascii=False), encoding="utf-8")
+        os.replace(tmp, final)
