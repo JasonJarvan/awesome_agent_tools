@@ -171,6 +171,43 @@ def test_main_once_runs_single_cycle(monkeypatch):
     assert calls["n"] == 1
 
 
+def test_state_save_failure_skips_folder_without_crashing(tmp_path):
+    """A store.save() OSError must not propagate out of run_cycle (§7 daemon-never-crashes)."""
+    from bilibili_watcher.watermark_store import FolderState
+
+    class _BoomSaveStore:
+        def load(self, folder_id):
+            return FolderState()
+
+        def save(self, folder_id, state):
+            raise OSError("disk full")
+
+    # Two folders so we can verify the second is still attempted after the first explodes.
+    cfg2 = WatcherConfig(
+        poll_interval_minutes=20,
+        output_dir=str(tmp_path / "out"),
+        state_dir=str(tmp_path / "state"),
+        cookie_source=CookieSource("http://x", "u", "p"),
+        engine=EngineConfig("b", "pid", "m"),
+        render=RenderConfig(),
+        folders=[FolderConfig(id="f1", name="Box1"), FolderConfig(id="f2", name="Box2")],
+    )
+    fetch_calls: list[str] = []
+
+    def fake_fetch(bvid, cred):
+        fetch_calls.append(bvid)
+        return FetchedDoc(title="T-" + bvid, markdown="body\n")
+
+    fav = _FakeFavorites([_item("BV1", 100)])
+    w = Watcher(cfg2, _FakeCookies(), fav, fake_fetch, _BoomSaveStore())
+
+    # Must not raise even though every store.save() throws OSError.
+    w.run_cycle()
+
+    # Both folders were listed (fav.calls has one entry per list_items call).
+    assert len(fav.calls) == 2, f"expected 2 list_items calls, got {fav.calls}"
+
+
 def test_main_default_schedules_interval_job(monkeypatch):
     import types as _t
     import bilibili_watcher.__main__ as m
@@ -202,3 +239,4 @@ def test_main_default_schedules_interval_job(monkeypatch):
     assert captured["kwargs"]["trigger"] == "interval"
     assert captured["kwargs"]["minutes"] == 20
     assert captured["kwargs"]["max_instances"] == 1
+    assert captured["kwargs"].get("coalesce") is True

@@ -40,7 +40,10 @@ class Watcher:
             return
         credential = build_credential(cookies)
         for folder in self._cfg.folders:
-            self._poll_folder(folder, cookies, credential)
+            try:
+                self._poll_folder(folder, cookies, credential)
+            except Exception as e:  # noqa: BLE001 - one bad folder must not abort the cycle
+                log.error("polling folder %s failed: %s", folder.id, e)
 
     def _poll_folder(self, folder, cookies, credential) -> None:
         try:
