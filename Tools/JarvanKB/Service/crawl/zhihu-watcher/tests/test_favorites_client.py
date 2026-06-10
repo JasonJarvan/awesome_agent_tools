@@ -1,5 +1,6 @@
 import httpx
 import pytest
+from datetime import datetime
 from zhihu_watcher.favorites_client import (
     FavoritesClient,
     CollectionItem,
@@ -80,3 +81,20 @@ def test_skips_malformed_items():
     fc = FavoritesClient(http_client=client)
     items = fc.list_items("c", {})
     assert [i.key for i in items] == ["answer:9"]   # item missing id/url dropped
+
+
+def test_parses_favorited_at_and_excerpt_per_type():
+    page = {"data": [
+        {"created": "2026-05-23T09:00:04+08:00",
+         "content": {"type": "article", "id": "a1", "url": "https://zhuanlan.zhihu.com/p/a1",
+                     "title": "T", "excerpt_title": "lead &#34;quoted&#34; body"}},
+        {"created": "2026-05-13T13:13:03+08:00",
+         "content": {"type": "answer", "id": "q1", "url": "https://www.zhihu.com/question/1/answer/q1",
+                     "question": {"title": "Q"}, "excerpt": "answer lead"}},
+    ], "paging": {"totals": 2, "is_end": True}}
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200, json=page)))
+    items = FavoritesClient(http_client=client).list_items("c", {})
+    assert items[0].favorited_at == datetime.fromisoformat("2026-05-23T09:00:04+08:00")
+    assert items[0].excerpt == 'lead "quoted" body'        # excerpt_title, html-unescaped
+    assert items[1].excerpt == "answer lead"               # answer uses content.excerpt
+    assert items[1].favorited_at == datetime.fromisoformat("2026-05-13T13:13:03+08:00")
