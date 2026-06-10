@@ -1,6 +1,6 @@
 ---
 slug: sp5b-bilibili-watcher
-status: review-pending
+status: reviewed
 domains: [crawl]
 updated_at: 2026-06-10
 language: zh
@@ -172,3 +172,17 @@ order=view     -> 按播放量重排(证明 order 确实控制排序)
 | 排序 | ✅ order=mtime = fav_time 降序(§5) |
 | cookie 安全 | SESSDATA 真值未落盘未打印;domain=bilibili.com 无点(credentials.md 权威) |
 | 待决项已显式标 ⭐ | §2/§5/§6/§7 |
+
+---
+
+## 9. 用户裁决(2026-06-10,HITL 门已清)
+
+用户认可本文档,据此进 design。§7 三问裁定如下:
+
+1. **监听收藏夹**:先一小撮跑通 —— `AI生成`(id=`2216104467`,41 条)+ `编程折腾`(id=`1195057867`,11 条)。
+   其余 20 个以后随时按配置增删。
+2. **watermark 形态**:采用 §6 推荐 —— **`fav_time` 高水位(`order=mtime` 早停省请求)+ seen-id 集(keyed `bvid`)幂等兜底**。
+   即 fav_time 负责早停、seen-id 负责绝不重复落盘/绝不漏。
+3. **type 过滤**:**只处理 `type==2`(UGC 视频)**,非视频条目 log+skip,不入水位(避免噪音)。
+
+这三条是 design.md 的硬输入。
