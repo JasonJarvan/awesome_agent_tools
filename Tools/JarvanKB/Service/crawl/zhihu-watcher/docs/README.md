@@ -5,18 +5,25 @@
 
 ## 做什么
 
-- 按配置的间隔(默认 45min,可配 30–60)轮询一个或多个知乎**收藏夹**。
+- 按配置的间隔(默认 45min,可配 30–60)轮询 `targets` 里配置的知乎**收藏夹**。
 - 用持久化的 **seen-id 集合**去重:只处理还没见过的条目,绝不重复抓取。
 - 每个新条目:从 SP-1 CookieManager 拉最新 cookie(内存内解密,**绝不落盘明文**)→ 调
   SP-2 引擎 `zhihu.fetch(url, cookies)` → 存 Markdown 到配置的输出目录。
 - 纯落盘,**无 LLM、无分类、无 Obsidian/GBrain 语义**(那些归 SP-6/SP-7)。
+- **专栏文章(zhuanlan)全文不可抓取**:知乎专栏端点需要签名器(SP-2 v1.2 未引入),会返回
+  403。此类条目以 best-effort 方式保存,连续失败后触发退避(`max_consecutive_failures` /
+  `failure_cooldown_hours`)以避免无限重试。
 
 ## 输入
 
 一份 YAML 配置(完整字段见 `interface.md` + `config/zhihu-watcher.example.yaml`):
 - 轮询间隔、输出目录、状态目录;
 - SP-1 连接(`base_url` / `uuid` / `password`);
-- 要监听的收藏夹列表(id 或收藏夹 URL,可给子目录名)。
+- `targets` 列表:两种类型:
+  - `type: collection` — 显式指定单个收藏夹(id 或完整 URL,可选子目录名);
+  - `type: user` — 自动发现该用户的所有**具名**收藏夹(`url_token: me` 或明文 token);
+    默认跳过空收藏夹(`skip_empty: true`)和"我的收藏"(`include_default: false`,留待分类器)。
+- 可选水位线(`only_after`)和首次运行回填开关(`backfill_on_first_run`)。
 
 ## 输出
 

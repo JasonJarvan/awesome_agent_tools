@@ -43,8 +43,8 @@ def main(argv: list[str] | None = None) -> None:
         coalesce=True,
     )
     logging.getLogger("zhihu_watcher").info(
-        "starting scheduler: every %d min, %d collection(s)",
-        config.poll_interval_minutes, len(config.collections),
+        "starting scheduler: every %d min, %d target(s)",
+        config.poll_interval_minutes, len(config.targets),
     )
     # run once immediately, then APScheduler fires every interval
     watcher.run_cycle()

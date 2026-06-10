@@ -7,8 +7,10 @@ mainland site; the host's proxy env is for overseas sites only).
 """
 from __future__ import annotations
 
+import html
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 import httpx
 
@@ -31,6 +33,16 @@ class CollectionItem:
     url: str           # canonical content URL, fed to SP-2 fetch()
     content_type: str  # "answer" | "article" | ...
     title: str         # fallback title (SP-2 FetchResult.title is authoritative)
+    favorited_at: datetime | None = None  # top-level `created` = the time it was added to the collection
+    excerpt: str = ""  # per-type body lead (article: excerpt_title; answer: excerpt), html-unescaped
+
+
+@dataclass
+class UserCollection:
+    id: str
+    title: str
+    is_default: bool
+    item_count: int
 
 
 class ZhihuApiError(Exception):
@@ -44,6 +56,17 @@ def collection_id_from_url(url_or_id: str) -> str:
     return url_or_id.split("?")[0].rstrip("/").split("/")[-1]
 
 
+def _parse_favorited_at(el: dict) -> datetime | None:
+    raw = el.get("created")
+    if not isinstance(raw, str):
+        return None
+    try:
+        dt = datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+
 def _build_item(el: dict) -> CollectionItem | None:
     content = el.get("content") or {}
     ctype = content.get("type")
@@ -53,9 +76,15 @@ def _build_item(el: dict) -> CollectionItem | None:
         return None
     if ctype == "answer":
         title = (content.get("question") or {}).get("title") or content.get("title") or ""
+        excerpt_raw = content.get("excerpt") or ""
     else:
         title = content.get("title") or ""
-    return CollectionItem(key=f"{ctype}:{cid}", url=url, content_type=ctype, title=title)
+        excerpt_raw = content.get("excerpt_title") or content.get("excerpt") or ""
+    return CollectionItem(
+        key=f"{ctype}:{cid}", url=url, content_type=ctype, title=title,
+        favorited_at=_parse_favorited_at(el),
+        excerpt=html.unescape(excerpt_raw),
+    )
 
 
 class FavoritesClient:
@@ -94,3 +123,47 @@ class FavoritesClient:
                 break
         log.info("collection %s: listed %d items", collection_id, len(items))
         return items
+
+    def list_user_collections(self, url_token: str, cookies: dict[str, str]) -> list["UserCollection"]:
+        cols: list[UserCollection] = []
+        offset = 0
+        while True:
+            url = (
+                f"https://www.zhihu.com/api/v4/people/{url_token}/collections"
+                f"?offset={offset}&limit={self._limit}"
+            )
+            resp = self._client.get(url, cookies=cookies)
+            if resp.status_code != 200:
+                raise ZhihuApiError(resp.status_code, url)
+            body = resp.json()
+            data = body.get("data") or []
+            for c in data:
+                if c.get("id") is None:
+                    continue
+                cols.append(UserCollection(
+                    id=str(c.get("id")),
+                    title=str(c.get("title") or c.get("id")),
+                    is_default=bool(c.get("is_default", False)),
+                    item_count=int(c.get("item_count") or 0),
+                ))
+            paging = body.get("paging") or {}
+            if paging.get("is_end") is True:
+                break
+            offset += self._limit
+            totals = paging.get("totals")
+            if totals is not None and len(cols) >= totals:
+                break
+            if not data:
+                break
+        log.info("user %s: listed %d collection(s)", url_token, len(cols))
+        return cols
+
+    def get_current_url_token(self, cookies: dict[str, str]) -> str:
+        url = "https://www.zhihu.com/api/v4/me"
+        resp = self._client.get(url, cookies=cookies)
+        if resp.status_code != 200:
+            raise ZhihuApiError(resp.status_code, url)
+        token = (resp.json() or {}).get("url_token")
+        if not token:
+            raise ZhihuApiError(resp.status_code, url + " (no url_token in response)")
+        return str(token)

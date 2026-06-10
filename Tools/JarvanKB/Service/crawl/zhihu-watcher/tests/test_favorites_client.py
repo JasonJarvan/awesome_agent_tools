@@ -1,5 +1,6 @@
 import httpx
 import pytest
+from datetime import datetime
 from zhihu_watcher.favorites_client import (
     FavoritesClient,
     CollectionItem,
@@ -80,3 +81,76 @@ def test_skips_malformed_items():
     fc = FavoritesClient(http_client=client)
     items = fc.list_items("c", {})
     assert [i.key for i in items] == ["answer:9"]   # item missing id/url dropped
+
+
+def test_parses_favorited_at_and_excerpt_per_type():
+    page = {"data": [
+        {"created": "2026-05-23T09:00:04+08:00",
+         "content": {"type": "article", "id": "a1", "url": "https://zhuanlan.zhihu.com/p/a1",
+                     "title": "T", "excerpt_title": "lead &#34;quoted&#34; body"}},
+        {"created": "2026-05-13T13:13:03+08:00",
+         "content": {"type": "answer", "id": "q1", "url": "https://www.zhihu.com/question/1/answer/q1",
+                     "question": {"title": "Q"}, "excerpt": "answer lead"}},
+    ], "paging": {"totals": 2, "is_end": True}}
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200, json=page)))
+    items = FavoritesClient(http_client=client).list_items("c", {})
+    assert items[0].favorited_at == datetime.fromisoformat("2026-05-23T09:00:04+08:00")
+    assert items[0].excerpt == 'lead "quoted" body'        # excerpt_title, html-unescaped
+    assert items[1].excerpt == "answer lead"               # answer uses content.excerpt
+    assert items[1].favorited_at == datetime.fromisoformat("2026-05-13T13:13:03+08:00")
+
+
+from zhihu_watcher.favorites_client import UserCollection
+
+def _coll(cid, title, is_default=False, item_count=10):
+    return {"id": cid, "title": title, "is_default": is_default, "item_count": item_count}
+
+def test_list_user_collections_pages_and_parses():
+    pages = {
+        0: {"data": [_coll(721323262, "我的收藏", is_default=True, item_count=109),
+                     _coll(865315034, "技术-AI生成", item_count=94)],
+            "paging": {"totals": 3, "is_end": False}},
+        20: {"data": [_coll(630144608, "赚钱-金融市场", item_count=212)],
+             "paging": {"totals": 3, "is_end": True}},
+    }
+    def handler(request):
+        assert "x-zse-96" not in {k.lower() for k in request.headers}
+        assert request.url.path == "/api/v4/people/zhao-cheng-57-99-79/collections"
+        return httpx.Response(200, json=pages[int(dict(request.url.params)["offset"])])
+    fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    cols = fc.list_user_collections("zhao-cheng-57-99-79", {"z_c0": "x"})
+    assert [(c.id, c.title, c.is_default, c.item_count) for c in cols] == [
+        ("721323262", "我的收藏", True, 109),
+        ("865315034", "技术-AI生成", False, 94),
+        ("630144608", "赚钱-金融市场", False, 212),
+    ]
+
+def test_list_user_collections_non_200_raises():
+    fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(403, json={}))))
+    with pytest.raises(ZhihuApiError):
+        fc.list_user_collections("zhao-cheng-57-99-79", {})
+
+
+def test_get_current_url_token():
+    def handler(request):
+        assert request.url.path == "/api/v4/me"
+        return httpx.Response(200, json={"url_token": "zhao-cheng-57-99-79", "name": "晓日晨"})
+    fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    assert fc.get_current_url_token({"z_c0": "x"}) == "zhao-cheng-57-99-79"
+
+def test_get_current_url_token_non_200_raises():
+    fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(401, json={}))))
+    with pytest.raises(ZhihuApiError):
+        fc.get_current_url_token({})
+
+
+def test_naive_created_is_made_timezone_aware():
+    page = {"data": [{"created": "2026-05-23T09:00:04",
+                      "content": {"type": "answer", "id": "n1",
+                                  "url": "https://www.zhihu.com/question/1/answer/n1",
+                                  "question": {"title": "Q"}, "excerpt": "x"}}],
+            "paging": {"totals": 1, "is_end": True}}
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200, json=page)))
+    items = FavoritesClient(http_client=client).list_items("c", {})
+    assert items[0].favorited_at is not None
+    assert items[0].favorited_at.tzinfo is not None   # naive input normalized to aware

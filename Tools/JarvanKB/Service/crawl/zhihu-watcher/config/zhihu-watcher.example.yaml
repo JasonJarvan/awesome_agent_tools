@@ -1,14 +1,27 @@
 # Copy to config/zhihu-watcher.yaml and fill in your values.
-poll_interval_minutes: 45            # default 30-60; how often to poll
-output_dir: /data/output             # where Markdown is written (may point at a vault subdir)
-state_dir: /data/state               # where seen-id JSON lives (mount a volume to persist)
+poll_interval_minutes: 45
+# the existing Zhihu library built by Zhihu-Collection-Saver (~33 category subfolders already present);
+# named-collection targets land in their matching existing subfolder
+output_dir: "/home/shenzhou/Documents/Obsidian/JasonJarvan/ResourceBase资源库/Zhihu知乎"
+state_dir: /data/state
 
-cookie_source:                       # SP-1 CookieManager connection
-  base_url: http://127.0.0.1:48088   # or LAN/public entry from cookie-manager interface.md §8
+cookie_source:
+  base_url: http://127.0.0.1:48088
   uuid: <your-cookiecloud-box-uuid>
   password: <your-cookiecloud-box-password>
-  # crypto_type is read from GET /get/:uuid; do not set it here.
 
-collections:                         # the user's own account; list one or more
-  - id: "630144608"                  # from https://www.zhihu.com/collection/630144608 (id or full URL)
-    name: "AI-papers"                # subfolder name under output_dir (optional; defaults to id)
+# optional: only save items favorited on/after this (skips back-filling history).
+# MUST include a timezone offset.
+# only_after: "2026-01-01T00:00:00+08:00"
+backfill_on_first_run: false        # default: first sight of a collection sets a "since now" baseline
+max_consecutive_failures: 3         # 403 backoff: cooldown after N consecutive fetch failures
+failure_cooldown_hours: 24
+
+targets:
+  - type: collection                # explicit single collection (id or full URL)
+    id: "630144608"
+    name: "赚钱-金融市场"            # optional; defaults to the id; use the existing subfolder name
+  - type: user                      # auto-discover this user's NAMED collections
+    url_token: me                   # "me" (current cookie user) or a literal url_token
+    skip_empty: true                # skip item_count==0 collections
+    include_default: false          # skip 我的收藏 (waits for the classifier); true = dump it flat

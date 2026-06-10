@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from zhihu_watcher.watermark_store import WatermarkStore
 
 
@@ -28,3 +30,13 @@ def test_save_is_atomic_no_partial_file(tmp_path):
     # no leftover temp files
     leftovers = [p.name for p in tmp_path.iterdir() if p.name.endswith(".tmp")]
     assert leftovers == []
+
+
+def test_baseline_set_get_and_persist(tmp_path):
+    store = WatermarkStore(str(tmp_path))
+    assert store.get_baseline("c1") is None
+    dt = datetime.fromisoformat("2026-06-10T00:00:00+08:00")
+    store.set_baseline("c1", dt)
+    assert store.get_baseline("c1") == dt
+    # survives a fresh instance (persisted)
+    assert WatermarkStore(str(tmp_path)).get_baseline("c1") == dt
