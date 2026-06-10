@@ -5,6 +5,45 @@
 > When a decision is promoted to global, leave a `[Promoted to global ↗]` marker pointing to
 > `<root>/docs/RepoMem/persist/memory/` (or `architecture/`).
 
+## 2026-06-10 · sp5a-watcher-v1.1 · target-resolution + watermark correction + 403 backoff (live-smoked)
+
+**Delivered** (branch `sp5a-watcher-v1.1`, off local `feat/agentcrawl-bootstrap` `b654662`; not yet merged):
+- **`targets` schema** replaces v1 `collections` (clean break, no alias): `type: collection` (explicit) +
+  `type: user` (auto-discover a user's NAMED collections). New `resolver.TargetResolver` expands targets →
+  `list[CollectionConfig]` per cycle (collections-before-users so explicit names win dedup; skip `is_default`
+  unless `include_default`; skip empty; per-target graceful degradation).
+- **Watermark correction** (the v1 "no favorited-time" claim was a BUG): parse top-level `created` →
+  `CollectionItem.favorited_at`; optional `only_after` (tz-aware, naive rejected) + first-run per-collection
+  baseline (`WatermarkStore.get/set_baseline`) so a fresh by-user watch does NOT back-fill history. seen-id set
+  stays the dedup backbone. **No early-stop** — items are NOT favorite-time-ordered (filter safe, early-stop unsafe).
+- **403 backoff** (`failure_store.FailureStore`, time-window cooldown, DI clock): bounds re-attempts of
+  permanently-failing items.
+- `favorites_client` gained `list_user_collections` (people/collections paging) + `get_current_url_token` (/me).
+- v1.1 Mode-1 **skips default 我的收藏** by default (`include_default: false`, user-decided) — the default inbox
+  is reserved for the separate classifier SP. `output_dir` set to the existing Obsidian Zhihu library.
+
+**Tests:** 58 pass (v1's 32 migrated for the `collections`→`targets` rename + new Watcher DI signature, + 26
+new across config/favorites_client/resolver/failure_store/watermark/watcher, incl. a real-resolver e2e test).
+Code-review (independent subagent): 2 blocking issues fixed (tz-aware datetime guard; example config/docs) +
+unused-import; verdict ready-to-merge.
+
+**Live smoke (real SP-1 + real account `zhao-cheng-57-99-79`, 2026-06-10):**
+- **`/api/v4/me` HTTP 200 unsigned** → url_token resolved (Mode-1 `me` viable; residual risk closed).
+- by-user discovery listed **35 collections → resolver kept 33** (skipped the default `我的收藏` + 1 empty
+  `产品思维`); `我的收藏` confirmed absent from the polled set. **`is_default` flag drives the skip.**
+- first-run baseline (`backfill=false`): every collection "0 new" — history NOT back-filled (baseline works,
+  favorited_at parsed without crashing).
+- full pipeline (explicit `量化`/998866113, `backfill=true`): **2 items fetched + saved** (one answer + one
+  专栏 article — NB some 专栏 nav-GETs DO succeed; the 403 is a subset, not universal); re-run `--once` →
+  **0 new (dedup invariant confirmed live)**.
+
+**Pending at Step 8 (impler-owned HITL merge — NOT done here, global persist is governance-gated):** promote to
+global `crawl-pipeline.md §知乎链路` — top-level `created` = favorite-time (correcting the v1 false claim),
+items-NOT-favorite-time-ordered (early-stop unsafe), `/api/v4/me` + people/collections unsigned, `is_default`
+flags the default collection; + the **methodology lesson** (empirically crawl + document + user-review before
+watermark/paging logic) per the BilibiliCrawl SubOrche correction letter. Also fix v1 SP-5a design §2's false
+"no favorited-time" claim. Empirical field doc: `docs/RepoMem/temp/sp5a-watcher-v1.1/api-fields-empirical.md`.
+
 ## 2026-06-07 · sp5a-zhihu-watcher · Step 8 merge closure + live smoke
 
 **v1 merged** to `feat/agentcrawl-bootstrap` (merge `7acacb2`); worktree + branch cleaned up.
