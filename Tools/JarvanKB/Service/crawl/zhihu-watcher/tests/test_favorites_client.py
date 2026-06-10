@@ -129,3 +129,16 @@ def test_list_user_collections_non_200_raises():
     fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(403, json={}))))
     with pytest.raises(ZhihuApiError):
         fc.list_user_collections("zhao-cheng-57-99-79", {})
+
+
+def test_get_current_url_token():
+    def handler(request):
+        assert request.url.path == "/api/v4/me"
+        return httpx.Response(200, json={"url_token": "zhao-cheng-57-99-79", "name": "晓日晨"})
+    fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    assert fc.get_current_url_token({"z_c0": "x"}) == "zhao-cheng-57-99-79"
+
+def test_get_current_url_token_non_200_raises():
+    fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(401, json={}))))
+    with pytest.raises(ZhihuApiError):
+        fc.get_current_url_token({})

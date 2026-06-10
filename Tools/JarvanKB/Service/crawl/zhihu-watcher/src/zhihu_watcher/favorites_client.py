@@ -156,3 +156,13 @@ class FavoritesClient:
                 break
         log.info("user %s: listed %d collection(s)", url_token, len(cols))
         return cols
+
+    def get_current_url_token(self, cookies: dict[str, str]) -> str:
+        url = "https://www.zhihu.com/api/v4/me"
+        resp = self._client.get(url, cookies=cookies)
+        if resp.status_code != 200:
+            raise ZhihuApiError(resp.status_code, url)
+        token = (resp.json() or {}).get("url_token")
+        if not token:
+            raise ZhihuApiError(resp.status_code, url + " (no url_token in response)")
+        return str(token)
