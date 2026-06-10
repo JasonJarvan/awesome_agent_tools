@@ -41,3 +41,31 @@ def test_default_config_is_conservative():
     assert c.min_interval == 0.3 and c.jitter == 0.2
     assert c.max_retries == 3 and c.backoff_base == 0.5
     assert c.retry_statuses == (403, 429) and c.enabled is True
+
+
+def test_rate_limiter_paces_second_call(monkeypatch):
+    from zhihu import fetcher
+    clock = {"t": 1000.0}
+    slept = []
+    monkeypatch.setattr(fetcher, "_now", lambda: clock["t"])
+    monkeypatch.setattr(fetcher, "_sleep", lambda s: (slept.append(s), clock.__setitem__("t", clock["t"] + s)))
+    monkeypatch.setattr(fetcher, "_rand", lambda a, b: 0.0)   # zero jitter -> deterministic
+    lim = fetcher._RateLimiter()
+    lim.acquire(min_interval=0.5, jitter=0.0)   # first call: last=0 -> target far in past -> no sleep
+    assert slept == []
+    lim.acquire(min_interval=0.5, jitter=0.0)   # immediate second call -> must wait the full interval
+    assert slept == [0.5]
+
+
+def test_rate_limiter_no_wait_when_enough_time_elapsed(monkeypatch):
+    from zhihu import fetcher
+    clock = {"t": 1000.0}
+    slept = []
+    monkeypatch.setattr(fetcher, "_now", lambda: clock["t"])
+    monkeypatch.setattr(fetcher, "_sleep", lambda s: slept.append(s))
+    monkeypatch.setattr(fetcher, "_rand", lambda a, b: 0.0)
+    lim = fetcher._RateLimiter()
+    lim.acquire(0.5, 0.0)
+    clock["t"] += 2.0          # 2s passes (e.g. a slow nav-GET download) -> already past interval
+    lim.acquire(0.5, 0.0)
+    assert slept == []         # no extra pacing when the request itself was slow enough

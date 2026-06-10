@@ -64,6 +64,28 @@ def configure(*, min_interval=None, jitter=None, max_retries=None, backoff_base=
     if enabled is not None: _cfg.enabled = enabled
 
 
+class _RateLimiter:
+    """Process-wide min-interval pacer. Ensures consecutive request *starts* are >= min_interval
+    apart (+ optional jitter). A slow request that already took longer than min_interval incurs no
+    extra wait, so single-URL callers are ~unaffected while bursts get smoothed. Thread-safe."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._last = 0.0
+
+    def acquire(self, min_interval: float, jitter: float) -> None:
+        with self._lock:
+            extra = _rand(0.0, jitter) if jitter else 0.0
+            target = self._last + min_interval + extra
+            now = _now()
+            if now < target:
+                _sleep(target - now)
+            self._last = _now()
+
+
+_limiter = _RateLimiter()
+
+
 def get_page(url: str, *, cookies: dict, timeout: float = 30.0) -> tuple[int, str]:
     """GET a Zhihu page as a browser navigation. Returns (status_code, text). Does not raise on 4xx."""
     resp = httpx.get(url, cookies=cookies, headers=NAV_HEADERS, timeout=timeout,
