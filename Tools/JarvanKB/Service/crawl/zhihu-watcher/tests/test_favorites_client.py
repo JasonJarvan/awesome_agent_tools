@@ -142,3 +142,15 @@ def test_get_current_url_token_non_200_raises():
     fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(401, json={}))))
     with pytest.raises(ZhihuApiError):
         fc.get_current_url_token({})
+
+
+def test_naive_created_is_made_timezone_aware():
+    page = {"data": [{"created": "2026-05-23T09:00:04",
+                      "content": {"type": "answer", "id": "n1",
+                                  "url": "https://www.zhihu.com/question/1/answer/n1",
+                                  "question": {"title": "Q"}, "excerpt": "x"}}],
+            "paging": {"totals": 1, "is_end": True}}
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200, json=page)))
+    items = FavoritesClient(http_client=client).list_items("c", {})
+    assert items[0].favorited_at is not None
+    assert items[0].favorited_at.tzinfo is not None   # naive input normalized to aware

@@ -1,7 +1,7 @@
 """Load and validate the watcher YAML config into dataclasses."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 
 import yaml
@@ -84,6 +84,9 @@ def load_config(path: str) -> WatcherConfig:
 
     only_after_raw = raw.get("only_after")
     only_after = datetime.fromisoformat(only_after_raw) if only_after_raw else None
+    if only_after is not None and only_after.tzinfo is None:
+        raise ValueError(
+            "config: only_after must include a timezone offset, e.g. '2026-01-01T00:00:00+08:00'")
 
     return WatcherConfig(
         poll_interval_minutes=interval,

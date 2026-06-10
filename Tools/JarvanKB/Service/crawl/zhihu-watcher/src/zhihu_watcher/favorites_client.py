@@ -10,7 +10,7 @@ from __future__ import annotations
 import html
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 import httpx
 
@@ -61,9 +61,10 @@ def _parse_favorited_at(el: dict) -> datetime | None:
     if not isinstance(raw, str):
         return None
     try:
-        return datetime.fromisoformat(raw)
+        dt = datetime.fromisoformat(raw)
     except ValueError:
         return None
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
 
 def _build_item(el: dict) -> CollectionItem | None:

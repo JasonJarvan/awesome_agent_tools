@@ -1,11 +1,13 @@
+import httpx
 from pathlib import Path
 from datetime import datetime, timezone
-from zhihu_watcher.config import WatcherConfig, CookieSource, CollectionConfig
-from zhihu_watcher.favorites_client import CollectionItem
+from zhihu_watcher.config import WatcherConfig, CookieSource, CollectionConfig, UserTarget
+from zhihu_watcher.favorites_client import CollectionItem, FavoritesClient
 from zhihu_watcher.watermark_store import WatermarkStore
 from zhihu_watcher.failure_store import FailureStore
 from zhihu_watcher.fetcher import FetchedDoc
 from zhihu_watcher.watcher import Watcher
+from zhihu_watcher.resolver import TargetResolver
 
 def _config(tmp_path, **over):
     base = dict(
@@ -228,3 +230,37 @@ def test_item_in_cooldown_is_skipped(tmp_path):
     assert fs.should_skip("c1", "article:1") is True
     w.run_cycle()
     assert calls == ["https://zhuanlan.zhihu.com/p/1"]
+
+
+def test_full_cycle_with_real_resolver_and_user_target(tmp_path):
+    def handler(request):
+        path = request.url.path
+        if path == "/api/v4/me":
+            return httpx.Response(200, json={"url_token": "zhao"})
+        if path == "/api/v4/people/zhao/collections":
+            return httpx.Response(200, json={"data": [
+                {"id": 721, "title": "我的收藏", "is_default": True, "item_count": 5},
+                {"id": 865, "title": "技术-AI生成", "is_default": False, "item_count": 2},
+            ], "paging": {"totals": 2, "is_end": True}})
+        if path == "/api/v4/collections/865/items":
+            return httpx.Response(200, json={"data": [
+                {"content": {"type": "answer", "id": "a1",
+                             "url": "https://www.zhihu.com/question/1/answer/a1",
+                             "question": {"title": "Q1"}, "excerpt": "lead"}},
+            ], "paging": {"totals": 1, "is_end": True}})
+        raise AssertionError(f"unexpected path {path}")
+
+    fc = FavoritesClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    cfg = _config(tmp_path, targets=[UserTarget(url_token="me")], backfill_on_first_run=True)
+    store = WatermarkStore(cfg.state_dir)
+    fs = FailureStore(cfg.state_dir, now_fn=lambda: 0.0)
+    saved = []
+    def fake_fetch(url, cookies):
+        saved.append(url)
+        return FetchedDoc("Q1", "body")
+    w = Watcher(cfg, _FakeCookies(), fc, fake_fetch, store,
+                resolver=TargetResolver(fc), failure_store=fs)
+    w.run_cycle()
+    # default 我的收藏 (721) skipped; only 技术-AI生成 (865) polled + saved
+    assert saved == ["https://www.zhihu.com/question/1/answer/a1"]
+    assert (Path(cfg.output_dir) / "技术-AI生成" / "Q1.md").exists()

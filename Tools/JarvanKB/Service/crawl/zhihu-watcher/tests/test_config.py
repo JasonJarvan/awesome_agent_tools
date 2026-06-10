@@ -133,3 +133,12 @@ targets:
     assert cfg.backfill_on_first_run is True
     assert cfg.max_consecutive_failures == 5
     assert cfg.failure_cooldown_hours == 6.0
+
+
+def test_naive_only_after_rejected(tmp_path):
+    with pytest.raises(ValueError, match="timezone offset"):
+        load_config(_write(tmp_path, _BASE + """
+only_after: "2026-01-01T00:00:00"
+targets:
+  - {type: collection, id: "1"}
+"""))
