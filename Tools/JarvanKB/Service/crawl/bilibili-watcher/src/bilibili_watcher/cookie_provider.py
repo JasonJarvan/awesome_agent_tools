@@ -27,6 +27,7 @@ def derive_key(uuid: str, password: str) -> str:
 
 
 def _evp_bytes_to_key(pw: bytes, salt: bytes, key_len: int, iv_len: int) -> tuple[bytes, bytes]:
+    """OpenSSL EVP_BytesToKey with MD5 (1 iteration), as crypto-js / OpenSSL use."""
     d = b""
     prev = b""
     while len(d) < key_len + iv_len:
@@ -53,6 +54,7 @@ def decrypt_legacy(encrypted: str, the_key: str) -> dict:
 
 
 def decrypt_fixed(encrypted: str, the_key: str) -> dict:
+    """aes-128-cbc-fixed: 16-byte key = the_key UTF-8, zero IV, AES-128-CBC + PKCS7, bare base64."""
     ct = base64.b64decode(encrypted)
     key = the_key.encode("utf-8")
     iv = b"\x00" * 16

@@ -1,5 +1,6 @@
 import base64, hashlib, json
 import httpx
+import pytest
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.padding import PKCS7
 
@@ -24,6 +25,16 @@ def _enc_legacy(plaintext: dict, the_key: str) -> str:
     body = pad.update(json.dumps(plaintext).encode()) + pad.finalize()
     ct = enc.update(body) + enc.finalize()
     return base64.b64encode(b"Salted__" + salt + ct).decode()
+
+
+def _enc_fixed(plaintext: dict, the_key: str) -> str:
+    key = the_key.encode("utf-8")
+    iv = b"\x00" * 16
+    enc = Cipher(algorithms.AES(key), modes.CBC(iv)).encryptor()
+    pad = PKCS7(128).padder()
+    body = pad.update(json.dumps(plaintext).encode()) + pad.finalize()
+    ct = enc.update(body) + enc.finalize()
+    return base64.b64encode(ct).decode()
 
 
 def test_derive_key():
@@ -63,3 +74,31 @@ def test_provider_pulls_and_sends_auth_token():
     assert cp.get_cookies() == {"SESSDATA": "s"}
     assert seen["token"] == "tok"
     assert seen["path"] == "/get/u"
+
+
+def test_decrypt_fixed_roundtrip():
+    payload = {"cookie_data": {"bilibili.com": [{"name": "SESSDATA", "value": "fixed_val"}]}}
+    the_key = derive_key("u", "p")
+    enc = _enc_fixed(payload, the_key)
+    assert decrypt_payload(enc, "aes-128-cbc-fixed", "u", "p") == payload
+
+
+def test_provider_omits_token_when_none():
+    payload = {"cookie_data": {"bilibili.com": [{"name": "SESSDATA", "value": "s"}]}}
+    enc = _enc_legacy(payload, derive_key("u", "p"))
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["token"] = request.headers.get("X-CookieCloud-Token")
+        return httpx.Response(200, json={"encrypted": enc, "crypto_type": "legacy"})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    src = CookieSource(base_url="http://box", uuid="u", password="p", auth_token=None)
+    cp = CookieProvider(src, http_client=client)
+    assert cp.get_cookies() == {"SESSDATA": "s"}
+    assert seen["token"] is None
+
+
+def test_unknown_crypto_type_raises():
+    with pytest.raises(ValueError, match="crypto_type"):
+        decrypt_payload("anything", "bogus-type", "u", "p")
