@@ -86,6 +86,43 @@ class _RateLimiter:
 _limiter = _RateLimiter()
 
 
+def _retry_after_seconds(resp: httpx.Response) -> float | None:
+    """Parse a Retry-After header (delta-seconds or HTTP-date) into seconds, or None."""
+    raw = resp.headers.get("retry-after")
+    if not raw:
+        return None
+    raw = raw.strip()
+    if raw.isdigit():
+        return float(raw)
+    try:
+        when = parsedate_to_datetime(raw)
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=timezone.utc)
+        return max(0.0, (when - datetime.now(tz=timezone.utc)).total_seconds())
+    except (TypeError, ValueError):
+        return None
+
+
+def _request(url: str, *, cookies: dict, headers: dict, timeout: float) -> httpx.Response:
+    """The single outbound GET for the whole engine: proactive pacing before every attempt +
+    reactive backoff on a retryable status (honors Retry-After). Returns the final Response WITHOUT
+    raising — the caller decides what a non-2xx means (get_page tolerates 403; api/comments raise)."""
+    resp = None
+    for attempt in range(_cfg.max_retries + 1):
+        if _cfg.enabled:
+            _limiter.acquire(_cfg.min_interval, _cfg.jitter)
+        resp = httpx.get(url, cookies=cookies, headers=headers, timeout=timeout,
+                         follow_redirects=True, trust_env=False)
+        if (not _cfg.enabled or resp.status_code not in _cfg.retry_statuses
+                or attempt == _cfg.max_retries):
+            return resp
+        delay = _retry_after_seconds(resp)
+        if delay is None:
+            delay = _cfg.backoff_base * (2 ** attempt) + (_rand(0.0, _cfg.jitter) if _cfg.jitter else 0.0)
+        _sleep(delay)
+    return resp
+
+
 def get_page(url: str, *, cookies: dict, timeout: float = 30.0) -> tuple[int, str]:
     """GET a Zhihu page as a browser navigation. Returns (status_code, text). Does not raise on 4xx."""
     resp = httpx.get(url, cookies=cookies, headers=NAV_HEADERS, timeout=timeout,

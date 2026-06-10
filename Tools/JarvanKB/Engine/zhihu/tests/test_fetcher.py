@@ -69,3 +69,43 @@ def test_rate_limiter_no_wait_when_enough_time_elapsed(monkeypatch):
     clock["t"] += 2.0          # 2s passes (e.g. a slow nav-GET download) -> already past interval
     lim.acquire(0.5, 0.0)
     assert slept == []         # no extra pacing when the request itself was slow enough
+
+
+def test_request_retries_403_then_succeeds(httpx_mock, monkeypatch):
+    from zhihu import fetcher
+    monkeypatch.setattr(fetcher, "_sleep", lambda s: None)          # no real waiting
+    monkeypatch.setattr(fetcher, "_rand", lambda a, b: 0.0)
+    monkeypatch.setattr(fetcher._limiter, "_last", 0.0, raising=False)
+    httpx_mock.add_response(url="https://www.zhihu.com/answer/9", status_code=403, text="no")
+    httpx_mock.add_response(url="https://www.zhihu.com/answer/9", status_code=200, text="yes")
+    fetcher.configure(min_interval=0.0, jitter=0.0, max_retries=3, enabled=True)
+    r = fetcher._request("https://www.zhihu.com/answer/9", cookies={"d_c0": "x"},
+                         headers=fetcher.NAV_HEADERS, timeout=5.0)
+    assert r.status_code == 200 and r.text == "yes"
+
+
+def test_request_honors_retry_after_header(httpx_mock, monkeypatch):
+    from zhihu import fetcher
+    waits = []
+    monkeypatch.setattr(fetcher, "_sleep", lambda s: waits.append(s))
+    monkeypatch.setattr(fetcher, "_rand", lambda a, b: 0.0)
+    httpx_mock.add_response(url="https://www.zhihu.com/answer/7", status_code=429,
+                            headers={"Retry-After": "12"}, text="slow down")
+    httpx_mock.add_response(url="https://www.zhihu.com/answer/7", status_code=200, text="ok")
+    fetcher.configure(min_interval=0.0, jitter=0.0, max_retries=3, backoff_base=0.5, enabled=True)
+    r = fetcher._request("https://www.zhihu.com/answer/7", cookies={"d_c0": "x"},
+                         headers=fetcher.API_HEADERS, timeout=5.0)
+    assert r.status_code == 200
+    assert 12 in waits            # honored Retry-After, not the 0.5 backoff
+
+
+def test_request_gives_up_after_max_retries(httpx_mock, monkeypatch):
+    from zhihu import fetcher
+    monkeypatch.setattr(fetcher, "_sleep", lambda s: None)
+    monkeypatch.setattr(fetcher, "_rand", lambda a, b: 0.0)
+    for _ in range(4):            # initial + 3 retries
+        httpx_mock.add_response(url="https://www.zhihu.com/answer/5", status_code=403, text="nope")
+    fetcher.configure(min_interval=0.0, jitter=0.0, max_retries=3, enabled=True)
+    r = fetcher._request("https://www.zhihu.com/answer/5", cookies={"d_c0": "x"},
+                         headers=fetcher.NAV_HEADERS, timeout=5.0)
+    assert r.status_code == 403   # returns the last response; caller decides (raise / fallback)
