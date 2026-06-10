@@ -9,6 +9,7 @@
 | `runbook.md` | 操作手册：凭据配置、OSS 桶策略、故障表、成本估算、**§6 Tavily MCP 作用域/启用** | 配环境 / 排查故障 / 估算运行成本 / SP-8 web-search 接手 |
 | `pre-openspec-decisions.md` | **冻结的遗存**：D1–D7 调研结论（bootstrap 期产生） | 阅读历史背景；**新决策不写这里**，走 `<module>/docs/RepoMem/temp/<slug>/decisions.md` |
 | `llm-shared-layer.md` | 共享 LLM 层（`jarvankb_common.LLMClient`，litellm + 自定义 OpenAI 兼容 provider）+ 多 runtime agentskills.io `SKILL.md` 打包契约（SP-3 落地，2026-06-07） | SP-4b/SP-6/SP-7 接 LLM 或打包 skill 时 |
+| `empirical-api-first.md` | **教训**：做水位/分页/字段依赖前必须先实测爬真站→文档化→用户复审→才实现（SP-5a v1 臆测收藏时间字段翻车，2026-06-10） | 任何 crawl SP 推断 API 字段/分页语义前 |
 
 ## 与 superpowers writing-plans / RepoMem temp 的边界
 

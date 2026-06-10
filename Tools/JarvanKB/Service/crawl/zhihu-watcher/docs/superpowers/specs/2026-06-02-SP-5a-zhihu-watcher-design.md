@@ -68,6 +68,13 @@ sources left ambiguous. Findings (code-level):
 - **No reliable per-item "favorited time" field**: the reference repo never reads one. The API's
   `content.created` is the **content's** creation time, not the favorite time — using it as a
   high-watermark would miss newly-favorited-but-old content. Hence D2 (seen-id set, not timestamp).
+
+  > **更正(v1.1, 2026-06-10 真站):** 上面两条(本条 + 上面的 "Ordering" 条)均为 v1 臆测、不准确。(1) 存在可靠的
+  > **顶层 `created` = 收藏时间**(与 `content` 同级,≠ `content.created` 发布时间)。(2) 条目**并非**
+  > newest-favorited-first 排序。seen-id set 仍是去重骨干(与排序无关、正确);v1.1 额外解析顶层 `created` 支持
+  > 「只收某时间后」过滤,但**不做早停**(乱序下不安全)。详见
+  > `docs/RepoMem/temp/sp5a-watcher-v1.1/api-fields-empirical.md` 与全局 `crawl-pipeline.md §知乎链路`。
+  > 教训已提升:`docs/RepoMem/persist/memory/empirical-api-first.md`。
 - **Collection id from URL**: `url.split('?')[0].split('/')[-1]` (e.g.
   `https://www.zhihu.com/collection/630144608` → `630144608`).
 

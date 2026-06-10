@@ -131,7 +131,14 @@ SP-5a Watcher 复用必知**的根因/坑（分层读协议下 SP-5a 在 `Servic
   `GET /api/v4/collections/{id}/items?offset=&limit=20` 纯 cookie + 浏览器 headers 即 200,**offset 翻页**
   ——停止条件用 `paging.is_end` 或 `len(已收集) >= paging.totals`,**勿用 `offset >= totals`**(API 把少于
   `totals` 的条目分散到多页 + `is_end` 迟到时会早停漏条)。用户收藏夹列表
-  `GET /api/v4/people/{url_token}/collections?...&offset=&limit=20` 同属导航端点、同样纯 cookie。
+  `GET /api/v4/people/{url_token}/collections?...&offset=&limit=20` 同属导航端点、同样纯 cookie(每个收藏夹对象带
+  `is_default`——仅默认夹「我的收藏」为 true——+ `item_count`);`GET /api/v4/me` 亦无签名,把 `url_token: me`
+  解析成当前 cookie 用户 token(SP-5a v1.1 真站确认)。
+- **收藏夹条目的「收藏时间」= 顶层 `created`,非 `content.created`**(SP-5a v1.1 **2026-06-10 真站确认**,纠正 v1 误判):
+  每条 `data[]` 有**顶层 `created`**(ISO8601,如 `2026-05-23T09:00:04+08:00`)= 加入收藏夹时间;`content.created`/
+  `content.created_time` 是内容**发布**时间(≠ 收藏时间)。**且条目不按收藏时间排序**(实测:某夹 item[0] 收藏于
+  2025-08、item[1..2] 于 2026-05)→ 可按 `created` **过滤**(只收某时间后),**不可据此早停翻页**(同「勿
+  `offset >= totals` 早停」之理,会漏掉排在旧条目后的新条目);去重仍用 seen-id。
 - **收藏夹抓正文的坑(SP-5a 真站)**:列表给的内容 URL,**答案页导航 GET 常 403**,但 SP-2 引擎的
   **api-fallback(仅 ANSWER + 403 → `/api/v4/answers/{id}`,无签名)** 能救回;**专栏 ARTICLE
   (`zhuanlan.zhihu.com/p/...`)无此兜底 → 403 即抓不到**(实测 168 条:140 答案救回、28 专栏失败)。
