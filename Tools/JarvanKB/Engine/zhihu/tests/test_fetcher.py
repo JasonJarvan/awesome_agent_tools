@@ -109,3 +109,14 @@ def test_request_gives_up_after_max_retries(httpx_mock, monkeypatch):
     r = fetcher._request("https://www.zhihu.com/answer/5", cookies={"d_c0": "x"},
                          headers=fetcher.NAV_HEADERS, timeout=5.0)
     assert r.status_code == 403   # returns the last response; caller decides (raise / fallback)
+
+
+def test_get_page_recovers_transient_403(httpx_mock, monkeypatch):
+    from zhihu import fetcher
+    monkeypatch.setattr(fetcher, "_sleep", lambda s: None)
+    monkeypatch.setattr(fetcher, "_rand", lambda a, b: 0.0)
+    fetcher.configure(min_interval=0.0, jitter=0.0, max_retries=2, enabled=True)
+    httpx_mock.add_response(url="https://www.zhihu.com/answer/3", status_code=403, text="x")
+    httpx_mock.add_response(url="https://www.zhihu.com/answer/3", status_code=200, text="<html>ok</html>")
+    status, text = fetcher.get_page("https://www.zhihu.com/answer/3", cookies={"d_c0": "x"})
+    assert status == 200 and "ok" in text

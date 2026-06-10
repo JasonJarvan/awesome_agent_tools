@@ -124,16 +124,15 @@ def _request(url: str, *, cookies: dict, headers: dict, timeout: float) -> httpx
 
 
 def get_page(url: str, *, cookies: dict, timeout: float = 30.0) -> tuple[int, str]:
-    """GET a Zhihu page as a browser navigation. Returns (status_code, text). Does not raise on 4xx."""
-    resp = httpx.get(url, cookies=cookies, headers=NAV_HEADERS, timeout=timeout,
-                     follow_redirects=True, trust_env=False)
+    """GET a Zhihu page as a browser navigation. Returns (status_code, text). Does not raise on 4xx.
+    Goes through _request (proactive pacing + 403/429 backoff)."""
+    resp = _request(url, cookies=cookies, headers=NAV_HEADERS, timeout=timeout)
     return resp.status_code, resp.text
 
 
 def get_api_answer(answer_id: str, *, cookies: dict, timeout: float = 30.0) -> dict:
-    """Unsigned /api/v4 answer fallback. Raises on non-2xx."""
+    """Unsigned /api/v4 answer fallback. Raises on non-2xx. Goes through _request."""
     url = f"https://www.zhihu.com/api/v4/answers/{answer_id}?include=content"
-    resp = httpx.get(url, cookies=cookies, headers=API_HEADERS, timeout=timeout,
-                     follow_redirects=True, trust_env=False)
+    resp = _request(url, cookies=cookies, headers=API_HEADERS, timeout=timeout)
     resp.raise_for_status()
     return resp.json()
