@@ -155,3 +155,50 @@ def test_corrupt_state_file_skips_folder(tmp_path):
     Watcher(cfg, _FakeCookies(), _FakeFavorites([_item("BV1", 1)]),
             lambda b, c: fetch_calls.append(b), WatermarkStore(cfg.state_dir)).run_cycle()
     assert fetch_calls == []                          # folder skipped
+
+
+def test_main_once_runs_single_cycle(monkeypatch):
+    import bilibili_watcher.__main__ as m
+    calls = {"n": 0}
+
+    class _W:
+        def run_cycle(self):
+            calls["n"] += 1
+
+    monkeypatch.setattr(m, "build_watcher", lambda cfg: _W())
+    monkeypatch.setattr(m, "load_config", lambda path: object())
+    m.main(["--once", "--config", "irrelevant.yaml"])
+    assert calls["n"] == 1
+
+
+def test_main_default_schedules_interval_job(monkeypatch):
+    import types as _t
+    import bilibili_watcher.__main__ as m
+    cycles = {"n": 0}
+
+    class _W:
+        def run_cycle(self):
+            cycles["n"] += 1
+
+    captured = {}
+
+    class _FakeScheduler:
+        def add_job(self, func, **kwargs):
+            captured["kwargs"] = kwargs
+
+        def start(self):
+            captured["started"] = True
+
+        def shutdown(self):
+            pass
+
+    fake_cfg = _t.SimpleNamespace(poll_interval_minutes=20, folders=[1, 2])
+    monkeypatch.setattr(m, "load_config", lambda path: fake_cfg)
+    monkeypatch.setattr(m, "build_watcher", lambda cfg: _W())
+    monkeypatch.setattr(m, "BlockingScheduler", lambda: _FakeScheduler())
+    m.main([])
+    assert cycles["n"] == 1
+    assert captured.get("started") is True
+    assert captured["kwargs"]["trigger"] == "interval"
+    assert captured["kwargs"]["minutes"] == 20
+    assert captured["kwargs"]["max_instances"] == 1
