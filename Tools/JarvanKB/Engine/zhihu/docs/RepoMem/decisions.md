@@ -4,6 +4,41 @@
 > Each entry: date, slug, decision, rationale, what-changes-when-this-is-revisited.
 > When a decision is promoted to global, leave a `[Promoted to global ↗]` marker pointing to `<root>/docs/RepoMem/persist/memory/`.
 
+## 2026-06-10 · zhihu-engine-ratelimit-hardening (v1.2)
+
+### D9 — nav-page HTML is `__zse_ck`-gated (time-sensitive); articles API is `x-zse-96`-gated  ⚠️ found at live smoke
+Two distinct anti-bot gates surfaced when v1.2's live smoke ran with a STALE cookie — revising the earlier
+optimistic "nav 200 is enough, no signature" read:
+- **Navigation HTML** (`www.zhihu.com/...`, `zhuanlan.zhihu.com/p/...`) requires a FRESH `__zse_ck` cookie.
+  Stale/absent → HTTP 403 returning an anti-bot CHALLENGE page (body carries `<meta id="zh-zse-ck">` + a
+  `zse_ck` JS tracker), NOT the content. A fresh `__zse_ck` (browser-computed, synced by cookie-manager)
+  passes transparently — which is why the 2026-06-07/09 probes saw 20/20 + 60/60 nav-200 (cookie was fresh
+  then). Retry/backoff CANNOT recover this (every retry returns the same challenge); only a fresh `__zse_ck` does.
+- **`/api/v4/articles/{id}`** (any `include=`) → 403 `code 10003` (signature gate), UNLIKE the unsigned
+  `/api/v4/answers/{id}` (D5). So there is NO unsigned article api-fallback to mirror — v1.2 therefore did NOT
+  add one and did NOT introduce a signer (honors D1). `api.zhihu.com/articles/{id}` → 403 `code 40362` (risk-control).
+- **cookie domain-key gotcha**: cookie-manager stores zhihu cookies under **`.zhihu.com` (leading dot)**, not
+  `zhihu.com` (the dotless key is empty). All consumers must pull with the dotted key.
+Revisit if Zhihu drops the `__zse_ck` nav gate or starts gating the unsigned answer/comment APIs.
+
+> D9 is cross-SP-reusable (SP-3 Skill / SP-5a Watcher both pull cookies + fetch nav pages). **[Promoted to global ↗]**
+> `<root>/docs/RepoMem/persist/architecture/crawl-pipeline.md` §知乎链路 — promoted 2026-06-10 (HITL, user).
+
+### D8 — engine has built-in proactive rate-limit + reactive 403/429 backoff (no signer)
+All four outbound httpx call sites (`get_page`, `get_api_answer`, `fetch_comments`, `fetch_child_comments`)
+route through one `fetcher._request`: a process-wide `_RateLimiter` (min-interval + jitter, shared so bulk
+consumers self-pace while single-URL callers are ~unaffected) + retry on 403/429 with exponential backoff
+honoring `Retry-After`. Empirical basis: Zhihu's throttle is BURST/CONCURRENCY-sensitive, not cumulative
+(60 sequential nav-GETs @ ~2 req/s = zero throttle). Tunable via module-level `zhihu.configure(...)`;
+conservative defaults (min_interval=0.3, jitter=0.2, max_retries=3); non-breaking (`fetch()`/`FetchResult`
+unchanged). Mechanism lives in `src/zhihu/fetcher.py`; contract note in `docs/interface.md §11`. This hardens
+against burst-throttle 403s; it does NOT solve the D9 `__zse_ck` nav gate (orthogonal — cookie freshness).
+Revisit if a consumer needs a per-call rate override (add a param) or if Zhihu's throttle model changes.
+
+> D8 mechanism stays in code — NOT promoted (step-8 standard: mechanism in code / codegraph-derivable is not
+> promoted). The cross-SP root-cause ("throttle is burst-sensitive → engine paces + backs off, tune via
+> `configure`") rides along as a one-liner under the §知乎链路 promotion below.
+
 ## 2026-06-02 · zhihu-engine-comment-tree (v1.1 follow-up)
 
 ### D7 — child_comment is OFFSET-paginated, but `paging.next`-verbatim is the safe driver  ⚠️ verified live

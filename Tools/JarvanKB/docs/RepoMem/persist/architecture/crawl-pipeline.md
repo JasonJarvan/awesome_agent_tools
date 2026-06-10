@@ -136,6 +136,20 @@ SP-5a Watcher 复用必知**的根因/坑（分层读协议下 SP-5a 在 `Servic
   **api-fallback(仅 ANSWER + 403 → `/api/v4/answers/{id}`,无签名)** 能救回;**专栏 ARTICLE
   (`zhuanlan.zhihu.com/p/...`)无此兜底 → 403 即抓不到**(实测 168 条:140 答案救回、28 专栏失败)。
   监听类下游:失败项不入水位会每轮重试 → 考虑失败计数/退避(v1+)。
+- **导航页 HTML 有 `__zse_ck` 时效门**(SP-2 v1.2 真站 **2026-06-10** 确认,**修正上文「导航页 200 即够、无需签名」的乐观表述**):
+  `www.zhihu.com/...` 与 `zhuanlan.zhihu.com/p/...` 的导航 GET 需**新鲜 `__zse_ck`**;过期/缺失 → 403 返回**反爬挑战页**
+  (body 含 `<meta id="zh-zse-ck">` + `zse_ck` JS tracker,非正文)。新鲜 `__zse_ck`(浏览器算、cookie-manager 同步)时
+  透明通过——故 06-07/09 探测 nav 全 200(当时 cookie 新鲜)。**重试/退避救不了过期**(每次重试还是挑战页),只有新鲜
+  `__zse_ck` 能。→ 监听类下游长期跑须**定期从浏览器同步新鲜 cookie**;根治需 `__zse_ck` 求解器(破 D1,root 决策,未做)。
+- **cookie domain-key = `.zhihu.com`(带点)**:cookie-manager 存的知乎 cookie 在**带点** key 下(`zhihu.com` 无点 key 已空)。
+  所有消费者(SP-3/SP-5a)`show domain=` 必须用 `.zhihu.com`(与 B 站「无点/带点」坑同源)。
+- **`/api/v4/articles/{id}` 需 `x-zse-96` 签名**(403 `code 10003`,任何 `include=`),与无签名的 `/api/v4/answers/{id}`(上文)
+  **不对称** → **无对应的无签名 article api-fallback 可镜像**,故 SP-2 v1.2 未加、亦未引签名器(守 D1);
+  `api.zhihu.com/articles/{id}` → 403 `code 40362`(风控)。
+- **知乎风控=突发/并发敏感型**(非累计;60 连续 nav-GET @~2req/s 零限流)→ SP-2 引擎已**内置主动限流(请求间最小间隔+
+  抖动,进程共享)+ 403/429 退避(遵从 `Retry-After`)**,4 处出站请求全走 `fetcher._request`,批量消费者自动受益、单 URL
+  几乎无感;入口 `zhihu.configure(...)`(机制在代码,见 `Engine/zhihu/docs/interface.md §11`)。**注:此层治突发限流,非
+  `__zse_ck` 门(正交)**。
 
 ## 模块边界
 
