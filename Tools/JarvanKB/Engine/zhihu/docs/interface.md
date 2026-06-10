@@ -258,3 +258,28 @@ zhihu "https://www.zhihu.com/question/123456/answer/789012"
 ```
 
 CLI 将结果打印到标准输出，退出码 `0` 表示成功。
+
+---
+
+## 11. 内置限流与重试（v1.2，非破坏性）
+
+引擎对所有出站请求内置 **主动限流（请求间最小间隔 + 抖动，进程内共享）** 与 **被动重试**（对 403/429 按指数退避重试，若响应含 `Retry-After` 则遵从）。目的：批量消费者（SP-5a Watcher）不再因突发请求触发知乎的「突发敏感」风控（实测顺序 ~2 req/s 安全），瞬时 403 自动恢复；单 URL 消费者（SP-3）几乎无感（单请求不等待）。
+
+默认值保守，可经模块级 `configure()` 调整或关闭，**不改变 `fetch()` 签名与 `FetchResult`**：
+
+```python
+from zhihu import configure
+configure(min_interval=0.3, jitter=0.2, max_retries=3, backoff_base=0.5, enabled=True)
+configure(enabled=False)   # 完全关闭限流+重试
+```
+
+| 参数 | 默认 | 说明 |
+|---|---|---|
+| `min_interval` | `0.3` | 相邻请求**发起**的最小间隔（秒）；慢请求自身已超过此值则不额外等待 |
+| `jitter` | `0.2` | 每次等待叠加的随机量 `U(0, jitter)`，打散节奏 |
+| `max_retries` | `3` | 命中可重试状态码时的重试次数 |
+| `backoff_base` | `0.5` | 退避 = `backoff_base * 2**attempt`（+ jitter）；有 `Retry-After` 时以其为准 |
+| `retry_statuses` | `(403, 429)` | 触发被动重试的状态码 |
+| `enabled` | `True` | 总开关；`False` 同时关闭限流与重试 |
+
+> 注意：文章接口 `/api/v4/articles/{id}` 需 `x-zse-96` 签名（403 code 10003），引擎**不**实现签名器（沿用 v1 的「无浏览器、无签名器」边界，见模块 `decisions.md` D1）；专栏正文经导航页（HTTP 200）正常抓取，此限流/重试正是为降低批量场景下导航页被风控 403 的概率而加。

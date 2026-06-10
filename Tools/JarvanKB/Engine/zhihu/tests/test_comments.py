@@ -225,3 +225,18 @@ def test_fetch_comments_multiple_roots_each_fetch_children(httpx_mock):
     assert by_id["b1"].parent_id == "r2" and by_id["b2"].parent_id == "r2"
     assert by_id["a2"].reply_to_author == "A1"   # resolved within r1's set
     assert by_id["b2"].reply_to_author == "B1"   # resolved within r2's set, no cross-root collision
+
+
+def test_fetch_comments_retries_transient_403(httpx_mock, monkeypatch):
+    from zhihu import fetcher
+    monkeypatch.setattr(fetcher, "_sleep", lambda s: None)
+    monkeypatch.setattr(fetcher, "_rand", lambda a, b: 0.0)
+    fetcher.configure(min_interval=0.0, jitter=0.0, max_retries=2, enabled=True)
+    url = "https://www.zhihu.com/api/v4/comment_v5/answers/9/root_comment?order_by=score&limit=20"
+    httpx_mock.add_response(url=url, status_code=403, text="throttled")
+    httpx_mock.add_response(url=url, json={"data": [
+        {"id": "k1", "content": "hi", "like_count": 0, "created_time": 1700000000,
+         "author": {"name": "U", "url_token": "u"}, "child_comments": []}],
+        "paging": {"is_end": True, "next": None}})
+    out = fetch_comments("answer", "9", cookies={"d_c0": "x"}, limit=None)
+    assert [c.id for c in out] == ["k1"]   # transient 403 retried -> recovered
