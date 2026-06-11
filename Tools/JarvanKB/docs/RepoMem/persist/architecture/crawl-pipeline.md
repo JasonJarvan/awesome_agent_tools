@@ -34,6 +34,33 @@ video_ref → bilibili-api-python get_info（元数据，公开无需 cookie）
   `Engine/bilibili/config/bilibili-engine.yaml`（gitignored，不含 key——key 在 BN 的 SQLite）。
 - **BN 无鉴权** → 端口只绑 `127.0.0.1`，公网经 SSH tunnel / frp，勿裸暴露。
 - 响应包装 `{code,msg,data}`（`code==0` 成功）；提交→轮询 `GET /api/task_status/{id}`（终态 SUCCESS/FAILED）。
+- **任何与 BN 通信的进程，运行/部署须清 `ALL_PROXY`/`HTTP(S)_PROXY`**：否则 httpx 经 `trust_env` 继承宿主
+  SOCKS 代理 → 连本地 BN 也抛 `socksio` ImportError（构造期即炸，与目标是否 localhost 无关）。或装
+  `httpx[socks]` + `NO_PROXY=127.0.0.1,localhost`。SP-5b/SP-4b/docker 部署共担。根因 = 引擎 BN 客户端
+  （`BiliNoteClient`）建 httpx.Client 未传 `trust_env=False` → 属 **SP-4a 引擎候选修复**（已由 SubOrche 升级 root；
+  机制在代码、不在此提升，但部署规则 + 修复指针提升）。勿当永久 workaround。
+- **BN 的 yt-dlp 取 bilibili 元数据可能被风控持续 `HTTP 412`**（已知 hazard）→ 转写整体失败；**推 cookie
+  （`POST /api/update_downloader_cookie`）实测不解**（2026-06-10）。修法在 BN/ops 侧：升级 BN 的 yt-dlp / 换出口 IP /
+  补 wbi+反检测 headers。监听/Skill 类消费者优雅降级（不入水位、下轮自动重试）。**当前实际中断状态见 UN-035**
+  （勿用 persist 记运行态）。架构注：412 在 BN 的 yt-dlp、**位于引擎请求路径之下**——引擎自身 `bilibili-api-python`
+  调用是 200，**引擎侧限流/反风控不解此问题**；反风控若要做属**引擎层**（勿在 SP-4b/SP-5b 重复，类比 SP-2 v1.2
+  硬化的是引擎 `_request` 非消费者），是 **SP-4a v1.x（root 主、引擎冻结）**，且也只硬化引擎调用、非 BN 下载器。
+
+## B站收藏夹 API（SP-5b Watcher 首爬，真站实证 2026-06-10；下游收藏夹消费者必看）
+
+监听/抓取收藏夹的下游（SP-5b 及未来）按此集成；分层读协议下别的 cwd 读不到 SP-5b 模块 `decisions.md`，故提升于此。
+
+- 端点 `GET api.bilibili.com/x/v3/fav/resource/list?media_id={夹id}&pn=&ps=20&order=mtime&type=0&platform=web`；
+  夹列表 `GET /x/v3/fav/folder/created/list-all?up_mid={mid}`。**纯 cookie（SESSDATA）+ 浏览器 headers，无签名**；
+  响应 `{code,message,ttl,data}`（`code==0`；`-101`=未登录/cookie 过期）。陆站**直连**（`trust_env=False`，勿走境外代理）。
+- ⭐ **每条收藏项带 `fav_time`=收藏时刻，≠视频 `pubtime`/`ctime`（发布时间）**（铁证：同条 fav 2026-04-24 vs
+  pub 2026-04-16，差 8 天）。喂引擎用 `bvid`；`type==2`=普通 UGC 视频（音频/番剧/合集 type≠2，引擎不支持 → 过滤）。
+- ⭐ **`order=mtime` ⇒ `data.medias[]` 按 `fav_time` 倒序**（最新收藏在前）⇒ 可早停（遇 `fav_time<=水位` 即停本夹）。
+- ⚠️ **分页 = `pn`/`ps` 页码 + `data.has_more` 停止；绝不能用 `data.info.media_count` 自算停止**——失效/删除视频
+  计入 `media_count` 却不在 `medias[]` 返回（实测夹 count=4 仅返 3）。这是 §知乎链路「勿从 totals 早停」的 B站翻版。
+- 这条 `fav_time` 实证**正面闭环了 SP-5a 当年的臆断**（SP-5a 凭记忆判"无可靠收藏时间"→ 错走 seen-id；B站实证有
+  `fav_time`）。durable 教训见 `memory/empirical-api-first.md`：**爬取类 API 的字段/分页语义先真站实证 + 落文档待
+  user review，勿凭记忆或参考库代码臆断**。
 
 ## 总数据流
 
