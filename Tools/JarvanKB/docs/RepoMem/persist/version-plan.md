@@ -56,6 +56,19 @@ When all v1 sub-projects (SP-0 through SP-7) verified end-to-end:
    - Create new GitHub repo under Organization, push
 3. Mark monorepo (this repo) as umbrella for HarnessStack template + cross-module integration tests
 
+### Prepared future task — whole-repo extraction (user framing 2026-06-11, by g4)
+
+Distinct from the per-SP fractal above: **extract `awesome_agent_tools/Tools/JarvanKB/` as ONE standalone
+repo `JarvanKB`; `awesome_agent_tools` keeps only a LINK (submodule, like its existing `Tools/gstack` /
+`Skills/ops-doc-maintainer` / … links).** This is the *coarser, first-level* split — whether it REPLACES the
+per-SP fractal (§9) or PRECEDES it (fractal later, inside the standalone repo) is an open question for the
+activation brainstorm. Deferred handoff prepared at `docs/sendbox/toRepoSplitImpler/handoff.md` (Dashboard
+UN-041). **Activation gated on:** v1 done (SP-6/SP-7 still pending) + Org name (UN-006) + explicit user
+go-ahead. Key wrinkle recorded there: all JarvanKB history is on `feat/agentcrawl-bootstrap` (never merged to
+main), so `git filter-repo --subdirectory-filter Tools/JarvanKB/` must target that branch; never filter-repo
+in place (use a mirror clone); `Tools/gstack` stays untouched; reproduce the `!.claude/` gitignore re-include
+in the new root.
+
 ## Compatibility / upgrade notes
 
 - HarnessStack recipe upgrades: see `longterm.md` §Full Rewrite Conditions
