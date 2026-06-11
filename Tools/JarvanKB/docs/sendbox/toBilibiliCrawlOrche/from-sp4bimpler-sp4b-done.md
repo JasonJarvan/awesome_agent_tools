@@ -33,12 +33,17 @@ design `b654662` · plan `2cfea0f` · plan-ready/board `beb833a` · code `b4fe48
 Module specifics (graceful-degrade decision, classify-input adaptation) live in
 `Skill/crawl/bilibili-crawl/docs/RepoMem/decisions.md`. Temp `temp/sp4b-bilibili-skill/` pruned.
 
-## GATE — live smoke (user action, NON-blocking)
-Not run. Needs, in the run environment: `MIMO_API_KEY` set (was empty in the impl session), the engine's
-`config/bilibili-engine.yaml` resolvable from the skill CWD (real one at `Engine/bilibili/config/`), and a
-`bilibili-crawl` `config.yaml` (cookie optional — missing cookie degrades to public-video ASR). Script ready:
-`Skill/crawl/bilibili-crawl/scripts/live_smoke.py`. Dashboard row UN-033 tracks it. Does NOT block SP-6
-(SP-4b is registered/shipped).
+## Live verification (updated 2026-06-11)
+- **LLM-provider live smoke ✓ PASSED.** User populated `.env` (`MIMO_API_KEY`). Rewrote `scripts/live_smoke.py`
+  to an LLM-only smoke mirroring SP-3 (+ stdlib `.env` auto-load) — it exercises the REAL
+  `jarvankb_common.LLMClient` (the one path offline tests mock). Ran it: provider `openai/mimo-v2.5-pro`
+  classified the sample video → `机器学习` (existing folder), `LIVE SMOKE OK` (commit `c534d7e`). This confirms
+  SP-4b's vague_path uses the real shared LLM layer end-to-end. (`api.py` imports `from jarvankb_common import
+  LLMClient`; resolves to `Engine/common/src/jarvankb_common/llm_client.py`.)
+- **Full transcribe→save live run** (engine side) is still blocked — not by SP-4b code, but by the B站-vertical
+  ops gate **UN-035 (BiliNote yt-dlp `HTTP 412` downloader risk-control)**, which SP-5b hit and explicitly
+  flagged as shared with SP-4b. Run `bilibili-crawl <BV> --out <path>` once BN's downloader is fixed. Does NOT
+  block SP-6 (SP-4b registered/shipped). Dashboard: UN-033 archived (LLM half done); transcribe half → UN-035.
 
 ## Next-step request
 Burn this letter + `toSP4bImpler/handoff.md` (burn-pair). SP-4b is registered to SP-6 per the SP Status Board.
