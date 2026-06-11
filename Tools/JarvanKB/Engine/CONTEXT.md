@@ -45,6 +45,6 @@ The shared in-process LLM access library (`jarvankb-common`), configured by a si
 _Avoid_: per-module LLM wrapper, direct litellm/openai calls
 
 **Profile**:
-A named provider+model entry in `config/llm.yaml`; the `active` key selects which Profile is
-used when the caller does not specify one.
+A named provider+model entry in `config/llm.yaml`; the `active` list is the fallthrough order
+of Profiles tried when the caller does not specify one.
 _Avoid_: preset, model config
