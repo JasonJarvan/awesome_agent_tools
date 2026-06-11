@@ -39,12 +39,16 @@ video_ref → bilibili-api-python get_info（元数据，公开无需 cookie）
   `httpx[socks]` + `NO_PROXY=127.0.0.1,localhost`。SP-5b/SP-4b/docker 部署共担。根因 = 引擎 BN 客户端
   （`BiliNoteClient`）建 httpx.Client 未传 `trust_env=False` → 属 **SP-4a 引擎候选修复**（已由 SubOrche 升级 root；
   机制在代码、不在此提升，但部署规则 + 修复指针提升）。勿当永久 workaround。
-- **BN 的 yt-dlp 取 bilibili 元数据可能被风控持续 `HTTP 412`**（已知 hazard）→ 转写整体失败；**推 cookie
-  （`POST /api/update_downloader_cookie`）实测不解**（2026-06-10）。修法在 BN/ops 侧：升级 BN 的 yt-dlp / 换出口 IP /
-  补 wbi+反检测 headers。监听/Skill 类消费者优雅降级（不入水位、下轮自动重试）。**当前实际中断状态见 UN-035**
-  （勿用 persist 记运行态）。架构注：412 在 BN 的 yt-dlp、**位于引擎请求路径之下**——引擎自身 `bilibili-api-python`
-  调用是 200，**引擎侧限流/反风控不解此问题**；反风控若要做属**引擎层**（勿在 SP-4b/SP-5b 重复，类比 SP-2 v1.2
-  硬化的是引擎 `_request` 非消费者），是 **SP-4a v1.x（root 主、引擎冻结）**，且也只硬化引擎调用、非 BN 下载器。
+- **BN 下载器 `HTTP 412` 根因已实证并修复（BN-412，2026-06-11）**：bilibili **playurl 接口对匿名（无 cookie）
+  请求一律 412**——与出口 IP、yt-dlp 版本无关（单变量矩阵：yt-dlp 2025.03.31/2026.06.09 无 cookie 均 412、带
+  cookie 均 200；同容器同 IP 浏览器 UA 调 view/zone API 均 200，IP 未被整体封）。早先「推 cookie
+  （`POST /api/update_downloader_cookie`）实测不解」（2026-06-10）是**假阴性**：BN 的 `BilibiliDownloader` 是
+  **导入时单例、cookie 只在进程启动时读一次**——推 cookie 后必须**重启 BN 容器**才生效（SOP 见
+  `bilibili-watcher/docs/runbook.md` §5 + `Engine/bilibili/deploy/bilinote/README.md`）。修复后 SP-4b 双路径
+  （subtitle + asr）真实落盘已验。监听/Skill 类消费者优雅降级（不入水位、下轮自动重试）。架构注：412 在 BN 的
+  yt-dlp、**位于引擎请求路径之下**——引擎自身 `bilibili-api-python` 调用（view/subtitle 类）本就 200，
+  **引擎侧限流/反风控与此无关**；若未来 playurl 风控再收紧（cookie 也不够），升级 BN 容器内 yt-dlp /
+  反检测 headers 才是下一层手段（属 BN/ops 侧，非引擎、非消费者）。
 
 ## B站收藏夹 API（SP-5b Watcher 首爬，真站实证 2026-06-10；下游收藏夹消费者必看）
 
