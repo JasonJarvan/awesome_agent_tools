@@ -1,0 +1,26 @@
+# Copy to config/bilibili-watcher.yaml and fill in your values.
+poll_interval_minutes: 20            # SP-0: 15-30; how often to poll
+output_dir: /data/output             # where Markdown is written (may point at a vault subdir)
+state_dir: /data/state               # per-folder state-<id>.json (mount a volume to persist)
+
+cookie_source:                       # SP-1 CookieManager connection
+  base_url: http://127.0.0.1:48088   # or LAN/public entry from cookie-manager interface.md §8
+  uuid: <your-cookiecloud-box-uuid>
+  password: <your-cookiecloud-box-password>
+  auth_token: <optional; set only if the box has server.auth_token>
+
+engine:                              # SP-4a Bilibili engine (BiliNote backend)
+  bn_base_url: http://127.0.0.1:3015 # BN backend (host maps :8483; see crawl-pipeline.md §B站链路)
+  provider_id: <BN provider id from GET /api/get_all_providers>
+  model_name: <model name registered in BN>
+
+render:
+  include_transcript: true
+  include_timestamps: false
+  split_transcript: false
+
+folders:                             # the user's own account; list one or more (id = media_id)
+  - id: "2216104467"                 # AI生成
+    name: "AI生成"
+  - id: "1195057867"                 # 编程折腾
+    name: "编程折腾"
