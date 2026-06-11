@@ -29,10 +29,16 @@ feature → not TDD-first). Reproduce → one-variable-at-a-time hypothesis test
   specifically **BN's yt-dlp**, downstream of the engine.
 - SP-4a's smoke **succeeded 2026-06-02** on specific BVs → risk-control tightened since.
 
-## 2. Definition of done
-A **real public B站 video transcribes end-to-end** through the EXISTING engine → BN → (subtitle or bcut ASR)
-→ Markdown, **demonstrated live**: i.e. `bilibili-crawl <BV> --out <path>` (SP-4b) and/or the SP-5b watcher
-`--once` produce a real saved note. Then promote what actually fixed it (Step-8 → runbook + `§B站链路`).
+## 2. Definition of done — re-run BOTH consumers' left-over live test
+After the 412 is fixed, you MUST re-run **both** SP-4b's and SP-5b's outstanding live gate (each was left
+incomplete by exactly this 412; do NOT settle for one — they're distinct consumer acceptance gates):
+- **SP-4b**: `bilibili-crawl <BV> --out <path>` → a **real saved Markdown note** (its full transcribe→save
+  half; the LLM-classification half already passed live).
+- **SP-5b**: the watcher `--once` over a real favorite folder **actually transcribes a favorited item →
+  saved note** (its success path; the §5 failure-degrade path already passed live).
+Confirm BOTH with evidence (saved file paths + transcript content), then promote what actually fixed the 412
+(Step-8 → runbook + `§B站链路`). If either consumer reveals a NON-412 issue once unblocked, surface it — but
+the 412 fix itself is your gate.
 
 ## 3. Candidate fixes — try in order of likelihood (systematic-debugging, isolate one variable)
 1. **Egress IP / network (most likely).** bilibili likely flagged the host's IP. Route BN's downloader egress
