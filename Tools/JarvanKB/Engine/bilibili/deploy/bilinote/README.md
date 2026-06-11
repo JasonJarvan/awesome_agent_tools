@@ -22,6 +22,14 @@ playurl 接口对匿名（无 cookie）请求一律 `HTTP 412`（与出口 IP、
 cookie 时 BN 完全无法下载公开视频音频**。验证：容器内
 `yt-dlp --cookies <netscape-file> --simulate --print title <bilibili-url>`。
 
+**自动闭环（防复发）**：本目录 `bn-cookie-sync.py` 由宿主 cron 每 10 分钟跑一次——从 SP-1 拉 bilibili
+cookie（复用 `bilibili_crawl.cookie` 解密例程，明文只在内存），与 BN 存储中的 **SESSDATA 值**比对
+（只比 SESSDATA：冻结引擎每次 ASR 会以自己的格式 best-effort 重推 cookie，比全串会重启抖动），
+**变化时**才推送 + `docker restart` + 健康轮询；未变化静默退出。日志
+`~/.local/state/jarvankb/bn-cookie-sync.log`（绝不记 cookie 值）。手动全路径演练：`--force`。
+为什么不用 SP-1 的 exec hook：SP-1 容器无 docker.sock、且 bridge 网络够不到 BN 只绑宿主 loopback 的
+端口 —— 容器内 hook 结构上做不了这件事，宿主 cron 是正确落点。
+
 ## 起 BN（用户操作 — Dashboard UN-018）
 
 1. `cp .env.example .env`（如 3015 端口被占用，改 `APP_PORT`）。
