@@ -1,44 +1,88 @@
 ---
 name: grill-with-docs
-description: Use when a full-lane task has a draft design/spec in docs/superpowers/specs/ and writing-plans has not run yet — stress-tests the draft against RepoMem architecture/decisions and current-code ground truth (codegraph), sharpening terminology and surfacing contradictions before they become an execution plan.
+description: Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates documentation (CONTEXT.md, ADRs) inline as decisions crystallise. Use when user wants to stress-test a plan against their project's language and documented decisions.
 ---
 
-# Grill With Docs (JarvanKB v2 adaptation)
+<what-to-do>
 
-Deep design review of a DRAFT spec, grounded in the repository's durable knowledge. Adapted from the community grill-with-docs (ADR/CONTEXT.md-based) to recipe v2 (CodeTeam #4 prop 4, instantiated 2026-06-10): the doc context here is RepoMem, NOT docs/adr/ or CONTEXT.md — do not create those.
+Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
 
-## When to run (auto-judge)
+Ask the questions one at a time, waiting for feedback on each question before continuing.
 
-- Full-lane tasks only (fast lane has no design tree — see `docs/HarnessStack/longterm.md §Lane Tiering (v2)`).
-- Window: after a draft spec exists in `docs/superpowers/specs/` (or `<module>/docs/superpowers/specs/`), BEFORE invoking writing-plans.
-- Auto-judge tier: run when there is a non-trivial design worth grilling (new architecture, new contract surface, cross-module behavior). Skip mechanically-full tasks (e.g. dependency bumps) with a one-line note in the plan: `grill-with-docs: skipped — <reason>`.
+If a question can be answered by exploring the codebase, explore the codebase instead.
 
-## Process
+</what-to-do>
 
-### 1. Gather context (in order)
+<supporting-info>
 
-1. Global: `docs/RepoMem/persist/architecture/` + `docs/RepoMem/persist/memory/` (decision rationale, gotchas).
-2. Module: `<module>/docs/RepoMem/{architecture,decisions}.md` for every module the design touches.
-3. Current-code ground truth: codegraph `query`/`callers`/`impact` on the symbols the design names (grep fallback where the graph is sparse — dynamic-Python callees).
-4. Prior specs in `docs/superpowers/specs/` overlapping this design's scope.
+## Domain awareness
 
-### 2. Grill the draft
+During codebase exploration, also look for existing documentation:
 
-1. **Domain fidelity** — does the design use the vocabulary already established in RepoMem architecture docs? Same concept, same name?
-2. **Decision consistency** — does it contradict a recorded decision (spec `### Dn`, module `decisions.md`, `persist/memory/`)? Flag it: either the design changes, or the old decision is explicitly superseded — say which.
-3. **Reality check** — do the symbols/flows the design references exist as described (codegraph)? A design built on a stale mental model fails here.
-4. **Module depth & leakage** — simple interfaces, deep implementations? Does it leak one module's knowledge into another?
-5. **Contract surface** — does it add public contract surface without declaring it? (That flips the Lane selection rule — re-check the lane.)
+### File structure
 
-### 3. Write findings back (write-sinks)
+Most repos have a single context:
 
-- Sharpened terminology + corrected statements → edit the spec text in place.
-- Decision-worthy outcomes → the spec's `### Dn` decision list.
-- Implementation-time gotchas discovered while grilling → `RepoMem/temp/<slug>/` (full lane has it).
-- Do NOT create `CONTEXT.md`, `docs/adr/`, or any new doc category.
+```
+/
+├── CONTEXT.md
+├── docs/
+│   └── adr/
+│       ├── 0001-event-sourced-orders.md
+│       └── 0002-postgres-for-write-model.md
+└── src/
+```
 
-## Principles
+If a `CONTEXT-MAP.md` exists at the root, the repo has multiple contexts. The map points to where each one lives:
 
-- Docs are the spec, code is the implementation; when they disagree, flag it and say which should change.
-- The grill teaches: cite the RepoMem doc or codegraph evidence behind each finding.
-- Missing docs are no excuse: grill against code ground truth and note what RepoMem should have contained.
+```
+/
+├── CONTEXT-MAP.md
+├── docs/
+│   └── adr/                          ← system-wide decisions
+├── src/
+│   ├── ordering/
+│   │   ├── CONTEXT.md
+│   │   └── docs/adr/                 ← context-specific decisions
+│   └── billing/
+│       ├── CONTEXT.md
+│       └── docs/adr/
+```
+
+Create files lazily — only when you have something to write. If no `CONTEXT.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed.
+
+## During the session
+
+### Challenge against the glossary
+
+When the user uses a term that conflicts with the existing language in `CONTEXT.md`, call it out immediately. "Your glossary defines 'cancellation' as X, but you seem to mean Y — which is it?"
+
+### Sharpen fuzzy language
+
+When the user uses vague or overloaded terms, propose a precise canonical term. "You're saying 'account' — do you mean the Customer or the User? Those are different things."
+
+### Discuss concrete scenarios
+
+When domain relationships are being discussed, stress-test them with specific scenarios. Invent scenarios that probe edge cases and force the user to be precise about the boundaries between concepts.
+
+### Cross-reference with code
+
+When the user states how something works, check whether the code agrees. If you find a contradiction, surface it: "Your code cancels entire Orders, but you just said partial cancellation is possible — which is right?"
+
+### Update CONTEXT.md inline
+
+When a term is resolved, update `CONTEXT.md` right there. Don't batch these up — capture them as they happen. Use the format in [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md).
+
+`CONTEXT.md` should be totally devoid of implementation details. Do not treat `CONTEXT.md` as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
+
+### Offer ADRs sparingly
+
+Only offer to create an ADR when all three are true:
+
+1. **Hard to reverse** — the cost of changing your mind later is meaningful
+2. **Surprising without context** — a future reader will wonder "why did they do it this way?"
+3. **The result of a real trade-off** — there were genuine alternatives and you picked one for specific reasons
+
+If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](./ADR-FORMAT.md).
+
+</supporting-info>
