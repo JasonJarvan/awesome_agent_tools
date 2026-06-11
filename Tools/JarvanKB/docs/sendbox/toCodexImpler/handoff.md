@@ -42,17 +42,22 @@ Verified by root on 2026-06-11:
   executing-plans, verification-before-completion, requesting-code-review, finishing-a-development-branch,
   using-git-worktrees, etc. are available to you natively. Confirm they load.
 - ✅ `~/.codex/skills/` has `code-reader-zh`, `ops-doc-maintainer`, and `openspec-*` (see §5 caveat).
-- ❌ **MISSING — the 4 JarvanKB-critical project skills.** Install these into `~/.codex/skills/` (the
-  agentskills.io `SKILL.md` is cross-runtime — the same file works in Codex; copy or symlink each skill dir):
+- ❌ **MISSING — the 4 JarvanKB-critical project skills** (the agentskills.io `SKILL.md` is cross-runtime —
+  the same file works in Codex):
 
-  | skill | source to install from |
+  | skill | source |
   |---|---|
   | `repo-mem` | `~/.claude/skills/repo-mem/` |
   | `sendbox-protocol` | `~/.claude/skills/sendbox-protocol/` |
   | `cc-dashboard` | `~/.claude/skills/cc-dashboard/` |
-  | `grill-with-docs` | `Tools/JarvanKB/.claude/skills/grill-with-docs/` (project-local) — **but see §5: it may be mid-replacement (UN-034); check before relying on its semantics** |
+  | `grill-with-docs` | `Tools/JarvanKB/.claude/skills/grill-with-docs/` (project-local) — **but see §5: mid-replacement (UN-034); check before relying on its semantics** |
 
-  After install, verify each loads in a fresh Codex session (appears in your skill list / is invokable).
+  **PREFERRED install method = `cc-switch`** (the machine's cross-runtime skill/config manager; supports
+  `--app codex`). Flow: `cc-switch skills import-from-apps -a claude` (bring the existing skills into its
+  SSOT) → `cc-switch skills enable <name>` → `cc-switch skills sync -a codex`. Run `cc-switch skills list` /
+  `--help` to confirm. (Fallback if you don't adopt cc-switch: copy/symlink each skill dir into
+  `~/.codex/skills/`.) Either way, **verify each loads in a fresh Codex session** (in your skill list /
+  invokable).
 
 ## 3. The contract + pipeline you must internalize (read, in order)
 
