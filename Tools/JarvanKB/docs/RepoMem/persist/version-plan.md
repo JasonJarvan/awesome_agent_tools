@@ -89,6 +89,39 @@ in the new root.
   the `LLMClient` interface is frozen, so the swap (litellm-in-process → service call) leaves consumer call
   sites unchanged. (User decision 2026-06-05 "不扩": keep v1 a library; defer the service to v2.)
 
+## MiroThinker research integration + anti-crawl MCP (future items — research-backed, live-tested 2026-06-12/13)
+
+Research (MiroResearchImpler, **live-tested with the user's MiroMind key**) established the hosted
+`mirothinker-1-7-deepresearch` is a **closed server-side agent**: it ignores caller-supplied OpenAI `tools`
+(uses its own server-side `web-processing.google_search`), and the only official "subscription + your own tool"
+channel — `mcp_servers` — returns `403 mcp_servers_not_allowed` (gated behind a beta this account lacks). Net:
+external tooling has exactly one legal entry (`mcp_servers`), currently disabled. MiroFlow ships **no** browsing
+MCP on any branch (only a Playwright `browser_session.py`), so an anti-crawl MCP must be user-supplied regardless.
+Full detail: `docs/sendbox/toMiroResearchImpler/miromind-repos-and-anticrawl.zh.md`.
+
+1. **MiroResearch as a JarvanKB research skill.** A CLI-wrapper skill over the MiroMind Responses API
+   (`MIROMIND_API_KEY`), living in the parent repo `Skills/MiroResearch`. **Soft-linked into JarvanKB at
+   `Skill/research/MiroResearch` → `../../../../Skills/MiroResearch`** (new `Skill/research/` category; relative,
+   monorepo-portable; done 2026-06-13). Not an MCP; no anti-crawl of its own. **Long-term form decision
+   (deferred):** keep symlink / vendor copy / submodule — **must be resolved at the standalone-repo extraction
+   (UN-041)**, since the link points OUTSIDE JarvanKB into the parent `Skills/` and breaks on extraction.
+
+2. **Anti-crawl MCP server (no-dependency — start anytime).** Wrap the repo's existing anti-crawl crawling
+   (zhihu-crawl / bilibili-crawl + crawl services) as a compliant **MCP server** with structured output
+   (content, source_url, fetch_method, auth_context, failure_reason, needs_human_action). One MCP serves BOTH
+   downstream paths (item 3), so it does **not** depend on the MiroMind beta reply — the no-regret first move.
+   **Compliance boundary baked in:** authorized sessions/cookies only, rate-limit + cache + provenance, manual
+   handoff on CAPTCHA/access walls — NO CAPTCHA bypass / access-control evasion / identity rotation.
+
+3. **Pending user decision — Path A vs Path C** (surfaced to user 2026-06-13; tracked Dashboard UN-042; the
+   `mcp_servers` beta request was already sent to MiroMind, awaiting reply):
+   - **(A) Subscription path** — once MiroMind grants the `mcp_servers` beta, attach the item-2 MCP to the hosted
+     mirothinker. Lightest ops, uses the subscription; blocked until beta granted; MCP must be publicly reachable.
+   - **(C) Self-host now** — MiroFlow + a third-party brain (Claude/GPT/Gemini) + the item-2 MCP. Works today,
+     full local control; does **not** consume the MiroMind subscription.
+   - Path B (MiroFlow + hosted mirothinker as brain) is **eliminated** by the evidence. Decision = wait for
+     Miro's reply, then branch; item-2 is the no-regret first move under both.
+
 ## How this doc is updated
 
 Append-most. Major changes (phase scope reshuffle, recipe upgrade, project rename) go through `RepoMem.merge` HITL review.
