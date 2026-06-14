@@ -37,6 +37,26 @@ For EACH watcher (`Service/crawl/zhihu-watcher/`, `Service/crawl/bilibili-watche
   up (`127.0.0.1:3015`) + have a **fresh SESSDATA** — the host cron `bn-cookie-sync.py` (`*/10`) keeps BN's
   downloader cookie current (UN-035 prevention); confirm it's installed/running, else transcription 412s.
 
+### 2b. Deploy gotchas — heads-up from the (converged) ZhihuCrawl SubOrche; apply to BOTH watchers
+1. **`state_dir` MUST be a persistent (mounted) volume — the #1 daemon-deploy footgun.** It holds the dedup
+   state (SP-5a seen-id set; SP-5b `fav_time` watermark + `bvid` seen-set). If the container has NO mounted
+   volume for it, **every restart re-fetches + re-saves everything** (dedup lost, vault spammed). Mount it for
+   both. (SP-5a `interface.md §3.1`.)
+2. **SP-5a zhihu-watcher binds NO listening port** — headless APScheduler `BlockingScheduler`, "config + CLI
+   only, no HTTP API" (`zhihu-watcher/docs/interface.md §1`). Only network is OUTBOUND: SP-1 cookie-manager
+   (`127.0.0.1:48088`, already a 48xxx port, or its public entry) + `www.zhihu.com`. **Do NOT add a port
+   mapping to its compose** — the 48xxx rule assigns nothing here. (SP-5b same: `network_mode: host`, outbound only.)
+3. **Clear proxy env (BOTH).** Clients already use `trust_env=False`, but a daemon env that FORCES
+   `ALL_PROXY`/SOCKS crashed SP-5a v1 at construction in smoke — same class as the Bili BN-client/`ALL_PROXY`
+   bug (UN-035). Ensure no forced SOCKS/`ALL_PROXY` in the daemon env.
+4. **SP-5a cookie freshness — `__zse_ck` staleness (UN-032).** Zhihu cookies live under the **DOTTED** key
+   `.zhihu.com` (the undotted box is empty). A long-running zhihu-watcher needs the **CookieCloud browser
+   extension to keep syncing a FRESH `__zse_ck`**, else 专栏/article fetches start **403'ing over time**.
+   Retry/backoff CANNOT fix a stale `__zse_ck` — only a fresh cookie. (Bilibili side: SESSDATA freshness is
+   handled by the `bn-cookie-sync` cron for BN; the watcher pulls fresh from SP-1 each cycle.)
+
+Authoritative ops detail: `Service/crawl/zhihu-watcher/docs/{runbook.md, interface.md §3}` (config schema).
+
 ## 3. Inputs (minimum)
 | Resource | Role |
 |---|---|
