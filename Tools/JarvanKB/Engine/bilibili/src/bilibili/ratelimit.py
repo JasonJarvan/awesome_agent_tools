@@ -51,3 +51,26 @@ def configure(*, min_interval=None, jitter=None, max_retries=None, backoff_base=
     if throttle_codes is not None: _cfg.throttle_codes = frozenset(throttle_codes)
     if retry_http_statuses is not None: _cfg.retry_http_statuses = tuple(retry_http_statuses)
     if enabled is not None: _cfg.enabled = enabled
+
+
+class _RateLimiter:
+    """Process-wide min-interval pacer. Ensures consecutive request *starts* are >= min_interval
+    apart (+ optional jitter). A slow call that already took longer than min_interval incurs no
+    extra wait, so a single transcribe()'s first call is ~unaffected while bursts get smoothed.
+    Thread-safe."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._last = 0.0
+
+    def acquire(self, min_interval: float, jitter: float) -> None:
+        with self._lock:
+            extra = _rand(0.0, jitter) if jitter else 0.0
+            target = self._last + min_interval + extra
+            now = _now()
+            if now < target:
+                _sleep(target - now)
+            self._last = _now()
+
+
+_limiter = _RateLimiter()
