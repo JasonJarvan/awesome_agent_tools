@@ -36,6 +36,25 @@ consume. (Aliyun AK / OSS credentials are out of v1 scope — R5 switched ASR to
   `http://101.35.46.114:48088`. Optional shared-secret header auth (`server.auth_token` →
   `X-CookieCloud-Token`). Real config `config/cookie-manager.yaml` holds secrets → gitignored.
 
+### Host service-port convention — **48xxx** (ratified by root g4, 2026-06-14)
+
+The canonical JarvanKB **listening**-service port block is **48000–48999**. (The user's literal ask was
+"45xxx"; per the user's own fallback rule "if occupied, find another 4yxxx band", 45xxx is excluded —
+`127.0.0.1:45397` is held by a foreign `node` listener — so 48xxx stands: it's the pre-existing convention,
+zero-migration.) Binds **listening** services only; **watchers (SP-5a/5b) do NOT listen** (outbound pollers,
+`network_mode: host`, no port map). Sub-allocation:
+
+| Band | Layer | Used / planned |
+|---|---|---|
+| 48000–48099 | crawl | cookie-manager `48088` (local) + `48098` (frp public) — existing |
+| 48100–48199 | engine | LLMService v2; BiliNote host-map optionally relocate `3015`→`481xx` (low-pri) |
+| 48200–48299 | ingester / **mcp** | SP-6/SP-7 + the `Service/mcp/` façade, if they expose control/health |
+| 48300–48399 | router/search | SP-8 |
+| 48900–48999 | reserved / experimental | — |
+
+ops-doc (`~/.ops-doc-maintainer-docs/hosts/<host>/rules.md`) already carries the 48xxx rule; the
+sub-allocation table above is the formalized version (WatcherDeploy/ops impler may sync it there).
+
 ## Pointers
 
 - Module decision log (full): `Service/crawl/cookie-manager/docs/RepoMem/decisions.md`
