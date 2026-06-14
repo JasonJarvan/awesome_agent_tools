@@ -23,6 +23,11 @@ SP-5a is the **Zhihu favorites watcher**. It is a pure consumer of two upstream 
 - **Cookie = active PULL, never push.** Pull the latest cookie from SP-1 each cycle and inject into `fetch(cookies=...)`. Decrypt only transiently in memory — never persist plaintext cookies to disk. SP-1's push path is permanently cancelled.
 - **Output = configurable output dir, vault-agnostic.** No GBrain frontmatter / no Obsidian taxonomy / no Thino (SP-6/SP-7 own that).
 - **No LLM / no classification.** Unlike SP-3, the watcher does not use LLMClient and does not auto-classify.
+  > **AMENDED by SP-5a v1.2 (2026-06-14, add-only):** this boundary is reopened as a **per-target opt-in flag,
+  > default OFF**. With no `classify: true` target, the daemon is byte-for-byte this no-LLM behavior (LLMClient
+  > never constructed) — the no-LLM *default* is preserved; the LLM runs only when a target explicitly enables
+  > `classify`. See `docs/superpowers/specs/2026-06-14-SP-5a-v1.2-default-collection-classify-design.md §1` +
+  > module `decisions.md`.
 - **Self-contained, parallel-independent.** No shared `Engine/common` helpers built competitively with SP-3; minor cookie-fetch/save duplication vs SP-3 is accepted for v1.
 - **Frozen SP-2 engine** — pure consumer, never edit it.
 
