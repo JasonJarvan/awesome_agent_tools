@@ -97,3 +97,84 @@ def test_throttle_signal_response_code_minus_412_and_101_pass_through():
 def test_throttle_signal_generic_exception_pass_through():
     from bilibili import ratelimit
     assert ratelimit._throttle_signal(ValueError("boom")) == (False, None)
+
+
+def test_paced_retries_429_then_succeeds(monkeypatch):
+    from bilibili import ratelimit
+    monkeypatch.setattr(ratelimit, "_sleep", lambda s: None)
+    monkeypatch.setattr(ratelimit, "_rand", lambda a, b: 0.0)
+    ratelimit._limiter._last = 0.0
+    ratelimit.configure(min_interval=0.0, jitter=0.0, max_retries=3, enabled=True)
+    calls = {"n": 0}
+    def fn():
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise _http_status_error(429)
+        return "ok"
+    assert ratelimit.paced(fn) == "ok"
+    assert calls["n"] == 2
+
+
+def test_paced_retries_throttle_code_then_succeeds(monkeypatch):
+    from bilibili import ratelimit
+    from bilibili_api.exceptions import ResponseCodeException
+    monkeypatch.setattr(ratelimit, "_sleep", lambda s: None)
+    monkeypatch.setattr(ratelimit, "_rand", lambda a, b: 0.0)
+    ratelimit._limiter._last = 0.0
+    ratelimit.configure(min_interval=0.0, jitter=0.0, max_retries=3, enabled=True)
+    calls = {"n": 0}
+    def fn():
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise ResponseCodeException(-509, "请求过于频繁")
+        return {"bvid": "BV1x"}
+    assert ratelimit.paced(fn) == {"bvid": "BV1x"}
+    assert calls["n"] == 2
+
+
+def test_paced_honors_retry_after(monkeypatch):
+    from bilibili import ratelimit
+    waits = []
+    monkeypatch.setattr(ratelimit, "_sleep", lambda s: waits.append(s))
+    monkeypatch.setattr(ratelimit, "_rand", lambda a, b: 0.0)
+    ratelimit._limiter._last = 0.0
+    ratelimit.configure(min_interval=0.0, jitter=0.0, max_retries=3, backoff_base=0.5, enabled=True)
+    calls = {"n": 0}
+    def fn():
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise _http_status_error(429, {"Retry-After": "12"})
+        return "ok"
+    assert ratelimit.paced(fn) == "ok"
+    assert 12 in waits            # honored Retry-After, not the 0.5 backoff
+
+
+def test_paced_propagates_non_throttle_immediately(monkeypatch):
+    from bilibili import ratelimit
+    monkeypatch.setattr(ratelimit, "_sleep", lambda s: None)
+    ratelimit._limiter._last = 0.0
+    ratelimit.configure(min_interval=0.0, jitter=0.0, max_retries=3, enabled=True)
+    calls = {"n": 0}
+    def fn():
+        calls["n"] += 1
+        raise _http_status_error(412)     # auth signal — must NOT retry
+    import pytest
+    with pytest.raises(httpx.HTTPStatusError):
+        ratelimit.paced(fn)
+    assert calls["n"] == 1                # called exactly once, no backoff
+
+
+def test_paced_gives_up_after_max_retries(monkeypatch):
+    from bilibili import ratelimit
+    monkeypatch.setattr(ratelimit, "_sleep", lambda s: None)
+    monkeypatch.setattr(ratelimit, "_rand", lambda a, b: 0.0)
+    ratelimit._limiter._last = 0.0
+    ratelimit.configure(min_interval=0.0, jitter=0.0, max_retries=3, enabled=True)
+    calls = {"n": 0}
+    def fn():
+        calls["n"] += 1
+        raise _http_status_error(429)
+    import pytest
+    with pytest.raises(httpx.HTTPStatusError):
+        ratelimit.paced(fn)
+    assert calls["n"] == 4                # initial + 3 retries

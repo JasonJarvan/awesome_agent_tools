@@ -112,3 +112,29 @@ def _throttle_signal(exc: BaseException) -> tuple[bool, float | None]:
     if isinstance(code, int) and code in _cfg.throttle_codes:
         return True, None
     return False, None
+
+
+def paced(fn):
+    """Run fn() under process-wide min-interval pacing + reactive backoff on a throttle signal.
+
+    `fn` is a zero-arg callable performing ONE bilibili.com-facing request; it either returns a
+    value or raises. Throttle exceptions (429 / codes -509/-799) trigger exponential backoff
+    (honoring Retry-After) and a retry; NON-throttle exceptions (412, -101, ...) propagate
+    immediately, unchanged. Returns fn()'s value, or re-raises the last throttle after max_retries.
+    """
+    last_exc: BaseException | None = None
+    for attempt in range(_cfg.max_retries + 1):
+        if _cfg.enabled:
+            _limiter.acquire(_cfg.min_interval, _cfg.jitter)
+        try:
+            return fn()
+        except Exception as e:
+            is_throttle, retry_after = _throttle_signal(e)
+            if not _cfg.enabled or not is_throttle or attempt == _cfg.max_retries:
+                raise
+            delay = retry_after
+            if delay is None:
+                delay = _cfg.backoff_base * (2 ** attempt) + (_rand(0.0, _cfg.jitter) if _cfg.jitter else 0.0)
+            _sleep(delay)
+            last_exc = e
+    raise last_exc  # pragma: no cover (unreachable: max_retries>=0 => loop always returns/raises)
