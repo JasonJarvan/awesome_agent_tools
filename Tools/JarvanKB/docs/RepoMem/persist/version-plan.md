@@ -106,12 +106,24 @@ Full detail: `docs/sendbox/toMiroResearchImpler/miromind-repos-and-anticrawl.zh.
    (deferred):** keep symlink / vendor copy / submodule — **must be resolved at the standalone-repo extraction
    (UN-041)**, since the link points OUTSIDE JarvanKB into the parent `Skills/` and breaks on extraction.
 
-2. **Anti-crawl MCP server (no-dependency — start anytime).** Wrap the repo's existing anti-crawl crawling
-   (zhihu-crawl / bilibili-crawl + crawl services) as a compliant **MCP server** with structured output
-   (content, source_url, fetch_method, auth_context, failure_reason, needs_human_action). One MCP serves BOTH
-   downstream paths (item 3), so it does **not** depend on the MiroMind beta reply — the no-regret first move.
-   **Compliance boundary baked in:** authorized sessions/cookies only, rate-limit + cache + provenance, manual
-   handoff on CAPTCHA/access walls — NO CAPTCHA bypass / access-control evasion / identity rotation.
+2. **Repo MCP façade v1 — crawl/anti-crawl tools first (no-dependency — start anytime).** Framed (user
+   2026-06-14) as the **first slice of a repo-wide MCP façade**, NOT a one-off: a thin aggregator that
+   re-exposes existing capability as MCP tools, built to grow tool-modules (one per engine/skill) toward "one
+   MCP = the agent toolbox" — NOT a god-process that absorbs logic (keep Engine/Service/Skill as the
+   implementation; MCP = the 4th surface). v1 wraps the crawl path (zhihu-crawl / bilibili-crawl + engines) with
+   structured output (content, source_url, fetch_method, auth_context, failure_reason, needs_human_action). One
+   MCP serves BOTH downstream paths (item 3), so it does **not** depend on the MiroMind beta reply — the
+   no-regret first move. **Placement = new `Service/mcp/` subcategory** (user decision 2026-06-14: option 2 —
+   group MCP servers under their own `Service/` subcat; it IS a long-running server like cookie-manager, so it
+   lives under Service, wrapping Engine + Skill/crawl as libs). **Granularity rule:** Engine `fetch`/`transcribe`
+   + Skill/crawl → request/response tools; **Services/watchers = daemons → only *control* tools (status/once),
+   the daemon stays a Service**. **Compliance boundary baked in:** authorized sessions/cookies only, rate-limit +
+   cache + provenance, manual handoff on CAPTCHA/access walls — NO CAPTCHA bypass / access-control evasion /
+   identity rotation. **Consumption rule of thumb (2026-06-14):** stateful/shared-backend capability (crawl +
+   anti-crawl: cookies, rate-limit, cache) → expose + consume as **MCP** (one central backend, all runtimes incl.
+   Hermes); pure-instruction / agent-local capability (research prompts, grill-with-docs, classify heuristics) →
+   stays a **Skill**. Don't double-front the same capability (once crawl is MCP, don't also sync the crawl Skill
+   to Hermes).
 
 3. **Pending user decision — Path A vs Path C** (surfaced to user 2026-06-13; tracked Dashboard UN-042; the
    `mcp_servers` beta request was already sent to MiroMind, awaiting reply):
