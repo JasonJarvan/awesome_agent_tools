@@ -6,6 +6,10 @@
 
 # Handoff — SP-4a Bilibili Engine rate-limit hardening (v1.x)
 
+> ⚠️ **Parent re-pointed to root g4 / MainOrc** (BilibiliCrawl SubOrche converged 2026-06-14). Report
+> plan-ready / blocker / done to **`docs/sendbox/toOrchestrator/from-biliratelimitimpler-*.md`** (NOT
+> `toBilibiliCrawlOrche/`). Everything else in this handoff stands. Greenlight comes from root.
+
 ## 0. What you are + a scope note
 An **engine-hardening impler**, child of BilibiliCrawl SubOrche. **Normally `Engine/bilibili` (SP-4a) is
 root-owned + frozen and out of the SubOrche's scope** — but the **user explicitly authorized this dispatch

@@ -6,6 +6,12 @@
 
 # Handoff — Watcher services bring-up + live verification (SP-5a + SP-5b)
 
+> ⚠️ **ON HOLD + parent re-pointed to root g4 / MainOrc** (BilibiliCrawl SubOrche converged 2026-06-14).
+> Do NOT bring up until root/MainOrc decides the **watcher-vs-MCP product question** (the user routed it to
+> MainOrc): autonomous watcher daemons vs on-demand crawl MCP vs both. When greenlit, report to
+> **`docs/sendbox/toOrchestrator/from-watcherdeployimpler-*.md`** (NOT `toBilibiliCrawlOrche/`). All deploy
+> detail below (incl. §2b gotchas) stands.
+
 ## 0. What you are
 An **ops / deployment impler**, child of BilibiliCrawl SubOrche. The two watchers are code-complete + merged +
 unit-verified, but have only ever run `--once` — **neither is running as a persistent daemon**. Your job =
