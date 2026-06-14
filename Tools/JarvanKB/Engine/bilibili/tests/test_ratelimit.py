@@ -1,3 +1,12 @@
+import httpx
+
+
+def _http_status_error(status, headers=None):
+    req = httpx.Request("GET", "https://api.bilibili.com/x/web-interface/view")
+    resp = httpx.Response(status, headers=headers or {}, request=req)
+    return httpx.HTTPStatusError(f"{status}", request=req, response=resp)
+
+
 def test_default_config_is_conservative():
     from bilibili import ratelimit
     c = ratelimit._Config()
@@ -50,3 +59,41 @@ def test_rate_limiter_no_wait_when_enough_time_elapsed(monkeypatch):
     clock["t"] += 2.0          # 2s passes (e.g. a slow get_info) -> already past interval
     lim.acquire(0.5, 0.0)
     assert slept == []         # no extra pacing when the call itself was slow enough
+
+
+def test_throttle_signal_http_429_with_retry_after():
+    from bilibili import ratelimit
+    is_t, ra = ratelimit._throttle_signal(_http_status_error(429, {"Retry-After": "12"}))
+    assert is_t is True and ra == 12.0
+
+
+def test_throttle_signal_http_412_is_not_throttle():
+    from bilibili import ratelimit
+    is_t, ra = ratelimit._throttle_signal(_http_status_error(412))
+    assert is_t is False and ra is None
+
+
+def test_throttle_signal_library_network_429():
+    from bilibili import ratelimit
+    from bilibili_api.exceptions import NetworkException
+    is_t, ra = ratelimit._throttle_signal(NetworkException(429, "too many"))
+    assert is_t is True and ra is None
+
+
+def test_throttle_signal_response_code_509():
+    from bilibili import ratelimit
+    from bilibili_api.exceptions import ResponseCodeException
+    is_t, _ = ratelimit._throttle_signal(ResponseCodeException(-509, "请求过于频繁"))
+    assert is_t is True
+
+
+def test_throttle_signal_response_code_minus_412_and_101_pass_through():
+    from bilibili import ratelimit
+    from bilibili_api.exceptions import ResponseCodeException
+    assert ratelimit._throttle_signal(ResponseCodeException(-412, "risk"))[0] is False
+    assert ratelimit._throttle_signal(ResponseCodeException(-101, "not logged in"))[0] is False
+
+
+def test_throttle_signal_generic_exception_pass_through():
+    from bilibili import ratelimit
+    assert ratelimit._throttle_signal(ValueError("boom")) == (False, None)

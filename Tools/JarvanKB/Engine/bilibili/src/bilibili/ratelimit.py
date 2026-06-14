@@ -74,3 +74,41 @@ class _RateLimiter:
 
 
 _limiter = _RateLimiter()
+
+
+def _retry_after_seconds(resp: httpx.Response) -> float | None:
+    """Parse a Retry-After header (delta-seconds or HTTP-date) into seconds, or None."""
+    raw = resp.headers.get("retry-after")
+    if not raw:
+        return None
+    raw = raw.strip()
+    if raw.isdigit():
+        return float(raw)
+    try:
+        when = parsedate_to_datetime(raw)
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=timezone.utc)
+        return max(0.0, (when - datetime.now(tz=timezone.utc)).total_seconds())
+    except (TypeError, ValueError):
+        return None
+
+
+def _throttle_signal(exc: BaseException) -> tuple[bool, float | None]:
+    """Classify an exception raised by a bilibili.com-facing call as throttle-or-not.
+
+    Returns (is_throttle, retry_after_seconds_or_None). Throttle == HTTP 429 (honors Retry-After)
+    or a bilibili business code in `_cfg.throttle_codes`. Duck-types `.status`/`.code` so this
+    module needs no hard `bilibili_api` import. 412 / -101 / anything else -> (False, None).
+    """
+    if isinstance(exc, httpx.HTTPStatusError):
+        resp = exc.response
+        if resp is not None and resp.status_code in _cfg.retry_http_statuses:
+            return True, _retry_after_seconds(resp)
+        return False, None
+    status = getattr(exc, "status", None)              # bilibili_api NetworkException
+    if isinstance(status, int) and status in _cfg.retry_http_statuses:
+        return True, None
+    code = getattr(exc, "code", None)                  # bilibili_api ResponseCodeException
+    if isinstance(code, int) and code in _cfg.throttle_codes:
+        return True, None
+    return False, None
