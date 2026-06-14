@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 from typing import Optional
 
+from . import ratelimit
 from .errors import CredentialError, InvalidVideoRef
 from .models import BilibiliCredential, BilibiliMetadata
 from .url_parser import VideoRef
@@ -54,7 +55,7 @@ def _get_info_raw(ref: VideoRef, cred: Optional[BilibiliCredential]) -> dict:
             v = video.Video(aid=ref.aid, credential=credential)
         return await v.get_info()
 
-    return asyncio.run(_run())
+    return ratelimit.paced(lambda: asyncio.run(_run()))
 
 
 def fetch_metadata(ref: VideoRef, cred: Optional[BilibiliCredential]) -> BilibiliMetadata:

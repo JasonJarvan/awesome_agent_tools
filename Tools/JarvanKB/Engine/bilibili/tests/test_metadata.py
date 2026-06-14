@@ -31,3 +31,14 @@ def test_fetch_metadata_uses_parser():
         meta = fetch_metadata(ref, BilibiliCredential(sessdata="SS"))
     m.assert_called_once()
     assert meta.bvid == raw["bvid"]
+
+
+def test_get_info_raw_routes_through_paced(monkeypatch):
+    from bilibili import metadata, ratelimit
+    seen = {}
+    def fake_paced(fn):
+        seen["ok"] = True                    # routed through paced; fn() never run -> no network
+        return {"bvid": "BV1x", "aid": 1, "cid": 1, "owner": {}}
+    monkeypatch.setattr(ratelimit, "paced", fake_paced)
+    out = metadata._get_info_raw(VideoRef(bvid="BV1x", aid=None, part=None), None)
+    assert seen.get("ok") is True and out["bvid"] == "BV1x"
