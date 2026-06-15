@@ -142,3 +142,49 @@ only_after: "2026-01-01T00:00:00"
 targets:
   - {type: collection, id: "1"}
 """))
+
+
+def test_collection_target_carries_classify_flag(tmp_path):
+    cfg_file = tmp_path / "c.yaml"
+    cfg_file.write_text(
+        "output_dir: /o\nstate_dir: /s\n"
+        "cookie_source: {base_url: 'http://x', uuid: u, password: p}\n"
+        "circuit_break_threshold: 7\n"
+        "classify: {llm_profile: mimo, tier1_chars: 200, tier2_chars: 1000, allow_new_folders: false}\n"
+        "targets:\n  - {type: collection, id: '721323262', name: 我的收藏, classify: true}\n",
+        encoding="utf-8")
+    from zhihu_watcher.config import load_config
+    cfg = load_config(str(cfg_file))
+    assert cfg.targets[0].classify is True
+    assert cfg.circuit_break_threshold == 7
+    assert cfg.classify.tier1_chars == 200
+    assert cfg.classify.tier2_chars == 1000
+    assert cfg.classify.allow_new_folders is False
+    assert cfg.classify.llm_profile == "mimo"
+
+
+def test_classify_target_without_classify_block_is_error(tmp_path):
+    import pytest
+    cfg_file = tmp_path / "c.yaml"
+    cfg_file.write_text(
+        "output_dir: /o\nstate_dir: /s\n"
+        "cookie_source: {base_url: 'http://x', uuid: u, password: p}\n"
+        "targets:\n  - {type: collection, id: '1', classify: true}\n",
+        encoding="utf-8")
+    from zhihu_watcher.config import load_config
+    with pytest.raises(ValueError, match="classify"):
+        load_config(str(cfg_file))
+
+
+def test_classify_defaults_when_block_absent(tmp_path):
+    cfg_file = tmp_path / "c.yaml"
+    cfg_file.write_text(
+        "output_dir: /o\nstate_dir: /s\n"
+        "cookie_source: {base_url: 'http://x', uuid: u, password: p}\n"
+        "targets:\n  - {type: collection, id: '1', name: Box}\n",
+        encoding="utf-8")
+    from zhihu_watcher.config import load_config
+    cfg = load_config(str(cfg_file))
+    assert cfg.targets[0].classify is False
+    assert cfg.classify is None
+    assert cfg.circuit_break_threshold == 10   # default

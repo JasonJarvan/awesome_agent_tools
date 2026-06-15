@@ -11,6 +11,7 @@ import yaml
 class CollectionConfig:
     id: str
     name: str
+    classify: bool = False
 
 
 @dataclass
@@ -19,6 +20,14 @@ class UserTarget:
     name_prefix: str = ""
     skip_empty: bool = True
     include_default: bool = False
+
+
+@dataclass
+class ClassifyConfig:
+    llm_profile: str = "default"
+    tier1_chars: int = 200
+    tier2_chars: int = 1000
+    allow_new_folders: bool = False
 
 
 @dataclass
@@ -39,6 +48,8 @@ class WatcherConfig:
     backfill_on_first_run: bool = False
     max_consecutive_failures: int = 3
     failure_cooldown_hours: float = 24.0
+    circuit_break_threshold: int = 10
+    classify: "ClassifyConfig | None" = None
 
 
 def _require(d: dict, key: str, ctx: str):
@@ -51,7 +62,8 @@ def _parse_target(t: dict):
     typ = _require(t, "type", "target")
     if typ == "collection":
         cid = str(_require(t, "id", "collection target"))
-        return CollectionConfig(id=cid, name=str(t.get("name") or cid))
+        return CollectionConfig(id=cid, name=str(t.get("name") or cid),
+                                classify=bool(t.get("classify", False)))
     if typ == "user":
         return UserTarget(
             url_token=str(_require(t, "url_token", "user target")),
@@ -88,6 +100,18 @@ def load_config(path: str) -> WatcherConfig:
         raise ValueError(
             "config: only_after must include a timezone offset, e.g. '2026-01-01T00:00:00+08:00'")
 
+    classify_raw = raw.get("classify")
+    classify_cfg = None
+    if classify_raw is not None:
+        classify_cfg = ClassifyConfig(
+            llm_profile=str(classify_raw.get("llm_profile", "default")),
+            tier1_chars=int(classify_raw.get("tier1_chars", 200)),
+            tier2_chars=int(classify_raw.get("tier2_chars", 1000)),
+            allow_new_folders=bool(classify_raw.get("allow_new_folders", False)),
+        )
+    if any(isinstance(t, CollectionConfig) and t.classify for t in targets) and classify_cfg is None:
+        raise ValueError("config: a target sets classify: true but no top-level 'classify:' block is defined")
+
     return WatcherConfig(
         poll_interval_minutes=interval,
         output_dir=_require(raw, "output_dir", "root"),
@@ -98,4 +122,6 @@ def load_config(path: str) -> WatcherConfig:
         backfill_on_first_run=bool(raw.get("backfill_on_first_run", False)),
         max_consecutive_failures=int(raw.get("max_consecutive_failures", 3)),
         failure_cooldown_hours=float(raw.get("failure_cooldown_hours", 24)),
+        circuit_break_threshold=int(raw.get("circuit_break_threshold", 10)),
+        classify=classify_cfg,
     )
