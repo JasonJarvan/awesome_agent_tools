@@ -154,6 +154,28 @@ its own server-side search and ignores caller tools. Consequences:
      exposes an MCP server AND exports OpenAI tool-schemas** → covers A (MCP attach), A′ (client-side tools),
      and a revived B with one capability. (B′ = local open-source weights stays the no-subscription/GPU fallback.)
 
+**RESOLVED 2026-06-15 — Miro answered in detail (corrects the UPDATE above):** Models = `apodex-1-0-deepresearch-h`
+(multi-agent; **no mcp/client-tc** — tool-call protocols assume one pausable loop, a multi-agent orchestrator has
+no single caller-facing pause point + hardest external-tool routing), `apodex-1-0-deepresearch` (non-`-h` workflow),
+`-mini`. (Naming mismatch vs docs' `mirothinker-1-7-*` — confirm exact id.) **Key: the platform offers NO bare-model
+API** → the floated **Path A′ (subscription pure-model + client-side tools) does NOT exist via the API**; client-side
+tool-call is only via **self-hosted open weights (B′, GPU, no subscription)**. **`mcp_servers` confirmed = server-side
+remote MCP** (you host a public endpoint, request carries `mcp_servers:[{name,url,access_token,...}]`, Miro's server
+calls it; supports `tool`+`resource`; **no URL whitelist during beta**). The hosted non-`-h` workflow supports
+tool-call via `mcp_servers` **with a user whitelist**. **→ Path A (hosted non-`-h` workflow + `mcp_servers`) is the
+only subscription-using, officially-supported route; B′ is the only client-side/local-tools route.**
+   - **🔴 Item-2 HARD CONSTRAINT:** because the MCP must be **public** with **no Miro-side URL whitelist**, and it
+     uses the user's authorized cookies, the `Service/mcp/` façade MUST: (1) **never accept/return cookies** (pulled
+     in-memory from localhost cookie-manager, used only outbound, never echoed); (2) expose **only URL→markdown**,
+     no raw-cookie / arbitrary-request / proxy tool (capability minimization → a leaked token can't get the cookie or
+     hit arbitrary sites); (3) **strong per-request auth** (bearer/OAuth over HTTPS, rotatable) since no URL whitelist;
+     (4) sit behind Nginx+TLS (reuse the cookie-manager frp pattern) + optional **IP-allowlist Miro's egress** on our
+     side; (5) **domain-allowlist** zhihu.com/bilibili.com + per-token rate-limit + audit log. (B′ avoids all this —
+     tools stay local, zero public surface.) User-facing detail: `docs/sendbox/toUser/mirothinker-path-aprime-client-side-explainer.md`.
+   - **Open to confirm (UN-042):** exact model id (apodex vs mirothinker); both whitelists enabled for the account;
+     does `mcp_servers` tool actually fire (vs internal-search fallback); precise schema (transport http/SSE, auth);
+     Miro egress IPs (for our IP-allowlist); B′ GPU/no-subscription acceptable?
+
 ## How this doc is updated
 
 Append-most. Major changes (phase scope reshuffle, recipe upgrade, project rename) go through `RepoMem.merge` HITL review.
