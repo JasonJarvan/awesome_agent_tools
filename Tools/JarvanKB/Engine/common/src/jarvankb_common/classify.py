@@ -71,7 +71,10 @@ def _parse(raw: str) -> dict:
     text = raw.strip()
     fence = _FENCE_RE.search(text)
     if fence:
-        text = fence.group(1).strip()
+        try:
+            return json.loads(fence.group(1).strip())
+        except json.JSONDecodeError:
+            pass  # broken fence content -> fall through to a full-text scan
     try:
         return json.loads(text)
     except json.JSONDecodeError:
@@ -84,14 +87,16 @@ def _parse(raw: str) -> dict:
     raise ValueError(f"LLM classification did not return parseable JSON: {raw[:200]!r}")
 
 
-def classify(title: str, lead_text: str, existing_subfolders: list[str], client,
+def classify(title: str, text: str, subfolders: list[str], client,
              *, allow_new: bool = True) -> Classification:
     raw = client.complete([{"role": "user",
-                            "content": _build_prompt(existing_subfolders, title, lead_text, allow_new)}])
+                            "content": _build_prompt(subfolders, title, text, allow_new)}])
     data = _parse(raw)
+    if "category" not in data:
+        raise ValueError(f"LLM classification missing 'category': {raw[:200]!r}")
     chosen = _slugify(str(data["category"]))
     vague = bool(data.get("vague", False))
-    match = next((s for s in existing_subfolders if _slugify(s) == chosen), None)
+    match = next((s for s in subfolders if _slugify(s) == chosen), None)
     if match is not None:
         return Classification(folder=match, is_new=False, vague=vague)
     return Classification(folder=chosen, is_new=True, vague=vague)

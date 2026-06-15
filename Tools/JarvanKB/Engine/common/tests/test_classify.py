@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 
 from jarvankb_common.classify import classify, existing_subfolders, lead_text, Classification
@@ -70,3 +71,24 @@ def test_allow_new_false_changes_prompt_only():
     client = FakeClient('{"category": "tech"}')
     classify("t", "body", ["tech"], client, allow_new=False)
     assert "ONLY" in client.prompt or "only" in client.prompt   # instructed to pick from existing
+
+
+def test_classify_raises_on_unparseable_llm_output():
+    client = FakeClient("sorry, I cannot classify that.")
+    with pytest.raises(ValueError, match="parseable JSON"):
+        classify("t", "body", ["tech"], client)
+
+
+def test_classify_raises_on_missing_category():
+    client = FakeClient('{"vague": true}')
+    with pytest.raises(ValueError, match="category"):
+        classify("t", "body", ["tech"], client)
+
+
+def test_allow_new_true_vs_false_prompt_contrast():
+    c_true = FakeClient('{"category": "tech"}')
+    classify("t", "body", ["tech"], c_true, allow_new=True)
+    c_false = FakeClient('{"category": "tech"}')
+    classify("t", "body", ["tech"], c_false, allow_new=False)
+    assert "ONLY from the existing" in c_false.prompt and "ONLY from the existing" not in c_true.prompt
+    assert "propose a NEW" in c_true.prompt
