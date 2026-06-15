@@ -164,6 +164,21 @@ def test_paced_propagates_non_throttle_immediately(monkeypatch):
     assert calls["n"] == 1                # called exactly once, no backoff
 
 
+def test_paced_backoff_schedule_is_exponential(monkeypatch):
+    from bilibili import ratelimit
+    waits = []
+    monkeypatch.setattr(ratelimit, "_sleep", lambda s: waits.append(s))
+    monkeypatch.setattr(ratelimit, "_rand", lambda a, b: 0.0)   # zero jitter -> deterministic schedule
+    ratelimit._limiter._last = 0.0
+    ratelimit.configure(min_interval=0.0, jitter=0.0, max_retries=3, backoff_base=0.5, enabled=True)
+    def fn():
+        raise _http_status_error(429)            # always throttle (no Retry-After) -> pure backoff
+    import pytest
+    with pytest.raises(httpx.HTTPStatusError):
+        ratelimit.paced(fn)
+    assert waits == [0.5, 1.0, 2.0]              # backoff_base * 2**attempt for attempts 0,1,2
+
+
 def test_paced_gives_up_after_max_retries(monkeypatch):
     from bilibili import ratelimit
     monkeypatch.setattr(ratelimit, "_sleep", lambda s: None)

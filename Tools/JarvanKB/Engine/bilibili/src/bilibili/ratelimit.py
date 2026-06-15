@@ -93,7 +93,7 @@ def _retry_after_seconds(resp: httpx.Response) -> float | None:
         return None
 
 
-def _throttle_signal(exc: BaseException) -> tuple[bool, float | None]:
+def _throttle_signal(exc: Exception) -> tuple[bool, float | None]:
     """Classify an exception raised by a bilibili.com-facing call as throttle-or-not.
 
     Returns (is_throttle, retry_after_seconds_or_None). Throttle == HTTP 429 (honors Retry-After)
@@ -122,7 +122,7 @@ def paced(fn):
     (honoring Retry-After) and a retry; NON-throttle exceptions (412, -101, ...) propagate
     immediately, unchanged. Returns fn()'s value, or re-raises the last throttle after max_retries.
     """
-    last_exc: BaseException | None = None
+    last_exc: Exception | None = None
     for attempt in range(_cfg.max_retries + 1):
         if _cfg.enabled:
             _limiter.acquire(_cfg.min_interval, _cfg.jitter)
