@@ -71,11 +71,13 @@ class Watcher:
         subfolders: list[str] = []
         if any(getattr(c, "classify", False) for c in collections):
             try:
+                # config validation guarantees cfg.classify is set when a classify target exists
                 client = self._llm_factory(self._cfg.classify.llm_profile) if self._llm_factory else None
                 subfolders = existing_subfolders(self._cfg.output_dir)
             except Exception as e:  # noqa: BLE001 - missing creds etc.: skip classify targets, keep others
                 log.error("LLM client unavailable: %s — classify targets will be skipped this cycle", e)
                 client = None
+                subfolders = []
 
         for coll in collections:
             self._poll_collection(coll, cookies, client, subfolders)
@@ -83,8 +85,8 @@ class Watcher:
         try:
             broken = []
             for coll in collections:
-                for e in self._failures.circuit_broken_items(coll.id):
-                    broken.append({**e, "collection": coll.name})
+                for broken_item in self._failures.circuit_broken_items(coll.id):
+                    broken.append({**broken_item, "collection": coll.name})
             self._attention(self._cfg.output_dir, broken)
         except Exception as e:  # noqa: BLE001 - attention render must never abort a cycle
             log.error("attention render failed: %s", e)
@@ -133,6 +135,7 @@ class Watcher:
                     self._record_fail(coll.id, item, cooldown_seconds)
                     continue
                 if classify_on:
+                    # ledger is the dedup store for classify collections — deliberately NO seen-set update
                     folder = self._classify(doc, subfolders, client, self._cfg.classify)
                     path = self._save(self._cfg.output_dir, folder, doc.title, item.url, doc.content_markdown)
                     self._ledger.record(coll.id, item.key, folder, path, item.favorited_at, self._now())
