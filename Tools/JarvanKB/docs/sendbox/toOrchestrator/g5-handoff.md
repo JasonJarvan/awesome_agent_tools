@@ -53,7 +53,7 @@ all implers directly (flat: root → impler).
 | **UN-008** CodeTeam #1/#2 review | user-side; no orche action |
 | **UN-031** approve codegraph MCP server | user approves on next session; CLI works regardless (non-blocking) |
 | **UN-032** `__zse_ck` long-term freshness | deferred root decision (cookie re-sync works today; signer/headless breaks D1) |
-| **UN-042** MiroThinker Path A vs C | **awaiting MiroMind `mcp_servers` beta reply**; Item-2 MCP (UN-043) is the no-regret first move under both |
+| **UN-042** MiroThinker path | **Miro replied 2026-06-15**: will enable `mcp_servers` beta (Path A unblocked) + a **non-`-h` model supports client-side tool calls** → new **Path A′** (subscription + local tools, no beta) and a possible **revival of Path B** (self-host MiroFlow + non-`-h` API brain). **3 follow-up Qs sent to Miro** (model-vs-harness / does self-host+API fire client tools / billing) — see version-plan §MiroThinker UPDATE 2026-06-15. Item-2 (UN-043) stays no-regret: build it to expose **both** an MCP server AND OpenAI tool-schemas |
 | **UN-041** extract JarvanKB → standalone repo | ⛔ DEFERRED; activation = v1 done + UN-006 + explicit user go |
 | **grill-with-docs (UN-034)** | mid-replacement → community CONTEXT.md producer; **partially reverts CodeTeam #4-prop4** (the design-gate role) — GrillDocsImpler reconciles CLAUDE.md/longterm refs with the user |
 | **MCP façade (UN-043)** | placement locked = `Service/mcp/`; framed as repo-wide façade v1 (crawl tools first, grow incrementally, not a god-process); dispatch AntiCrawlMcpImpler when user greenlights |

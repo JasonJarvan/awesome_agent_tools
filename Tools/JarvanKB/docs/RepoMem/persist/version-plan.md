@@ -135,6 +135,25 @@ Full detail: `docs/sendbox/toMiroResearchImpler/miromind-repos-and-anticrawl.zh.
    - Path B (MiroFlow + hosted mirothinker as brain) is **eliminated** by the evidence. Decision = wait for
      Miro's reply, then branch; item-2 is the no-regret first move under both.
 
+**UPDATE 2026-06-15 — MiroMind replied (reopens the option space):** (a) they will **enable the `mcp_servers`
+beta** on the account (Path A unblocked); (b) **a non-`-h` model supports client-side tool calls** (honors
+OpenAI `tools` → emits `tool_calls` for our client to execute) — unlike the `-h`/deepresearch model that runs
+its own server-side search and ignores caller tools. Consequences:
+   - **New Path A′** = non-`-h` model + client-side tools: uses the subscription, no beta needed, our anti-crawl
+     tools run locally; cost = we drive the agent loop (no Miro deepresearch harness).
+   - **Path B may REVIVE**: the report's 方案 B death-sentence was specifically the deepresearch model ignoring
+     client-side tools. If the non-`-h` model honors them, self-hosted **MiroFlow + non-`-h` API as brain +
+     local anti-crawl MCP** becomes viable AND subscription-using — exactly the "self-host harness + official
+     API" combination. **Unconfirmed — pending the follow-up to Miro** (below).
+   - **Follow-up questions sent to Miro** (UN-042): ① does the API serve a *pure tool-calling model* or the
+     *full server-side deepresearch harness* — and which model id is the non-`-h` one? ② if we self-host
+     MiroFlow/MiroThinker and point its brain at the non-`-h` API, do `tools`/`tool_calls` work end-to-end so
+     our locally-attached anti-crawl MCP fires (= 方案 B revived)? ③ does API-as-brain-of-self-hosted-harness
+     bill against the subscription normally?
+   - **Item-2 design implication:** build the `Service/mcp/` crawl façade so the **same crawl logic both
+     exposes an MCP server AND exports OpenAI tool-schemas** → covers A (MCP attach), A′ (client-side tools),
+     and a revived B with one capability. (B′ = local open-source weights stays the no-subscription/GPU fallback.)
+
 ## How this doc is updated
 
 Append-most. Major changes (phase scope reshuffle, recipe upgrade, project rename) go through `RepoMem.merge` HITL review.
