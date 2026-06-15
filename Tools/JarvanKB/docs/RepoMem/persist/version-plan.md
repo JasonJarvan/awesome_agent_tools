@@ -164,6 +164,14 @@ remote MCP** (you host a public endpoint, request carries `mcp_servers:[{name,ur
 calls it; supports `tool`+`resource`; **no URL whitelist during beta**). The hosted non-`-h` workflow supports
 tool-call via `mcp_servers` **with a user whitelist**. **→ Path A (hosted non-`-h` workflow + `mcp_servers`) is the
 only subscription-using, officially-supported route; B′ is the only client-side/local-tools route.**
+
+**DECISION 2026-06-15 — user CHOSE Path A.** Non-A paths (B dead / B′ self-host weights / C third-party brain)
+summarized + archived as a fallback reference (use only if Path A breaks — Miro revokes beta / mcp tools don't
+fire / public exposure unacceptable): **`docs/sendbox/archive/mirothinker-fallback-paths.md`** (the single
+pointer). **MCP auth/security design for the impler:** `docs/superpowers/specs/2026-06-15-mcp-facade-auth-security-design.md`
+(binding contract — capability minimization, cookie-never-crosses-interface, strong per-request auth,
+Nginx+TLS+IP-allowlist, domain-allowlist+rate-limit+audit). AntiCrawlMcpImpler (UN-043) consumes that spec; not
+yet dispatched (the 6 Miro confirmations below are wanted early).
    - **🔴 Item-2 HARD CONSTRAINT:** because the MCP must be **public** with **no Miro-side URL whitelist**, and it
      uses the user's authorized cookies, the `Service/mcp/` façade MUST: (1) **never accept/return cookies** (pulled
      in-memory from localhost cookie-manager, used only outbound, never echoed); (2) expose **only URL→markdown**,
