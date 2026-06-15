@@ -34,3 +34,37 @@ def test_persists_across_reload(tmp_path):
 def test_unknown_key_not_skipped(tmp_path):
     fs = FailureStore(str(tmp_path), now_fn=lambda: 0.0)
     assert fs.should_skip("c1", "never-seen") is False
+
+
+def test_circuit_break_sets_permanent_skip_and_records_display_fields(tmp_path):
+    from zhihu_watcher.failure_store import FailureStore
+    clock = [1000.0]
+    fs = FailureStore(str(tmp_path), now_fn=lambda: clock[0])
+    for _ in range(3):
+        fs.record_failure("c1", "article:12", url="https://zhuanlan.zhihu.com/p/12",
+                          title="T12", excerpt="lead...", max_failures=3,
+                          circuit_break_threshold=3, cooldown_seconds=60)
+    assert fs.should_skip("c1", "article:12") is True   # circuit-broken -> always skip
+    clock[0] += 10_000                                   # even far past any cooldown
+    assert fs.should_skip("c1", "article:12") is True
+    broken = fs.circuit_broken_items("c1")
+    assert len(broken) == 1
+    assert broken[0]["key"] == "article:12"
+    assert broken[0]["url"] == "https://zhuanlan.zhihu.com/p/12"
+    assert broken[0]["title"] == "T12"
+    assert broken[0]["failures"] == 3
+
+
+def test_below_circuit_break_still_clears_on_success(tmp_path):
+    from zhihu_watcher.failure_store import FailureStore
+    fs = FailureStore(str(tmp_path), now_fn=lambda: 1000.0)
+    fs.record_failure("c1", "answer:11", max_failures=3, circuit_break_threshold=10, cooldown_seconds=60)
+    fs.clear("c1", "answer:11")
+    assert fs.should_skip("c1", "answer:11") is False
+    assert fs.circuit_broken_items("c1") == []
+
+
+def test_circuit_broken_items_empty_when_none(tmp_path):
+    from zhihu_watcher.failure_store import FailureStore
+    fs = FailureStore(str(tmp_path))
+    assert fs.circuit_broken_items("c1") == []
