@@ -160,6 +160,7 @@ class Watcher:
 
 
 def build_watcher(config: WatcherConfig) -> Watcher:
+    from jarvankb_common import LLMClient
     favorites = FavoritesClient()
     return Watcher(
         config=config,
@@ -169,4 +170,6 @@ def build_watcher(config: WatcherConfig) -> Watcher:
         watermark_store=WatermarkStore(config.state_dir),
         resolver=TargetResolver(favorites),
         failure_store=FailureStore(config.state_dir),
+        ledger_store=LedgerStore(config.state_dir),
+        llm_client_factory=lambda profile: LLMClient(profile=profile),
     )
