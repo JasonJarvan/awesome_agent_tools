@@ -20,6 +20,17 @@ A full answer parsed out of a Zhihu question page's server-rendered data, obtain
 extra request.
 _Avoid_: inline answer
 
+**Answer**:
+A Zhihu answer (回答) to a question. Its content API `/api/v4/answers/{id}` is unsigned, which is
+why the api-fallback can rescue a blocked Answer page but not an Article.
+_Avoid_: response, reply
+
+**Article**:
+A Zhihu column post (专栏, `zhuanlan.zhihu.com/p/...`). Its content API `/api/v4/articles/{id}`
+requires the `x-zse-96` signature, so a blocked Article page has no unsigned rescue path — a 403
+is terminal for it.
+_Avoid_: column, post, 专栏 (in English prose), blog
+
 **api-fallback**:
 The Zhihu Engine's rescue path when a content page's navigation GET is blocked: re-fetch via the
 unsigned answers API. Exists for answers only — articles (专栏) have no unsigned equivalent.
