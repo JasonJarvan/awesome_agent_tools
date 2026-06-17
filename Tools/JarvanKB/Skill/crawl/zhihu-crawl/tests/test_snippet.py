@@ -1,7 +1,8 @@
 """Token-saving classification input (2026-06-07): clean markdown noise + cap the lead snippet."""
 import types
 
-from zhihu_crawl.classify import _lead_text, classify
+from jarvankb_common.classify import lead_text as _lead_text
+from zhihu_crawl.classify import classify
 
 
 def test_lead_text_strips_markdown_noise():

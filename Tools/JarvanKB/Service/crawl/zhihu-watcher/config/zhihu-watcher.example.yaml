@@ -16,6 +16,14 @@ cookie_source:
 backfill_on_first_run: false        # default: first sight of a collection sets a "since now" baseline
 max_consecutive_failures: 3         # 403 backoff: cooldown after N consecutive fetch failures
 failure_cooldown_hours: 24
+circuit_break_threshold: 10         # permanent-skip + attention-list after N total failures
+
+# classify block — only consulted when a target sets classify: true (default: LLM never runs)
+classify:
+  llm_profile: mimo-v2.5-pro        # a profile from config/llm.yaml
+  tier1_chars: 200
+  tier2_chars: 1000
+  allow_new_folders: false          # unattended daemon: pick from EXISTING folders only
 
 targets:
   - type: collection                # explicit single collection (id or full URL)
@@ -25,3 +33,7 @@ targets:
     url_token: me                   # "me" (current cookie user) or a literal url_token
     skip_empty: true                # skip item_count==0 collections
     include_default: false          # skip 我的收藏 (waits for the classifier); true = dump it flat
+  - type: collection                # the default collection 我的收藏, auto-classified
+    id: "721323262"
+    name: "我的收藏"                # ignored when classify: true (items land in classified folders)
+    classify: true

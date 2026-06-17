@@ -264,3 +264,92 @@ def test_full_cycle_with_real_resolver_and_user_target(tmp_path):
     # default 我的收藏 (721) skipped; only 技术-AI生成 (865) polled + saved
     assert saved == ["https://www.zhihu.com/question/1/answer/a1"]
     assert (Path(cfg.output_dir) / "技术-AI生成" / "Q1.md").exists()
+
+
+from zhihu_watcher.config import ClassifyConfig
+from zhihu_watcher.ledger_store import LedgerStore
+
+
+class _ScriptedLLM:
+    def __init__(self, replies):
+        self.replies = list(replies)
+        self.calls = 0
+
+    def complete(self, messages, **kw):
+        self.calls += 1
+        return self.replies.pop(0) if self.replies else '{"category": "tech", "vague": false}'
+
+
+def _build_classify(cfg, items, fetch_fn, llm, *, cols):
+    store = WatermarkStore(cfg.state_dir)
+    fs = FailureStore(cfg.state_dir)
+    ledger = LedgerStore(cfg.state_dir)
+    w = Watcher(cfg, _FakeCookies(), _FakeFavorites(items), fetch_fn, store,
+                resolver=_FakeResolver(cols), failure_store=fs, ledger_store=ledger,
+                llm_client_factory=lambda profile: llm)
+    return w, store, fs, ledger
+
+
+def test_classify_cycle_saves_to_folder_and_ledgers(tmp_path):
+    (Path(tmp_path) / "out" / "机器学习").mkdir(parents=True)
+    (Path(tmp_path) / "out" / "历史").mkdir(parents=True)
+    items = [CollectionItem(key="answer:11", url="https://www.zhihu.com/question/1/answer/11",
+                            content_type="answer", title="ML", excerpt="lead")]
+    cfg = _config(tmp_path, classify=ClassifyConfig(tier1_chars=200, tier2_chars=1000, allow_new_folders=False),
+                  targets=[CollectionConfig(id="d", name="我的收藏", classify=True)])
+    llm = _ScriptedLLM(['{"category": "机器学习", "vague": false}'])
+    w, _, _, ledger = _build_classify(
+        cfg, items, lambda u, c: FetchedDoc(title="ML title", content_markdown="深度学习"),
+        llm, cols=[CollectionConfig(id="d", name="我的收藏", classify=True)])
+
+    w.run_cycle()
+    assert (Path(cfg.output_dir) / "机器学习" / "ML title.md").exists()
+    assert ledger.has("d", "answer:11") is True
+
+    # second cycle: ledger dedup -> no re-fetch, no re-classify
+    calls_before = llm.calls
+    w.run_cycle()
+    assert llm.calls == calls_before
+
+
+def test_no_classify_target_never_builds_llm(tmp_path):
+    items = [CollectionItem(key="answer:11", url="https://www.zhihu.com/question/1/answer/11",
+                            content_type="answer", title="X")]
+    cfg = _config(tmp_path)            # default targets: CollectionConfig(id=c1) classify=False
+    built = {"n": 0}
+
+    def factory(profile):
+        built["n"] += 1
+        raise AssertionError("LLM must not be constructed without a classify target")
+
+    store = WatermarkStore(cfg.state_dir)
+    fs = FailureStore(cfg.state_dir)
+    w = Watcher(cfg, _FakeCookies(), _FakeFavorites(items),
+                lambda u, c: FetchedDoc(title="T", content_markdown="b"), store,
+                resolver=_FakeResolver([CollectionConfig("c1", "Box1")]),
+                failure_store=fs, ledger_store=LedgerStore(cfg.state_dir),
+                llm_client_factory=factory)
+    w.run_cycle()
+    assert built["n"] == 0
+    assert (Path(cfg.output_dir) / "Box1" / "T.md").exists()
+
+
+def test_classify_403_retries_then_circuit_breaks_and_writes_attention(tmp_path):
+    (Path(tmp_path) / "out").mkdir(parents=True)
+    items = [CollectionItem(key="article:12", url="https://zhuanlan.zhihu.com/p/12",
+                            content_type="article", title="专栏", excerpt="开头")]
+    cfg = _config(tmp_path, circuit_break_threshold=3, max_consecutive_failures=2,
+                  failure_cooldown_hours=0,
+                  classify=ClassifyConfig(allow_new_folders=False),
+                  targets=[CollectionConfig(id="d", name="我的收藏", classify=True)])
+    llm = _ScriptedLLM([])
+    w, _, fs, ledger = _build_classify(
+        cfg, items, lambda u, c: None,   # fetch always fails (403 -> None)
+        llm, cols=[CollectionConfig(id="d", name="我的收藏", classify=True)])
+
+    for _ in range(3):
+        w.run_cycle()
+    assert ledger.has("d", "article:12") is False        # failures never ledgered
+    assert fs.should_skip("d", "article:12") is True      # circuit-broken
+    att = Path(cfg.output_dir) / "_zhihu-watcher-attention.md"
+    assert att.exists() and "专栏" in att.read_text(encoding="utf-8")
