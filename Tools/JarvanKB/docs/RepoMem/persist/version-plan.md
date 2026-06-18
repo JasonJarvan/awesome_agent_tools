@@ -45,6 +45,31 @@ Naming convention: `g{N}-handoff.md` placed in `docs/sendbox/toOrchestrator/` (s
   - Impler handoff: `docs/sendbox/toSP0Impler/handoff.md`
 - **Live SP status board** (kanban-like): `docs/Dashboard/index.md` §SP Status Board — single H2A surface for sub-project status, owner agent, phase enter gates
 
+## Capability Milestones (v1 → v5+) — user-facing product axis
+
+> Added 2026-06-18 (user-defined). This is the **user-facing capability axis**, distinct from the SP-N
+> **implementation-tracking axis** (`docs/Dashboard/index.md §SP Status Board`). One milestone may span multiple
+> SPs; one SP may serve multiple milestones. H2A projection (中文) = `Dashboard §里程碑`. These reframe the SP plan
+> by delivered capability; they remove nothing. Net-new SPs below are **draft mapping** — the concrete design is
+> brainstormed when the milestone is approached (per the milestone-gating rule), not invented now.
+
+| Milestone | Capability (user words) | Draft realizing SP/UN | Status |
+|---|---|---|---|
+| **v1** | Talk to me via **Hermes**; the 知乎/B站 content I drop in chat + my own thoughts in that chat → summarize → save into Obsidian | SP-6 CrawlMdSaver (in flight, the URL+notes→merged-md core) + **net-new "Hermes A2A conversational-ingest" SP** + likely MCP façade (UN-043 — Hermes is another runtime → consume crawl via MCP per the consumption rule). Candidate owner: **ReachOrche** (charter pending) | not started (core deps in flight) |
+| **v1.1** | Auto-watch + crawl my 知乎/B站 favorites → save to Obsidian vault | SP-5a + SP-5b watchers (done) + SP-5a v1.2 default-collection auto-classify (UN-036, merged 2026-06-18) + **WatcherDeployImpler (UN-047)** deploy | near-done (gated on user vault root) |
+| **v1.2** | Watch + process 知乎/B站 links inside Obsidian **Thino** notes; summarize+save same as v1 | **SP-7 ThinoIngester** (queued; unlocks when SP-6 lands) | queued |
+| **v2** | Auto-watch + crawl content from people I **follow** on 知乎/B站; filter to keep valuable info; save | net-new (extends the SP-5x watcher family + a filter stage). **Open (待 brainstorm):** which people (e.g. classify-crawl by B站 following groups); filter design (hard metrics + LLM) | not started |
+| **v3** | **Deep research** capability | existing `Skill/research/MiroResearch` — swap internals to **apodex API**, depends on the **local MCP** (UN-043). Ties to MiroThinker Path A (UN-042) | not started (MCP façade is the gate) |
+| **v4** | **Memory system** | net-new. Ties to FutureFeaturesImpler (UN-040) repo-index / Mem0 / MemOS research draft | not started |
+| **v5+** | **Research-agent long-horizon tasks** | net-new. Ties to FutureFeaturesImpler (UN-040) auto-researcher / goal-driven agent draft | not started |
+
+**Milestone-gating rule (orchestrator standing rule — user 2026-06-18).** On **every task completion**, the
+orchestrator checks whether a capability milestone is about to unlock and updates `Dashboard §里程碑`. When a
+milestone **unlocks or nears completion**, the orchestrator **hands off an impler to take the user through the
+"last mile"** to the delivered capability (the deploy/wire-up/UX/ops glue that turns "the SPs are technically
+done" into "the user can use it end-to-end") — distinct from any single SP's technical done. Applies to root and
+to each SubOrche for its own vertical's milestone(s). Codified in `CLAUDE.md §3` + `longterm.md §Milestone Gating (v2)`.
+
 ## v1.0 OSS release plan
 
 When all v1 sub-projects (SP-0 through SP-7) verified end-to-end:
@@ -89,6 +114,12 @@ in the new root.
   cache / one endpoint / language-agnostic access, with per-consumer provider selection. **Non-breaking:**
   the `LLMClient` interface is frozen, so the swap (litellm-in-process → service call) leaves consumer call
   sites unchanged. (User decision 2026-06-05 "不扩": keep v1 a library; defer the service to v2.)
+- **Model selection + auto-router (roadmap — user 2026-06-18):** model choice must be deliberate per task; plan
+  a **model auto-router** that picks a lightweight/cheap model for simple tasks (e.g. vague_path classification,
+  short summaries) and a stronger model for hard reasoning. Keep the frozen `LLMClient` interface so call sites
+  are unchanged — the router is a policy layer behind it (natural home = LLMService v2 central routing/metering,
+  or a `LLMClient` selection policy if done in-library first). Decide scope when v2 is taken up; capture the
+  concrete routing policy in `architecture/` when implemented.
 
 ## MiroThinker research integration + anti-crawl MCP (future items — research-backed, live-tested 2026-06-12/13)
 

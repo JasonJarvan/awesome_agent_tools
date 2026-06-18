@@ -37,6 +37,8 @@
 
 Sendbox letters & dashboard rows are **side-effects** of the steps above, not standalone steps.
 
+**Milestone gate (orchestrator standing rule — user 2026-06-18).** On **every task completion**, check whether a user-facing **capability milestone** (v1→v5+; `version-plan.md §Capability Milestones` / `Dashboard §里程碑`) is about to unlock; update `Dashboard §里程碑`. When a milestone **unlocks or nears completion**, hand off an impler (normal handoff flow) to take the user through the **"last mile"** to the *delivered capability* — the integration/UX/ops/deploy glue beyond any single SP's technical done. Applies to root and to each SubOrche for its own vertical's milestone(s). Detail: `longterm.md §Milestone Gating (v2)`.
+
 ## 4. Hard Invariants
 
 - **Single task identifier.** `<task> = <slug>` — one string across HarnessStack and RepoMem docs.
@@ -64,6 +66,7 @@ Sendbox letters & dashboard rows are **side-effects** of the steps above, not st
 | Task-level recipe patch (module scope) | `<module>/docs/HarnessStack/temporary-<task>.md` |
 | Repo-local cc-dashboard hook config | `docs/HarnessStack/hooks/cc-dashboard.md` |
 | Know what the user owes right now | `docs/Dashboard/index.md` |
+| Capability milestone roadmap (v1→v5+) + gating rule | `docs/RepoMem/persist/version-plan.md §Capability Milestones` + `docs/Dashboard/index.md §里程碑` (detail `longterm.md §Milestone Gating (v2)`) |
 | RepoMem layout overview | `docs/RepoMem/README.md` |
 | Global long-term memory (loaded by `RepoMem.read`) | `docs/RepoMem/persist/{config,version-plan}.md` + `architecture/` + `memory/` |
 | Per-module memory (loaded by `RepoMem.read` in module cwd) | `<module>/docs/RepoMem/{architecture,decisions}.md` + `temp/<slug>/` |

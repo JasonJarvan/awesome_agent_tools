@@ -54,6 +54,21 @@ SP-0 ✓ ──┬─ SP-1 ✓ ──┬─ SP-3(知乎Skill)   ⚫ done ← SP-
 
 详细路径见 `docs/superpowers/specs/2026-05-31-SP-0-jarvankb-skeleton-design.md` §7。
 
+## 里程碑（能力轴 v1→v5+）
+
+> 用户视角的能力里程碑（2026-06-18 用户定义），区别于 §SP Status Board 的 SP-N 实现轴。一个里程碑可跨多个 SP；耐久版（A2A）在 `version-plan.md §Capability Milestones`。
+> **门规则（orche 常驻）**：每个任务完成都查"是否将解锁某里程碑"；里程碑解锁/临近达成时，orche **handoff 一个 impler 带你走最后一公里**（到能力交付，不止 SP 技术 done）。详 `CLAUDE.md §3` / `longterm.md §Milestone Gating (v2)`。
+
+| 里程碑 | 能力 | 承载 SP/UN | 状态 |
+|---|---|---|---|
+| **v1** | Hermes 对话：对话里发的知乎/B站内容 + 我的思考 → 总结 → 存 Obsidian | SP-6（在飞）+ 净新"Hermes 对话式 ingest"SP + 可能 MCP 门面（UN-043）；候选 owner=ReachOrche（charter 待定） | 未启动（核心依赖在飞） |
+| **v1.1** | 自动监听爬取我的知乎/B站收藏夹 → Obsidian | SP-5a+SP-5b watcher（done）+ SP-5a v1.2 默认夹自动分类（UN-036，2026-06-18 合并）+ WatcherDeploy（UN-047） | 近完成（候你给 vault 根） |
+| **v1.2** | 监听处理 Obsidian Thino 笔记里的知乎/B站链接，同 v1 总结保存 | SP-7 ThinoIngester（候 SP-6 落地解锁） | queued |
+| **v2** | 监听爬取我关注的人的内容 + 过滤保留有价值信息 → 存 | 净新（扩 watcher 家族 + 过滤层）；**待 brainstorm**：哪些人（如按 B站关注分组）/ 过滤=硬指标+LLM | 未启动 |
+| **v3** | deep research 能力 | `Skill/research/MiroResearch` 换 apodex API + 依赖本机 MCP（UN-043）；接 MiroThinker Path A（UN-042） | 未启动（MCP 门面是门） |
+| **v4** | 记忆系统 | 净新；接 FutureFeatures（UN-040） | 未启动 |
+| **v5+** | research agent 长程任务 | 净新；接 FutureFeatures（UN-040） | 未启动 |
+
 ## Active
 
 | ID | Type | Action | Where (detail) | Blocker for | Since | Status |

@@ -150,6 +150,37 @@ Instantiated from CodeTeam #4 (2026-06-10), translated from the OpenSpec-based o
 
 ---
 
+## Milestone Gating (v2)
+
+Instantiated 2026-06-18 (user directive). Adds a **capability-milestone axis** on top of the SP-N implementation
+axis, plus a standing orchestrator rule. **Additive amendment — NOT a Full Rewrite** (no method removed; pipeline
+ordering, merge gate, verification topology unchanged — this only adds an orchestrator check at task completion).
+
+**Two axes (orthogonal):**
+- **SP-N — implementation axis.** The existing sub-project tracking in `Dashboard §SP Status Board`. Unchanged.
+- **vN — user-facing capability milestones.** `version-plan.md §Capability Milestones` (canonical, A2A) +
+  `Dashboard §里程碑` (H2A 中文 projection). One milestone may span multiple SPs; one SP may serve multiple
+  milestones. The current ladder: v1 (Hermes conversational ingest) → v1.1 (favorites watchers) → v1.2 (Thino
+  link ingest) → v2 (followed-people crawl+filter) → v3 (deep research) → v4 (memory system) → v5+ (research-agent
+  long-horizon).
+
+**The standing rule:**
+1. **Milestone-unlock check at every task completion.** Whenever a task closes (impler done / SP merged / a
+   decision lands), the orchestrator re-evaluates: did this complete, or bring within reach, any vN milestone?
+   Update the status in `Dashboard §里程碑`.
+2. **Last-mile handoff.** When a milestone **unlocks or nears completion**, the orchestrator hands off an impler
+   (via the normal §Pipeline-v2 / §Local-sendbox handoff flow — handoff letter + Dashboard row + user-booted
+   session) whose charter is to take the user through the **last mile** to the *delivered capability*: the
+   integration / UX / ops / deploy glue that turns "the SPs are technically done" into "the user can use the
+   capability end-to-end." This is a deliverable distinct from any single SP's technical completion.
+3. **Scope.** Root applies this across all milestones; a SubOrche applies it to its own vertical's milestone(s).
+
+**Why a separate rule (not just SP status):** an SP merge is a *technical* done; a milestone is a *user
+capability*. The gap between them — deploy, wire-up, conversational UX, vault placement, the "make it real for the
+user" mile — is exactly what the last-mile handoff owns, and it is easy to drop if only SP-done is tracked.
+
+---
+
 ## Hard Invariants (v2)
 
 (See `CLAUDE.md` §4 for the compressed version. Both must stay in sync.)
