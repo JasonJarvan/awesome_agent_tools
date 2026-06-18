@@ -28,6 +28,17 @@ Distinct from recipe version: same recipe can span multiple orchestrator session
 | g3 | Claude Opus 4.8 (1M context) | 2026-05-31 → 2026-06-07 | Wrote `g4-handoff.md` after fanning out 2 SubOrche verticals (ZhihuCrawl + BilibiliCrawl); SP-0/1/2/4a done, SP-3/5a wip; landed UN-015 merge-ownership + RepoMem.merge promotion standard + cookie-PULL decision; prune-via-inheritance |
 | g4 | Claude Opus 4.8 (1M context) | 2026-06-07 → 2026-06-14 | Wrote `g5-handoff.md` after both crawl verticals converged (SubOrche era ended → flat root→impler); SP-0…SP-5b done, SP-6 in flight; landed no-push-lift + MCP-façade route (`Service/mcp/`) + Codex cross-runtime onboarding (cc-switch) + MiroThinker findings + CodeTeam #3/#4 (codegraph + Lane Tiering) + 48xxx port convention; prune-via-inheritance |
 | g5 | TBD by user spawn (see Dashboard g5 row) | 2026-06-14 → | — (active); inherits 6 live implers (SP6/ZhihuClassify/GrillDocs/FutureFeatures/BiliRateLimit/WatcherDeploy) + 1 prepared (AntiCrawlMcp/UN-043). Near-term: SP-6 done → SP-7; then v2 arc (MCP façade → auto-researcher → repo index) + v1.0 OSS split |
+| **ReachOrche g1** (SubOrche under root g5) | Claude Code session `7b0495f9-…` | 2026-06-18 → | — (active); user-established reach/content-supply-layer SubOrche. Owns: crawl engines/skills/watchers (zhihu/bili + future platforms), SP-8 web-search router (anysearch-B blueprint), anti-crawl/auth, **UN-043 MCP façade dispatch** (transferred from root, user-ratified). Has its own inheritance chain `toReachOrche/g{N}-handoff.md`. Onboarded + scope-confirmed via `from-reachorche-{boundary-ratified,ack}.md` (burned after this reflection) |
+
+**Reach-layer boundary (user-ratified 2026-06-18).** Two-orchestrator structure: **root g5** retains governance +
+ingest/cognition verticals (v1 Hermes ingest, MiroThinker UN-042 = Path A, auto-researcher UN-040) + the
+non-reach implers (SP6/GrillDocs/FutureFeatures). **ReachOrche g1** owns the content-supply layer (above) + UN-043
+dispatch. **Deconfliction (non-disruptive):** in-flight reach-domain implers (UN-036 zhihu-classify / UN-046
+bili-engine-ratelimit / UN-047 watcher-deploy) finish under root and converge; ReachOrche assumes the **domain**
+forward. **Seam:** consumers (v1 Hermes, MiroThinker) reach the supply via the UN-043 MCP façade — ReachOrche owns
+the supply contract (tool schema + compliance), consumers own integration. Milestone gate: ReachOrche holds
+reach-capability milestones (new-platform coverage, SP-8 live, MCP-façade live); root holds the v1–v5 product
+milestones.
 
 Naming convention: `g{N}-handoff.md` placed in `docs/sendbox/toOrchestrator/` (same box as inbound letters; new orche replaces predecessor, no parallel box). Letter lifecycle: `burn` after inheritor logs first orche-attributable commit (decision letter / Dashboard archive / new SP brainstorming kickoff).
 
