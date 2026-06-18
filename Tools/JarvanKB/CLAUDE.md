@@ -25,7 +25,7 @@
 ## 3. Per-Task Pipeline (compressed — authoritative in `longterm.md` §Pipeline v2)
 
 1. `RepoMem.read` — load global persist + per-module RepoMem (two layers); prefer codegraph (`query`/`callers`/`impact`) over ad-hoc grep for in-repo symbol/caller/impact lookups (map vs why — §2 code-map row)
-2. `Superpowers.brainstorming` — clarify vague intent *(auto-judge skip on `clear` / trivial fix; subagent → `handoff.md` + Type-B dashboard row; full-lane: MAY grill the draft spec via project skill `grill-with-docs` before step 4 — auto-judge)*
+2. `Superpowers.brainstorming` — clarify vague intent *(auto-judge skip on `clear` / trivial fix; subagent → `handoff.md` + Type-B dashboard row; full-lane: MAY grill the draft spec via project skill `grill-design` before step 4 — auto-judge)*
 3. `RepoMem.capture` — open task-level temporary docs in the relevant module's `docs/RepoMem/temp/<slug>/`
 4. `Superpowers.writing-plans` — produce plan, land at `<root>/docs/superpowers/plans/` or `<module>/docs/superpowers/plans/`
 5. `using-git-worktrees` + `executing-plans` + **TDD** + `RepoMem.capture` (continuous)
@@ -60,7 +60,8 @@ Sendbox letters & dashboard rows are **side-effects** of the steps above, not st
 | Full HarnessStack contract | `docs/HarnessStack/longterm.md` |
 | Lane Tiering full rule (selection, doc-set mapping, invariants) | `docs/HarnessStack/longterm.md` §Lane Tiering (v2) |
 | code-map / codegraph ops (install, MCP, worktree fallback) | `docs/HarnessStack/longterm.md` §Harness Enhancement Layer (v2) |
-| Project-local skills (`grill-with-docs`) | `.claude/skills/<name>/SKILL.md` |
+| Project-local skills (`grill-design` design-gate; `grill-with-docs` community glossary-grill — ADR-worthy decisions go to RepoMem, not `docs/adr/`) | `.claude/skills/<name>/SKILL.md` |
+| Project glossary (ubiquitous language; complement to RepoMem) | `CONTEXT-MAP.md` + `{Engine,Service,Skill}/CONTEXT.md` |
 | Day-One Init / per-task / long-term usage manual | `docs/HarnessStack/_toUser/README.md` |
 | Task-level recipe patch (global scope) | `docs/HarnessStack/temporary-<task>.md` |
 | Task-level recipe patch (module scope) | `<module>/docs/HarnessStack/temporary-<task>.md` |

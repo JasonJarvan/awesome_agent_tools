@@ -42,7 +42,7 @@ The 8-step per-task pipeline (compressed view also in `CLAUDE.md` §3):
    - trivial fix (typo, single-line bugfix, dep bump)
    - pure refactor with no behavior change
    - spike / <3h exploration with throwaway code
-   When spawning subagent for brainstorming, write `handoff.md` letter to `<root>/docs/sendbox/to<Role>/` and open a Type-B dashboard row. On a **full-lane** task, after a draft design/spec exists and before step 4, the agent MAY run project skill `grill-with-docs` (auto-judge: grill when a non-trivial design exists, else skip with a one-line note in the plan). See §Lane Tiering (v2).
+   When spawning subagent for brainstorming, write `handoff.md` letter to `<root>/docs/sendbox/to<Role>/` and open a Type-B dashboard row. On a **full-lane** task, after a draft design/spec exists and before step 4, the agent MAY run project skill `grill-design` (auto-judge: grill when a non-trivial design exists, else skip with a one-line note in the plan; renamed from `grill-with-docs` 2026-06-11 — that name now belongs to the community CONTEXT.md-glossary skill, see §Lane Tiering (v2) note). See §Lane Tiering (v2).
 
 3. **`RepoMem.capture`** — Open task-level temp docs in the relevant module: `<module>/docs/RepoMem/temp/<slug>/{requirements,architecture,decisions}.md`. Cross-module task: open at `<root>/docs/RepoMem/temp/<slug>/` instead.
 
@@ -135,7 +135,9 @@ Instantiated from CodeTeam #4 (2026-06-10), translated from the OpenSpec-based o
 | `docs/superpowers/specs/` design doc | optional-by-default; omission noted in one line in the plan | expected; collapsible — MAY be just its `### Dn` decision list when the decision count is small |
 | `RepoMem/temp/<slug>/` | **skipped entirely** | per RepoMem capture rules |
 | `temporary-<task>.md` | unchanged from v2: optional recipe patch on BOTH lanes (required on neither) | same |
-| `grill-with-docs` design gate (`.claude/skills/grill-with-docs/`) | ineligible (no design tree) | MAY run (auto-judge); window: draft spec → before writing-plans |
+| `grill-design` design gate (`.claude/skills/grill-design/`) | ineligible (no design tree) | MAY run (auto-judge); window: draft spec → before writing-plans |
+
+> **Skill naming note (2026-06-11, task `grill-with-docs-restore`):** the design gate above was authored 2026-06-10 under the name `grill-with-docs` (CodeTeam #4 prop 4 adaptation) and RENAMED to `grill-design` — semantics unchanged, no deactivation. The name `grill-with-docs` is now the **community original** (Matt Pocock, `mattpocock/skills@e3b90b5`, installed verbatim at `.claude/skills/grill-with-docs/`): an interactive grilling session that maintains the project glossary (`CONTEXT-MAP.md` + per-module-group `CONTEXT.md` — glossary only, complement to RepoMem, no implementation details). JarvanKB-local write-sink override when running it: decision-worthy outcomes passing its 3-condition ADR test go to RepoMem (`temp/<slug>/decisions.md` → HITL promote), NOT `docs/adr/` — RepoMem remains the single durable decision memory (CLAUDE.md §4). Decisions D1–D3: `docs/superpowers/plans/2026-06-11-grill-with-docs-restore.md`.
 
 **Fast-lane promote-candidate lesson:** if a fast-lane task still surfaces a genuinely durable lesson, it goes through step-8 HITL merge directly from the session (no temp staging) — the merge reviewer is the existing non-duplication checkpoint.
 
