@@ -125,7 +125,7 @@ in the new root.
   cache / one endpoint / language-agnostic access, with per-consumer provider selection. **Non-breaking:**
   the `LLMClient` interface is frozen, so the swap (litellm-in-process → service call) leaves consumer call
   sites unchanged. (User decision 2026-06-05 "不扩": keep v1 a library; defer the service to v2.)
-- **Tiered model router (design aligning with user 2026-06-18; deferred impl = Dashboard UN-050).** Replace
+- **Tiered model router (design AGREED — user sign-off 2026-06-18; deferred impl = Dashboard UN-050).** Replace
   per-task ad-hoc model choice with a **tier** abstraction so cost scales with task difficulty (cheap model for
   simple tasks like vague-path classification, strong model for hard tasks like long-transcript summarization):
   - **Three tiers** `heavy | medium | light`, each → `{provider, model}`. Today: heavy = `mimo-v2.5-pro`,
