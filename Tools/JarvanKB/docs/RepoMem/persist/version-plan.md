@@ -125,12 +125,28 @@ in the new root.
   cache / one endpoint / language-agnostic access, with per-consumer provider selection. **Non-breaking:**
   the `LLMClient` interface is frozen, so the swap (litellm-in-process → service call) leaves consumer call
   sites unchanged. (User decision 2026-06-05 "不扩": keep v1 a library; defer the service to v2.)
-- **Model selection + auto-router (roadmap — user 2026-06-18):** model choice must be deliberate per task; plan
-  a **model auto-router** that picks a lightweight/cheap model for simple tasks (e.g. vague_path classification,
-  short summaries) and a stronger model for hard reasoning. Keep the frozen `LLMClient` interface so call sites
-  are unchanged — the router is a policy layer behind it (natural home = LLMService v2 central routing/metering,
-  or a `LLMClient` selection policy if done in-library first). Decide scope when v2 is taken up; capture the
-  concrete routing policy in `architecture/` when implemented.
+- **Tiered model router (design aligning with user 2026-06-18; deferred impl = Dashboard UN-050).** Replace
+  per-task ad-hoc model choice with a **tier** abstraction so cost scales with task difficulty (cheap model for
+  simple tasks like vague-path classification, strong model for hard tasks like long-transcript summarization):
+  - **Three tiers** `heavy | medium | light`, each → `{provider, model}`. Today: heavy = `mimo-v2.5-pro`,
+    medium = light = `mimo-v2.5` (medium/light alias the same model until distinct mid/light models exist).
+  - **`customer` = a service/skill** (zhihu-skill, bili-skill, zhihu-watcher, bili-watcher, crawl-md-saver, …).
+    Binding is **customer-first**: each customer declares its default tier (one line) — NOT tier→customer-lists
+    (which inverts the runtime lookup and forbids a customer spanning tiers). Unlisted customer → a `default` tier.
+  - **Forward-compat — intra-customer per-task routing (deferred):** a customer value may be either a tier string
+    (simple) OR `{default: <tier>, tasks: {<task>: <tier>}}`, so sub-tasks inside one customer pick different
+    tiers. The `LLMClient` call gains an optional `tier=`/`task=` override; the no-arg call resolves the customer
+    default, so the **frozen `LLMClient` interface stays non-breaking** (router = a policy layer behind it).
+  - **Schema sketch:** `tiers:` (tier→provider+model — the only place model ids live) + `providers:` (endpoint +
+    `api_key_env`, today's profiles minus the model) + `customers:` (customer→tier). Supersedes the current
+    `profiles`/`active` block; `active` fallthrough becomes a per-tier or global fallback list.
+  - **Professional-router research done** (subagent, 2026-06-18; full report
+    `persist/memory/llm-router-research-2026-06-18.md`): **recommendation = roll a thin custom tier-map over
+    litellm now** (the tier-map is a config artifact, not a routing engine), keep litellm `Router`/proxy as the
+    LB+fallback engine and the v2 `LLMService` target, and **defer dedicated routers (RouteLLM binary /
+    semantic-router) to the later intra-customer learned/semantic phase** (`tier="auto"`), plugged behind the same
+    frozen seam. Hosted routers (NotDiamond/Martian/OpenRouter-as-router) rejected (external hop / vendor lock).
+    **Activation** = v2 LLMService work or explicit user go; capture the final policy in `architecture/` when implemented.
 
 ## MiroThinker research integration + anti-crawl MCP (future items — research-backed, live-tested 2026-06-12/13)
 
