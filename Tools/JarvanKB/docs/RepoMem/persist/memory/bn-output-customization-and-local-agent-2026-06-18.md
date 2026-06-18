@@ -1,7 +1,7 @@
 ---
 language: en
 audience: A2A
-status: research finding (backs deferred reach task Dashboard UN-051; awaiting user confirm before toUser report)
+status: research finding (backs UN-051); user decisions recorded 2026-06-18 (see Decision below)
 created: 2026-06-18
 ---
 
@@ -9,8 +9,15 @@ created: 2026-06-18
 
 > Subagent finding (2026-06-18), verified against the live `jarvankb-bilinote` container (stock
 > `ghcr.io/jefferyhcool/bilinote:latest`) + upstream `github.com/JefferyHcool/BiliNote` + our
-> `Engine/bilibili`. Backs **Dashboard UN-051** (deferred, reach domain). User-facing report (`toUser/`) to be
-> written after user confirmation.
+> `Engine/bilibili`. Backs **Dashboard UN-051** (deferred, reach domain). User-facing report:
+> `toUser/2026-06-18-bn-summary-findings-and-decisions.md`.
+
+## Decision (user 2026-06-18)
+- **v1.1 = ship bare base-prompt notes as-is** (option A=a); the `style` no-op fix is deferred, not done at deploy.
+- **Output-customization surface (fix `style` + `extras` + post-processing) = CONFIRMED but DEFERRED** → handed to
+  **ReachOrche** (`toReachOrche/from-orchestrator-bn-output-customization-task.md`), Dashboard UN-051.
+- **Local-agent backing (claude -p / hermes shim) = DROPPED** (metered since 2026-06-15 + only worth it for
+  tool/KB deep-note). Preserved below only as a possible future "deep note" mode; not to be built unless revived.
 
 ## Ground truth
 - **One model hook for all providers.** `gpt/gpt_factory.py` routes every provider (incl. our `custom`
