@@ -84,3 +84,27 @@ md = transcribe("BV1xx", credential=cred).to_markdown()
 需一个可达的自托管 BiliNote 实例（`TRANSCRIBER_TYPE=bcut`）。部署见 `deploy/bilinote/`（起容器是用户
 操作）。引擎配置 `config/bilibili-engine.yaml`（从 `config/bilibili-engine.example.yaml` 复制，填
 `provider_id`）。
+
+## 8. 内置限流与重试（v1.x，非破坏性）
+
+引擎对**自身面向 bilibili.com 的出站调用**（`get_info` 元数据 / `get_subtitle` 字幕轨 / 字幕正文 CDN
+下载）内置 **主动限流（请求间最小间隔 + 抖动，进程内共享）** 与 **被动重试**：对 **HTTP 429** 及 bilibili
+业务码 **`-509`/`-799`**（「请求过于频繁」类）按指数退避重试，若响应含 `Retry-After` 则遵从。目的：批量
+消费者（SP-5b Watcher）不再因突发触发 B站风控，瞬时节流自动恢复；单次 `transcribe()` 几乎无感（新进程
+首个调用不等待，字幕命中路径至多多等 ~2×min_interval，被 BN 总结耗时淹没）。
+
+**不限流的:** `bilinote_client.py` 的 BN 本地调用（`127.0.0.1`，非 bilibili 调用）；BN 内部 yt-dlp/playurl
+下载位于引擎请求路径之下，归 BN/ops 侧。**`412` 不视作节流**（匿名 playurl 鉴权信号，BN-412，引擎照旧穿透
+降级到 ASR）；`-101`（未登录）同理穿透 → `CredentialError` 路径不变。
+
+默认值保守，可经模块级 `configure()` 调整或关闭，**不改变 `transcribe()` 签名与 `BilibiliResult`/冻结契约**：
+
+```python
+from bilibili import configure
+configure(min_interval=0.3, jitter=0.2, max_retries=3, backoff_base=0.5,
+          throttle_codes=[-509, -799], retry_http_statuses=[429], enabled=True)
+configure(enabled=False)   # 完全关闭限流+重试
+```
+
+> 机制镜像知乎引擎（SP-2 v1.2 `Engine/zhihu/docs/interface.md §11`），但因 bilibili 调用「抛异常」而非
+> 「返回 Response」，收口形状是包装 callable 的 `ratelimit.paced(fn)`。

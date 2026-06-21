@@ -11,6 +11,7 @@ from typing import Optional
 
 import httpx
 
+from . import ratelimit
 from .models import BilibiliCredential, Transcript, TranscriptSegment
 
 logger = logging.getLogger(__name__)
@@ -77,16 +78,20 @@ def _get_tracks_raw(bvid: str, cid: int, cred: Optional[BilibiliCredential]) -> 
         data = await v.get_subtitle(cid)
         return (data or {}).get("subtitles", []) or []
 
-    return asyncio.run(_run())
+    return ratelimit.paced(lambda: asyncio.run(_run()))
 
 
 def _get_body_raw(subtitle_url: str, cred: Optional[BilibiliCredential]) -> list[dict]:
     headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.bilibili.com"}
     if cred and cred.sessdata:
         headers["Cookie"] = cred.to_cookie_string()
-    resp = httpx.get(normalize_url(subtitle_url), headers=headers, timeout=15)
-    resp.raise_for_status()
-    return resp.json().get("body") or []
+
+    def _do() -> list[dict]:
+        resp = httpx.get(normalize_url(subtitle_url), headers=headers, timeout=15)
+        resp.raise_for_status()
+        return resp.json().get("body") or []
+
+    return ratelimit.paced(_do)
 
 
 def fetch_subtitle(bvid: str, cid: int, cred: Optional[BilibiliCredential]) -> Optional[Transcript]:

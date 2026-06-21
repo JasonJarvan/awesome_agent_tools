@@ -70,3 +70,31 @@ def test_fetch_subtitle_falls_back_to_none_on_body_fetch_error():
     with patch("bilibili.subtitle._get_tracks_raw", return_value=tracks), \
          patch("bilibili.subtitle._get_body_raw", side_effect=Exception("timeout")):
         assert fetch_subtitle(bvid="BV1x", cid=2, cred=BilibiliCredential(sessdata="SS")) is None
+
+
+def test_get_tracks_raw_routes_through_paced(monkeypatch):
+    from bilibili import subtitle, ratelimit
+    seen = {}
+    def fake_paced(fn):
+        seen["ok"] = True
+        return [{"lan": "ai-zh", "subtitle_url": "//x"}]
+    monkeypatch.setattr(ratelimit, "paced", fake_paced)
+    out = subtitle._get_tracks_raw("BV1x", 2, None)
+    assert seen.get("ok") is True and out[0]["lan"] == "ai-zh"
+
+
+def test_get_body_raw_retries_transient_429(monkeypatch):
+    import httpx as _httpx
+    from bilibili import subtitle, ratelimit
+    ratelimit._limiter._last = 0.0
+    monkeypatch.setattr(ratelimit, "_sleep", lambda s: None)
+    monkeypatch.setattr(ratelimit, "_rand", lambda a, b: 0.0)
+    ratelimit.configure(min_interval=0.0, jitter=0.0, max_retries=2, enabled=True)
+    req = _httpx.Request("GET", "https://x/sub.json")
+    responses = [
+        _httpx.Response(429, request=req),
+        _httpx.Response(200, json={"body": [{"from": 0.0, "to": 1.0, "content": "你好"}]}, request=req),
+    ]
+    monkeypatch.setattr(subtitle.httpx, "get", lambda *a, **k: responses.pop(0))
+    body = subtitle._get_body_raw("//x/sub.json", None)
+    assert body == [{"from": 0.0, "to": 1.0, "content": "你好"}]   # 429 retried -> recovered
