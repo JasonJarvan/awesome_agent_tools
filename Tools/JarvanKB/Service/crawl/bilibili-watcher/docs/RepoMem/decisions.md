@@ -68,3 +68,16 @@ Ratified by user 2026-06-10 after Stage-0 empirical investigation. Full Stage-0 
 - **B站 fav API paging stop = `has_more`, never `media_count` (deleted-item gotcha).**
   `media_count` counts invalid/deleted items not returned in `medias[]`. Stage-0 proof: count=4, returned=3.
   **Pending HITL Step 8 merge to global `crawl-pipeline.md`.**
+
+## Deploy notes (v1.1 WatcherDeploy, 2026-06-19)
+
+- **No `backfill_on_first_run` flag (unlike SP-5a) → first cycle with watermark=0 backfills the WHOLE folder.**
+  To deploy "from-now" (only NEW favorites, no history backfill), pre-seed each folder's
+  `data/state/state-<id>.json` with `{"watermark": <now-epoch>, "seen": []}` BEFORE first `up -d`. Then
+  `list_items(since_fav_time=now)` early-stops immediately → 0 new; only items favorited after `now` flow.
+  (v1.1 seeded all 22 folders this way.)
+- **Compose bind-mounts the host vault dir → `/data/output`** (config `output_dir: /data/output`); `state_dir`
+  persisted via `./data/state`. `network_mode: host` already present (reaches BN `:3015` + SP-1 `:48088`).
+  Defensive proxy-clear env added (runbook §5 socksio class).
+- **BN provider key drift**: B站 transcription needs a valid LLM provider key in BN; it expires independently of
+  repo `.env` and has no auto-refresh. See `crawl-pipeline.md §B站链路` (BN `/api/update_provider` SOP).

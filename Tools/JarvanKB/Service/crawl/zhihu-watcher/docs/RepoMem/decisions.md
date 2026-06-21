@@ -169,3 +169,18 @@ Also guarded `watermark_store.load()` against a corrupt state file (skip that co
   live smoke confirmed it by our own run (200, 168 items, plain cookie), so it is no longer a candidate
   caveated to the reference repo. The offset-paging stop rule and the ARTICLE-403-no-fallback gotcha were
   promoted alongside it.
+
+## Deploy notes (v1.1 WatcherDeploy, 2026-06-19)
+
+- **The Docker image MUST install `Engine/common` (jarvankb_common), not just `Engine/zhihu` + the watcher.**
+  `watcher.py` imports `from jarvankb_common.classify import existing_subfolders` at module top-level (and
+  `build_watcher` imports `LLMClient` for the classify path), so a missing install crashes the container on
+  import — even for non-classify targets. Dockerfile now `COPY Engine/common` + pip-installs it (mirrors the
+  Engine/zhihu copy-install pattern; jarvankb_common is a local path pkg, not on PyPI).
+- **Compose needs `network_mode: host`.** The watcher reaches cookie-manager at `127.0.0.1:48088` (host loopback)
+  + `zhihu.com` (outbound). On the default bridge network `127.0.0.1` is the container itself → `cookie pull
+  failed: [Errno 111] Connection refused`. Host networking fixes it and binds NO listening port (headless),
+  so it is NOT a port mapping (the 48xxx rule assigns nothing here).
+- **classify path runtime deps in-container**: `config/llm.yaml` mounted → `/llm.yaml` + `JARVANKB_LLM_CONFIG=/llm.yaml`;
+  `MIMO_API_KEY` via `env_file ../../../.env`. The classifier reads `output_dir` subdirs (the bind-mounted vault's
+  ~33 folders) as the existing-folder list. mimo profile = `openai/mimo-v2.5` (verified resolves live).
