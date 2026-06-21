@@ -49,6 +49,27 @@ video_ref → bilibili-api-python get_info（元数据，公开无需 cookie）
   yt-dlp、**位于引擎请求路径之下**——引擎自身 `bilibili-api-python` 调用（view/subtitle 类）本就 200，
   **引擎侧限流/反风控与此无关**；若未来 playurl 风控再收紧（cookie 也不够），升级 BN 容器内 yt-dlp /
   反检测 headers 才是下一层手段（属 BN/ops 侧，非引擎、非消费者）。
+- **BN 的 LLM 供应商 `api_key` 会过期 → 任务 `401 Invalid API Key`（WatcherDeploy 实证 2026-06-19）**：BN 给每个
+  provider（如 MiMo `xiaomitokenplan`）在自己的 SQLite 里**独立存一份 key**，与 repo `.env` 的 `MIMO_API_KEY`
+  **不联动**、**无自动续期**（区别于 SESSDATA 有宿主 cron 同步）。现象：下载/字幕全 200，唯 BN 的 LLM 总结步 401，
+  转录任务失败。修法 SOP：用 `.env` 里有效的 `MIMO_API_KEY` 调 `POST /api/update_provider {"id":"<provider_id>","api_key":"<key>"}`
+  （provider key 每请求读 DB，**无需重启 BN**，区别于 downloader cookie 单例）；期望 `{"code":0,"msg":"更新模型供应商成功"}`。
+  任何消费 BN LLM 步的下游（watcher/skill）都共担——长期应给 BN 的 LLM key 也做一个类似 SESSDATA 的续期机制（UN-051 reach 域）。
+- **bcut 云端 ASR 对个别「无字幕」视频报 `上传提交失败: 第三方服务异常`（WatcherDeploy 2026-06-19 实证）**：有字幕的视频
+  走「字幕优先级联」（拉 `aisubtitle.hdslb.com` 字幕、跳过 bcut，零 ASR 成本、稳）；无字幕才上传音频给 bcut，bcut 偶对
+  特定视频报第三方异常。属 BN/bcut 侧（非 watcher/引擎代码 bug）；消费者优雅降级（不入 seen、下轮重试）。
+- **引擎对自身 bilibili 直连调用内置主动限流 + 节流退避**（SP-4a v1.x，2026-06-21；SP-4b/SP-5b 经引擎自动继承）：
+  3 处直连（`get_info`/`get_subtitle`/字幕正文 CDN）走进程共享限流（最小间隔+抖动）+ 对 **HTTP 429** 及 B站业务码
+  **`-509`/`-799`**（「请求过于频繁」）指数退避（遵从 `Retry-After`）；批量消费者自动受益、单次 transcribe 几乎无感。
+  **`412` 不是限流信号**（匿名 playurl 鉴权 / BN 内部，即上文 BN-412）、**`-101`**=未登录，二者均穿透不重试 →
+  ASR 降级 / `CredentialError` 路径不变。入口 `bilibili.configure(...)`（机制在代码，见 `Engine/bilibili/docs/interface.md §8`）。
+- **BN 下载并发=全局上限 3、无 rate-limit、与引擎共享出口 IP**（SP-4a 调研 2026-06-21；SP-5b 并发上量前必看）：
+  BN 的 `/api/generate_note` 把任务投进**进程级单例 `ThreadPoolExecutor(max_workers=3)`**（容器 `TASK_MAX_WORKERS`
+  未设→默认 3；单 uvicorn worker）⇒ **并发猛敲 API 击穿不了**（N 个并发仍 ≤3 真正下载、其余排队，全局、非 per-request）。
+  **但** BN 的 yt-dlp **零限速/零退避**（无 `limit-rate/sleep_interval/retries`），3 槽满速背靠背；且 BN bridge-NAT
+  出网 = **主机公网 IP = 引擎直连同一 IP** ⇒ 并发批量消费者（需显式多线程；`transcribe()` 本身同步阻塞）下有「≤3 并发
+  满速、共享 IP」的**有界**残留暴露（BN 突发会风控连累引擎直连）。**修法（未做，留后续）**：引擎 `bilinote_client.py`
+  加可配置并发信号量（≤3，默认 2）+ 给 `generate_note` 复用引擎 limiter 最小间隔（BN 不动）。**Revisit when**：SP-5b 真正并发跑 transcribe。
 
 ## B站收藏夹 API（SP-5b Watcher 首爬，真站实证 2026-06-10；下游收藏夹消费者必看）
 

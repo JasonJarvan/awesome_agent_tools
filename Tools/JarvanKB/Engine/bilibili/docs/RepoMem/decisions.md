@@ -5,6 +5,29 @@
 > When a decision is promoted to global, leave a `[Promoted to global ↗]` marker pointing to
 > `<root>/docs/RepoMem/persist/memory/` (or `architecture/`).
 
+## 2026-06-21 — bilibili-engine-ratelimit-hardening (v1.x, verified)
+
+### D-4a.5 — engine has built-in proactive rate-limit + reactive throttle backoff on its bilibili-facing calls (mirror SP-2 D8)
+The 3 bilibili.com-facing calls (`metadata._get_info_raw` get_info, `subtitle._get_tracks_raw` get_subtitle,
+`subtitle._get_body_raw` subtitle-CDN GET) route through `ratelimit.paced()`: a process-shared `_RateLimiter`
+(min-interval + jitter, so bulk consumers self-pace while a single transcribe's first call is ~unaffected) +
+retry on throttle with exponential backoff honoring `Retry-After`. Throttle = HTTP 429 + bilibili business
+codes -509/-799; **412 is NOT throttle** (anonymous-playurl auth / BN-internal, BN-412) and **-101** (no login)
+— both pass through unchanged → existing ASR-fallback / `CredentialError` paths intact. Unlike SP-2's
+`_request()->Response`, the wrapper takes a callable because bilibili calls RAISE on throttle
+(`ResponseCodeException.code` / `NetworkException.status` / httpx `HTTPStatusError`); classifier duck-types
+`.status`/`.code` (no hard `bilibili_api` import). **BN-local calls (`bilinote_client.py`, 127.0.0.1) are NOT
+paced** — not bilibili calls; BN's internal yt-dlp bilibili downloads are below the engine (see §B站链路 BN-412).
+Conservative defaults mirror deployed zhihu (min_interval=0.3, jitter=0.2, max_retries=3, backoff_base=0.5);
+tunable via module-level `bilibili.configure(...)`; non-breaking (v1 frozen contract byte-identical). Mechanism
+in `src/bilibili/ratelimit.py`; contract note `docs/interface.md §8`. **Revisit when:** a consumer needs a
+per-call rate override, or bilibili changes which codes signal throttling, **or a concurrent bulk consumer
+saturates BN's download cap-of-3** (BN has no rate-limit + shares the engine egress IP) → then add a BN-client
+concurrency/min-interval cap (deferred 2026-06-21; see §B站链路 + `temp/bilibili-engine-ratelimit-hardening/bn-concurrency-investigation.md`).
+
+> D-4a.5 mechanism stays in code — NOT promoted. The cross-SP root-cause rides along under the §B站链路
+> promotion — promoted 2026-06-21 (HITL: root orche greenlight + user-delegated closure).
+
 ## 2026-06-02 — sp4a-bilibili-engine (initial implementation, verified)
 
 ### D-4a.1 — BiliNote is a hard v1 dependency; both cascade paths produce a summary
