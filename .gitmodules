@@ -4,9 +4,6 @@
 [submodule "Skills/cc-relocate-project"]
 	path = Skills/cc-relocate-project
 	url = https://github.com/JasonJarvan/cc-relocate-project.git
-[submodule "Tools/gstack"]
-	path = Tools/gstack
-	url = https://github.com/garrytan/gstack
 [submodule "Tools/claude-hud"]
 	path = Tools/claude-hud
 	url = https://github.com/JasonJarvan/claude-hud
@@ -16,3 +13,6 @@
 [submodule "Tools/JarvanKB"]
 	path = Tools/JarvanKB
 	url = https://github.com/JasonJarvan/JarvanKB.git
+[submodule "Skills/interviewer-designer"]
+	path = Skills/interviewer-designer
+	url = https://github.com/JasonJarvan/interviewer-designer.git
