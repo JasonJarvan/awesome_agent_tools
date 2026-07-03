@@ -1,4 +1,0 @@
-config.yaml
-.env
-*.egg-info/
-__pycache__/

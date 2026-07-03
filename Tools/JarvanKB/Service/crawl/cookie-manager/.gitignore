@@ -1,8 +1,0 @@
-node_modules/
-dist/
-data/
-snapshots/
-*.local.yaml
-# real runtime config holds secrets (uuid/password/auth_token) — never commit.
-# only the *.example.yaml and *.smoke.yaml templates are tracked.
-config/cookie-manager.yaml

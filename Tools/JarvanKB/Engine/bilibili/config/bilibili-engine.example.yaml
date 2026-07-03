@@ -1,9 +1,0 @@
-# Copy to bilibili-engine.yaml (gitignored) and fill provider_id.
-bilinote:
-  base_url: http://127.0.0.1:3015     # BiliNote nginx APP_PORT
-  provider_id: ""                     # paste from BiliNote web UI after adding an LLM provider
-  model_name: "gpt-4o-mini"
-  poll_interval_s: 3
-  poll_timeout_s: 600                  # bcut ASR can run for minutes
-  style: "summary"
-# credentials are NOT stored here — passed as input / sourced from SP-1 cookie-manager

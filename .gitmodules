@@ -13,3 +13,6 @@
 [submodule "CodeTeam"]
 	path = CodeTeam
 	url = https://github.com/JasonJarvan/CodeTeam.git
+[submodule "Tools/JarvanKB"]
+	path = Tools/JarvanKB
+	url = https://github.com/JasonJarvan/JarvanKB.git

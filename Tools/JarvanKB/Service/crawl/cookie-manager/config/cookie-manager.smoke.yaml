@@ -1,9 +1,0 @@
-server: { host: 127.0.0.1, port: 48088, data_dir: ./data-smoke, body_limit: 50mb }
-accounts: [{ uuid: "smoke-uuid", password: "smoke-pass" }]
-hooks:
-  - id: smoke-write
-    on: cookie-update
-    match: { uuid: "*", domain: ".zhihu.com" }
-    action: write_file
-    path: "./smoke-out/{{uuid}}.json"
-    template: '{{cookie_json}}'

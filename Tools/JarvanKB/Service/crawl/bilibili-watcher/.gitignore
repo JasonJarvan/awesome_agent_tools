@@ -1,6 +1,0 @@
-.venv/
-*.egg-info/
-# 本地真实配置 + smoke 配置（含 cookie-manager box 凭据）—— 不入库（*.example 模板才入库）
-config/bilibili-watcher.yaml
-config/*.smoke.yaml
-data/
