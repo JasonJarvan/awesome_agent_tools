@@ -5,7 +5,7 @@
 	path = Skills/cc-relocate-project
 	url = https://github.com/JasonJarvan/cc-relocate-project.git
 [submodule "Tools/Agent/claude-hud"]
-	path = Tools/Agent/claude-hud
+	path = Tools/utils/claude-hud
 	url = https://github.com/JasonJarvan/claude-hud
 [submodule "Tools/CodeTeam"]
 	path = Tools/CodeTeam
