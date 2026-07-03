@@ -4,11 +4,11 @@
 [submodule "Skills/cc-relocate-project"]
 	path = Skills/cc-relocate-project
 	url = https://github.com/JasonJarvan/cc-relocate-project.git
-[submodule "Tools/claude-hud"]
-	path = Tools/claude-hud
+[submodule "Tools/Agent/claude-hud"]
+	path = Tools/Agent/claude-hud
 	url = https://github.com/JasonJarvan/claude-hud
-[submodule "CodeTeam"]
-	path = CodeTeam
+[submodule "Tools/CodeTeam"]
+	path = Tools/CodeTeam
 	url = https://github.com/JasonJarvan/CodeTeam.git
 [submodule "Tools/JarvanKB"]
 	path = Tools/JarvanKB
