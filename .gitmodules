@@ -16,3 +16,6 @@
 [submodule "Skills/interviewer-designer"]
 	path = Skills/product/interviewer-designer
 	url = https://github.com/JasonJarvan/interviewer-designer.git
+[submodule "Skills/maintain/edge-sidebar-history-migration-skill"]
+	path = Skills/maintain/edge-sidebar-history-migration-skill
+	url = https://github.com/JarvanAI/edge-sidebar-history-migration-skill.git
