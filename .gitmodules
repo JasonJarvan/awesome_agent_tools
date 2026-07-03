@@ -1,8 +1,8 @@
 [submodule "Skills/ops-doc-maintainer"]
-	path = Skills/ops-doc-maintainer
+	path = Skills/maintain/ops-doc-maintainer
 	url = https://github.com/JasonJarvan/ops-doc-maintainer.git
 [submodule "Skills/cc-relocate-project"]
-	path = Skills/cc-relocate-project
+	path = Skills/maintain/cc-relocate-project
 	url = https://github.com/JasonJarvan/cc-relocate-project.git
 [submodule "Tools/Agent/claude-hud"]
 	path = Tools/utils/claude-hud
@@ -14,5 +14,5 @@
 	path = Tools/JarvanKB
 	url = https://github.com/JasonJarvan/JarvanKB.git
 [submodule "Skills/interviewer-designer"]
-	path = Skills/interviewer-designer
+	path = Skills/product/interviewer-designer
 	url = https://github.com/JasonJarvan/interviewer-designer.git
