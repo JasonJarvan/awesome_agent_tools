@@ -15,7 +15,7 @@
 ## Clone 注意事项
 
 仓库里有多处 git submodule，指向各自的独立仓库
-（`Skills/ops-doc-maintainer/` 和 `Skills/Coding/` 下的所有条目）。
+（在 `Skills/maintain/`、`Skills/product/` 与 `Tools/` 下）。
 普通 `git clone` 完之后，那些目录是空的，需要一并初始化 submodule：
 
 ```bash
@@ -32,31 +32,28 @@ git pull --recurse-submodules
 
 ## 仓库里有什么
 
-- `Skills/skill-orchestrator/`
-  一个可跨平台复用的编排型 skill，用来在 Codex、Claude Code、OpenClaw 等生态里发现、评估、适配和创建 skill。
+Skills 按用途分类归置在 `Skills/` 下(索引见 [`Skills/README.md`](Skills/README.md)):
 
-- `Skills/barksy_pipeline/`
-  一个偏工具型的 skill，用于将 Codex 会话历史导出为 Markdown。
+- **`Skills/maintain/`** —— 维护/运维类:
+  - `skill-orchestrator/` —— 旗舰:可跨平台复用的编排型 skill,在 Codex、Claude Code、OpenClaw 等生态里发现、评估、适配和创建 skill。
+  - `cc-relocate-project/` *(git submodule → [JasonJarvan/cc-relocate-project](https://github.com/JasonJarvan/cc-relocate-project))* —— 安全搬迁/重命名 Claude Code 项目,不丢失可 `--resume` 的会话历史。
+  - `ops-doc-maintainer/` *(git submodule → [JasonJarvan/ops-doc-maintainer](https://github.com/JasonJarvan/ops-doc-maintainer))* —— 跨平台(Linux + Windows)运维文档维护 skill,每次调用自动判断平台,维护端口/Docker/Nginx/SSH/PostgreSQL/全局 CLI 等热点文档。
 
-- `Skills/ops-doc-maintainer/` *（git submodule → [JasonJarvan/ops-doc-maintainer](https://github.com/JasonJarvan/ops-doc-maintainer)）*
-  一个跨平台（Linux + Windows）的运维文档维护 skill。每次调用时自动判断平台，分别走 `scripts/linux/` 或 `scripts/windows/` 的实现，共享同一份 docs 目录。
+- **`Skills/knowledge/`** —— 信息获取类:
+  - `MiroResearch/` —— 深度、多步、带引用的联网研究(封装 MiroMind Deep Research API)。
+  - `web-search/` —— 统一走 `bailian_web_search` MCP 工具做网页搜索。
 
-- `Skills/web-search.md`
-  一个轻量的搜索相关 skill 说明文件。
+- **`Skills/product/`** —— 业务/评估决策类:
+  - `idea-evaluator/` —— 用投资人视角评估一句话产品 idea 的商业价值与天花板。
+  - `interviewer-designer/` *(git submodule → [JasonJarvan/interviewer-designer](https://github.com/JasonJarvan/interviewer-designer))* —— 把简历转成一小时面试官手册(公开核实、即用题库、现场打分)。
 
-- `Skills/Coding/` —— 面向 coding agent 的精选 skill，每个都是 git submodule：
+- `Skills/in-progress/`、`Skills/deprecated/` —— 隔离非主线 skill 的生命周期目录。
 
-  - `Skills/Coding/RepoMem/` *（git submodule → [JasonJarvan/RepoMem](https://github.com/JasonJarvan/RepoMem)）*
-    给代码仓库和 coding agent 用的持久化记忆层。
+独立工具与子系统放在 `Tools/` 下(**不是 skill**):
 
-  - `Skills/Coding/HarnessFactory/` *（git submodule → [JasonJarvan/HarnessFactory](https://github.com/JasonJarvan/HarnessFactory)）*
-    coding agent 的 harness 体系：长期 + 临时 contractor 模板与 skill 打包，用于嵌入目标开发仓库。*（前身为 `HarnessStack`）*
-
-  - `Skills/Coding/cc-sendbox/` *（git submodule → [JasonJarvan/cc-sendbox](https://github.com/JasonJarvan/cc-sendbox)）*
-    用带版本号的"信件"做多 agent 协作，打包成 Claude Code skill。
-
-- `Tools/cursor_history_viewer/`
-  仓库中已有的智能体或编辑器历史浏览相关项目材料。
+- `Tools/utils/` —— 轻量工具:`claude-hud` *(git submodule)* 与 `cursor_chat_browser`。
+- `Tools/CodeTeam/` *(git submodule → [JasonJarvan/CodeTeam](https://github.com/JasonJarvan/CodeTeam))* —— 多 agent 协作 harness 子系统(HarnessFactory、RepoMem、cc-sendbox 等)。
+- `Tools/JarvanKB/` *(git submodule → [JasonJarvan/JarvanKB](https://github.com/JasonJarvan/JarvanKB))* —— 知识库爬取引擎(知乎/B 站引擎、watcher、crawl skills)。
 
 ## 为什么要做这个项目
 
@@ -127,33 +124,25 @@ awesome_agent_tools/
 ├── README.zh-CN.md
 ├── AGENT.md
 ├── Skills/
-│   ├── Coding/                               # 面向 coding agent 的 skill（全是 submodule）
-│   │   ├── RepoMem/                          # submodule → JasonJarvan/RepoMem
-│   │   ├── HarnessFactory/                   # submodule → JasonJarvan/HarnessFactory
-│   │   └── cc-sendbox/                       # submodule → JasonJarvan/cc-sendbox
-│   ├── barksy_pipeline/
-│   ├── ops-doc-maintainer/                   # submodule → JasonJarvan/ops-doc-maintainer（跨平台）
-│   ├── skill-orchestrator/
-│   │   ├── SKILL.md
-│   │   ├── agents/
-│   │   │   └── openai.yaml
-│   │   ├── scripts/
-│   │   │   ├── requirements.txt
-│   │   │   └── search_skills.py
-│   │   ├── references/
-│   │   │   ├── adaptation-matrix.md
-│   │   │   ├── decision-rules.md
-│   │   │   ├── result-schema.md
-│   │   │   ├── search-playbook.md
-│   │   │   └── sources.yaml
-│   │   ├── assets/
-│   │   │   └── templates/
-│   │   │       ├── candidate-summary.md
-│   │   │       └── creation-brief.md
-│   │   └── output/ (运行生成，已加入 gitignore)
-│   └── web-search.md
+│   ├── README.md                             # 顶层导航
+│   ├── maintain/                             # 维护/运维类
+│   │   ├── skill-orchestrator/               # 旗舰(SKILL.md + references/ + scripts/ + assets/)
+│   │   ├── cc-relocate-project/              # submodule → JasonJarvan/cc-relocate-project
+│   │   └── ops-doc-maintainer/               # submodule → JasonJarvan/ops-doc-maintainer（跨平台）
+│   ├── knowledge/                            # 信息获取类
+│   │   ├── MiroResearch/                     # SKILL.md + scripts/
+│   │   └── web-search/                       # SKILL.md
+│   ├── product/                              # 业务/评估决策类
+│   │   ├── idea-evaluator/                   # SKILL.md
+│   │   └── interviewer-designer/             # submodule → JasonJarvan/interviewer-designer
+│   ├── in-progress/                          # 非主线:开发中
+│   └── deprecated/                           # 非主线:已弃用
 └── Tools/
-    └── cursor_history_viewer/
+    ├── utils/                                # 轻量工具
+    │   ├── claude-hud/                       # submodule → JasonJarvan/claude-hud
+    │   └── cursor_chat_browser/
+    ├── CodeTeam/                             # submodule → JasonJarvan/CodeTeam
+    └── JarvanKB/                             # submodule → JasonJarvan/JarvanKB
 ```
 
 ## 如何使用这个 skill
@@ -171,12 +160,12 @@ awesome_agent_tools/
 如果你想在智能体运行时之外做一轮可重复的“半自动搜索”，可以直接运行附带脚本：
 
 ```bash
-cd Skills/skill-orchestrator/scripts
+cd Skills/maintain/skill-orchestrator/scripts
 python -m pip install -r requirements.txt
 python search_skills.py "documentation co-authoring skill for Claude Code" --ecosystem claude_code
 ```
 
-脚本会把 Markdown 和 JSON 输出写入 `Skills/skill-orchestrator/output/`。
+脚本会把 Markdown 和 JSON 输出写入 `Skills/maintain/skill-orchestrator/output/`。
 
 当没有找到足够强的候选，或者你虽然找到了候选但仍然更倾向于自建时，输出里还会包含一个结构化的 `creation brief`，可以直接作为创建新 skill 的起点。
 
@@ -201,7 +190,7 @@ python search_skills.py "documentation co-authoring skill for Claude Code" --eco
 - GitHub
 - 其他 skill 目录、社区聚合页或生态注册源
 
-所有已注册源都放在 [`Skills/skill-orchestrator/references/sources.yaml`](Skills/skill-orchestrator/references/sources.yaml) 里，方便随着生态变化手工维护。
+所有已注册源都放在 [`Skills/maintain/skill-orchestrator/references/sources.yaml`](Skills/maintain/skill-orchestrator/references/sources.yaml) 里，方便随着生态变化手工维护。
 
 ### 优先级模型
 
@@ -229,22 +218,22 @@ python search_skills.py "documentation co-authoring skill for Claude Code" --eco
 
 这个 skill 不是一个单纯的 prompt 文件，而是一组小而清晰的系统化文档：
 
-- [`SKILL.md`](Skills/skill-orchestrator/SKILL.md)
+- [`SKILL.md`](Skills/maintain/skill-orchestrator/SKILL.md)
   编排器本身的操作说明。
 
-- [`sources.yaml`](Skills/skill-orchestrator/references/sources.yaml)
+- [`sources.yaml`](Skills/maintain/skill-orchestrator/references/sources.yaml)
   可编辑的 source registry，按 source type、agent 生态和优先级组织。
 
-- [`decision-rules.md`](Skills/skill-orchestrator/references/decision-rules.md)
+- [`decision-rules.md`](Skills/maintain/skill-orchestrator/references/decision-rules.md)
   负责路由、评分、停止条件和候选数量规则。
 
-- [`result-schema.md`](Skills/skill-orchestrator/references/result-schema.md)
+- [`result-schema.md`](Skills/maintain/skill-orchestrator/references/result-schema.md)
   规定返回给用户的候选信息应包含哪些关键字段。
 
-- [`adaptation-matrix.md`](Skills/skill-orchestrator/references/adaptation-matrix.md)
+- [`adaptation-matrix.md`](Skills/maintain/skill-orchestrator/references/adaptation-matrix.md)
   说明 Codex、Claude Code、OpenClaw 之间如何做适配转换。
 
-- [`search-playbook.md`](Skills/skill-orchestrator/references/search-playbook.md)
+- [`search-playbook.md`](Skills/maintain/skill-orchestrator/references/search-playbook.md)
   规定搜索时该如何扩展、何时升级搜索范围、如何和用户同步决策边界。
 
 ## 为什么 README 写得这么详细

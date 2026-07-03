@@ -15,7 +15,7 @@ The current flagship artifact is a cross-platform `skill-orchestrator` skill. It
 ## Cloning This Repository
 
 Several entries below are git submodules pointing to their own standalone
-repos (`Skills/ops-doc-maintainer/` and everything under `Skills/Coding/`).
+repos (under `Skills/maintain/`, `Skills/product/`, and `Tools/`).
 A plain `git clone` leaves those directories empty — initialise submodules
 in the same step:
 
@@ -33,31 +33,28 @@ git pull --recurse-submodules
 
 ## What This Repository Contains
 
-- `Skills/skill-orchestrator/`
-  A portable orchestration skill for discovering, evaluating, adapting, and eventually creating skills across agent ecosystems such as Codex, Claude Code, and OpenClaw.
+Skills are grouped by purpose under `Skills/` (see [`Skills/README.md`](Skills/README.md) for the index):
 
-- `Skills/barksy_pipeline/`
-  A utility-oriented skill for exporting Codex session history to Markdown.
+- **`Skills/maintain/`** — maintenance / ops skills:
+  - `skill-orchestrator/` — the flagship: a portable orchestration skill for discovering, evaluating, adapting, and eventually creating skills across agent ecosystems such as Codex, Claude Code, and OpenClaw.
+  - `cc-relocate-project/` *(git submodule → [JasonJarvan/cc-relocate-project](https://github.com/JasonJarvan/cc-relocate-project))* — safely rename or move Claude Code projects without losing resumable session history.
+  - `ops-doc-maintainer/` *(git submodule → [JasonJarvan/ops-doc-maintainer](https://github.com/JasonJarvan/ops-doc-maintainer))* — a cross-platform ops documentation skill (Linux and Windows). Auto-detects the host on every invocation and maintains low-noise shared docs for network hotspots, listening ports, Docker, Nginx/IIS, SSH/WinRM, VPN/proxy state, PostgreSQL (Linux only), and manually installed global CLI tools.
 
-- `Skills/ops-doc-maintainer/` *(git submodule → [JasonJarvan/ops-doc-maintainer](https://github.com/JasonJarvan/ops-doc-maintainer))*
-  A cross-platform ops documentation skill (Linux and Windows). Auto-detects the host on every invocation and maintains low-noise shared docs for network hotspots, listening ports, Docker, Nginx/IIS, SSH/WinRM, VPN/proxy state, PostgreSQL connection guidance (Linux only), and manually installed global CLI tools. Designed to be written once and installed into Codex, Claude Code, and OpenClaw while sharing one docs directory.
+- **`Skills/knowledge/`** — information-gathering skills:
+  - `MiroResearch/` — deep, multi-step, cited web research (wraps the MiroMind Deep Research API).
+  - `web-search/` — routes web search through the `bailian_web_search` MCP tool.
 
-- `Skills/web-search.md`
-  A lightweight skill note related to web search behavior.
+- **`Skills/product/`** — business / evaluation skills:
+  - `idea-evaluator/` — evaluate the commercial value and ceiling of a one-line product idea.
+  - `interviewer-designer/` *(git submodule → [JasonJarvan/interviewer-designer](https://github.com/JasonJarvan/interviewer-designer))* — turn a résumé into a one-hour interviewer manual (public verification, ready-to-use question pools, live scoring).
 
-- `Skills/Coding/` — curated skills for coding agents, each a git submodule:
+- `Skills/in-progress/`, `Skills/deprecated/` — lifecycle folders isolating non-mainline skills.
 
-  - `Skills/Coding/RepoMem/` *(git submodule → [JasonJarvan/RepoMem](https://github.com/JasonJarvan/RepoMem))*
-    A persistent memory layer for code repositories and coding agents.
+Standalone tools and subsystems live under `Tools/` (these are **not** skills):
 
-  - `Skills/Coding/HarnessFactory/` *(git submodule → [JasonJarvan/HarnessFactory](https://github.com/JasonJarvan/HarnessFactory))*
-    A harness system for coding agents — long-term and temporary contractor templates plus skill packaging, designed to be embedded into target development repos. *(formerly `HarnessStack`)*
-
-  - `Skills/Coding/cc-sendbox/` *(git submodule → [JasonJarvan/cc-sendbox](https://github.com/JasonJarvan/cc-sendbox))*
-    Multi-agent coordination via versioned letters — packaged as a Claude Code skill.
-
-- `Tools/cursor_history_viewer/`
-  Existing project material related to browsing and exporting agent or editor history.
+- `Tools/utils/` — lightweight utilities: `claude-hud` *(git submodule)* and `cursor_chat_browser`.
+- `Tools/CodeTeam/` *(git submodule → [JasonJarvan/CodeTeam](https://github.com/JasonJarvan/CodeTeam))* — a multi-agent harness subsystem (HarnessFactory, RepoMem, cc-sendbox, and more).
+- `Tools/JarvanKB/` *(git submodule → [JasonJarvan/JarvanKB](https://github.com/JasonJarvan/JarvanKB))* — a knowledge-base crawling engine (Zhihu / Bilibili engines, watchers, crawl skills).
 
 ## Why This Project Exists
 
@@ -123,53 +120,28 @@ This means the content is reusable even when the packaging is not identical.
 ```text
 awesome_agent_tools/
 ├── README.md
+├── README.zh-CN.md
 ├── AGENT.md
 ├── Skills/
-│   ├── Coding/                               # curated skills for coding agents (all submodules)
-│   │   ├── RepoMem/                          # submodule → JasonJarvan/RepoMem
-│   │   ├── HarnessFactory/                   # submodule → JasonJarvan/HarnessFactory
-│   │   └── cc-sendbox/                       # submodule → JasonJarvan/cc-sendbox
-│   ├── barksy_pipeline/
-│   ├── ops-doc-maintainer/                   # submodule → JasonJarvan/ops-doc-maintainer (cross-platform)
-│   │   ├── SKILL.md
-│   │   ├── README.md
-│   │   ├── adapters/
-│   │   │   ├── linux/{claude-code.md, openclaw.md}
-│   │   │   └── windows/claude-code.md
-│   │   ├── agents/
-│   │   │   ├── linux/openai.yaml
-│   │   │   └── windows/openai.yaml
-│   │   ├── assets/
-│   │   │   ├── linux/templates/
-│   │   │   └── windows/templates/
-│   │   ├── references/
-│   │   │   ├── linux/{collection-rules.md, doc-layout.md, safety-and-boundaries.md, software-detection-rules.md}
-│   │   │   └── windows/{collection-rules.md, doc-layout.md, safety-and-boundaries.md, software-detection-rules.md}
-│   │   └── scripts/
-│   │       ├── update_ops_docs.py            # dispatcher: detects OS, delegates
-│   │       ├── linux/{collect_*.sh, ops_doc_lib.py, update_ops_docs.py}
-│   │       └── windows/{win_ops_doc_lib.py, update_ops_docs.py}
-│   ├── skill-orchestrator/
-│   │   ├── SKILL.md
-│   │   ├── agents/
-│   │   │   └── openai.yaml
-│   │   ├── scripts/
-│   │   │   ├── requirements.txt
-│   │   │   └── search_skills.py
-│   │   ├── references/
-│   │   │   ├── adaptation-matrix.md
-│   │   │   ├── decision-rules.md
-│   │   │   ├── result-schema.md
-│   │   │   ├── search-playbook.md
-│   │   │   └── sources.yaml
-│   │   └── assets/
-│   │       └── templates/
-│   │           ├── candidate-summary.md
-│   │           └── creation-brief.md
-│   │   └── output/ (generated, gitignored)
-│   └── web-search.md
+│   ├── README.md                             # top-level navigation
+│   ├── maintain/                             # maintenance / ops
+│   │   ├── skill-orchestrator/               # flagship (SKILL.md + references/ + scripts/ + assets/)
+│   │   ├── cc-relocate-project/              # submodule → JasonJarvan/cc-relocate-project
+│   │   └── ops-doc-maintainer/               # submodule → JasonJarvan/ops-doc-maintainer (cross-platform)
+│   ├── knowledge/                            # information gathering
+│   │   ├── MiroResearch/                     # SKILL.md + scripts/
+│   │   └── web-search/                       # SKILL.md
+│   ├── product/                              # business / evaluation
+│   │   ├── idea-evaluator/                   # SKILL.md
+│   │   └── interviewer-designer/             # submodule → JasonJarvan/interviewer-designer
+│   ├── in-progress/                          # non-mainline: work in progress
+│   └── deprecated/                           # non-mainline: deprecated
 └── Tools/
-    └── cursor_history_viewer/
+    ├── utils/                                # lightweight tools
+    │   ├── claude-hud/                       # submodule → JasonJarvan/claude-hud
+    │   └── cursor_chat_browser/
+    ├── CodeTeam/                             # submodule → JasonJarvan/CodeTeam
+    └── JarvanKB/                             # submodule → JasonJarvan/JarvanKB
 ```
 
 ## How To Use The Skill
@@ -187,12 +159,12 @@ Typical usage pattern:
 If you want a repeatable, half-automated search outside the agent runtime, use the included script:
 
 ```bash
-cd Skills/skill-orchestrator/scripts
+cd Skills/maintain/skill-orchestrator/scripts
 python -m pip install -r requirements.txt
 python search_skills.py "documentation co-authoring skill for Claude Code" --ecosystem claude_code
 ```
 
-The script writes both Markdown and JSON outputs into `Skills/skill-orchestrator/output/`.
+The script writes both Markdown and JSON outputs into `Skills/maintain/skill-orchestrator/output/`.
 When no strong candidate exists, or when you may still prefer a custom solution, the output also includes a structured creation brief that can seed a new skill.
 For web-based source lookups, the script uses retries and fallback providers so occasional search-engine failures degrade gracefully into source notes instead of breaking the whole run.
 
@@ -240,7 +212,7 @@ The first version focuses on skill discovery, not MCP orchestration. The main so
 - GitHub
 - other skill directories or ecosystem-specific registries
 
-All registered sources live in [`Skills/skill-orchestrator/references/sources.yaml`](Skills/skill-orchestrator/references/sources.yaml), which is designed to be easy to edit as the ecosystem changes.
+All registered sources live in [`Skills/maintain/skill-orchestrator/references/sources.yaml`](Skills/maintain/skill-orchestrator/references/sources.yaml), which is designed to be easy to edit as the ecosystem changes.
 
 ### Priority Model
 
@@ -268,22 +240,22 @@ This keeps decision-making fast and humane.
 
 The skill is documented as a small system rather than a single prompt file.
 
-- [`SKILL.md`](Skills/skill-orchestrator/SKILL.md)
+- [`SKILL.md`](Skills/maintain/skill-orchestrator/SKILL.md)
   The portable operating manual for the orchestrator.
 
-- [`sources.yaml`](Skills/skill-orchestrator/references/sources.yaml)
+- [`sources.yaml`](Skills/maintain/skill-orchestrator/references/sources.yaml)
   Editable registry of search sources, grouped by source type, agent ecosystem, and priority tier.
 
-- [`decision-rules.md`](Skills/skill-orchestrator/references/decision-rules.md)
+- [`decision-rules.md`](Skills/maintain/skill-orchestrator/references/decision-rules.md)
   Routing, scoring, stopping rules, and candidate-count logic.
 
-- [`result-schema.md`](Skills/skill-orchestrator/references/result-schema.md)
+- [`result-schema.md`](Skills/maintain/skill-orchestrator/references/result-schema.md)
   Defines exactly what information should be returned to help a user choose.
 
-- [`adaptation-matrix.md`](Skills/skill-orchestrator/references/adaptation-matrix.md)
+- [`adaptation-matrix.md`](Skills/maintain/skill-orchestrator/references/adaptation-matrix.md)
   Describes how skills can be adapted between Codex, Claude Code, and OpenClaw.
 
-- [`search-playbook.md`](Skills/skill-orchestrator/references/search-playbook.md)
+- [`search-playbook.md`](Skills/maintain/skill-orchestrator/references/search-playbook.md)
   Concrete execution guidance for searching well and escalating carefully.
 
 ## Why The README Is Detailed
