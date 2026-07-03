@@ -19,3 +19,12 @@
 [submodule "Skills/maintain/edge-sidebar-history-migration-skill"]
 	path = Skills/maintain/edge-sidebar-history-migration-skill
 	url = https://github.com/JarvanAI/edge-sidebar-history-migration-skill.git
+[submodule "Skills/Coding/HarnessFactory"]
+	path = Skills/Coding/HarnessFactory
+	url = https://github.com/JasonJarvan/HarnessFactory.git
+[submodule "Skills/Coding/RepoMem"]
+	path = Skills/Coding/RepoMem
+	url = https://github.com/JasonJarvan/RepoMem.git
+[submodule "Skills/Coding/cc-sendbox"]
+	path = Skills/Coding/cc-sendbox
+	url = https://github.com/JasonJarvan/cc-sendbox.git
