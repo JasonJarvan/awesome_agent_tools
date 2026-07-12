@@ -28,3 +28,6 @@
 [submodule "Skills/Coding/cc-sendbox"]
 	path = Skills/Coding/cc-sendbox
 	url = https://github.com/JasonJarvan/cc-sendbox.git
+[submodule "Skills/knowledge/MiroResearch"]
+	path = Skills/knowledge/MiroResearch
+	url = https://github.com/JasonJarvan/MiroResearch.git
